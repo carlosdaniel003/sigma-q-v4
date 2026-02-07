@@ -14,6 +14,12 @@ import {
   CartesianGrid
 } from "recharts";
 import { TrendItem } from "../hooks/useDashboard"; 
+import { 
+  BarChart2, 
+  Activity, 
+  Package, 
+  AlertCircle 
+} from "lucide-react";
 
 const META_PPM = 6200;
 
@@ -68,7 +74,6 @@ const renderSafeLabel = (props: any) => {
   const totalPpm = Number(value || 0);
 
   // Se passou da meta, a responsabilidade de mostrar o número é da parte vermelha.
-  // Retorna null para não desenhar nada na parte azul.
   if (totalPpm > META_PPM) return null;
   
   // Se a barra azul for muito pequena, não desenha para não cortar
@@ -78,7 +83,7 @@ const renderSafeLabel = (props: any) => {
     <text
       x={x + width - 8}
       y={y + height / 2}
-      fill="#fff" // Branco pois está dentro da barra azul
+      fill="#fff"
       textAnchor="end"
       dominantBaseline="middle"
       style={{ fontSize: 11, fontWeight: "bold", pointerEvents: "none" }}
@@ -89,21 +94,19 @@ const renderSafeLabel = (props: any) => {
 };
 
 // Label para a parte VERMELHA (Excedente)
-// ✅ NOVA REGRA: Se essa função for chamada (significa que tem excesso), 
-// o texto será SEMPRE vermelho e SEMPRE fora da barra (à direita).
 const renderExcessLabel = (props: any) => {
   const { x, y, width, height, value } = props;
   const totalPpm = Number(value || 0);
 
-  // Segurança: se não passou da meta, não desenha (deveria ser tratado pelo SafeLabel)
+  // Segurança: se não passou da meta, não desenha
   if (totalPpm <= META_PPM) return null;
   
   return (
     <text
-      x={x + width + 5} // Sempre desenha 5px à direita do final da barra vermelha
+      x={x + width + 5} // Sempre desenha 5px à direita
       y={y + height / 2}
       fill="#EF4444" // Sempre Vermelho
-      textAnchor="start" // Alinhado à esquerda (começa logo após a barra)
+      textAnchor="start"
       dominantBaseline="middle"
       style={{ fontSize: 11, fontWeight: "bold", pointerEvents: "none" }}
     >
@@ -140,18 +143,19 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
   if (chartData.length === 0) {
      return (
         <div style={emptyContainerStyle}>
-            Nenhum dado de histórico disponível para esta seleção.
+           Nenhum dado de histórico disponível para esta seleção.
         </div>
      );
   }
 
-  // Calcula máximo dinâmico e aumenta a margem (x 1.3) para garantir espaço para o label externo
+  // Calcula máximo dinâmico e aumenta a margem
   const maxVal = Math.max(...chartData.map(d => d.ppmTotal), META_PPM) * 1.3;
 
   return (
     <div style={containerStyle}>
-      <h2 style={{ fontSize: "1.1rem", marginBottom: 16, color: "#fff" }}>
-        📊 Evolução Temporal ({tipoLabel})
+      <h2 style={{ fontSize: "1.1rem", marginBottom: 16, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>
+        <BarChart2 size={18} color="#60A5FA" />
+        Evolução Temporal ({tipoLabel})
       </h2>
 
       <div style={{ flex: 1, minHeight: 0 }}>
@@ -159,7 +163,6 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
           <BarChart
             layout="vertical"
             data={chartData}
-            // Aumentei a margem direita (right: 80) para o texto vermelho não cortar
             margin={{ top: 20, right: 80, left: 10, bottom: 5 }} 
             barCategoryGap={8}
           >
@@ -188,15 +191,22 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
                                 <p style={{ fontWeight: "bold", marginBottom: "8px", color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 4 }}>
                                     {formatLabel(label as string, tipoLabel)}
                                 </p>
-                                <div style={{ marginBottom: 6 }}>
-                                    {/* Mostra o Total Real */}
+                                <div style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                    {/* Mostra o Total Real com ícone */}
+                                    <Activity size={14} color={dataItem.ppmTotal > META_PPM ? "#EF4444" : "#60a5fa"} />
                                     <span style={{ color: dataItem.ppmTotal > META_PPM ? "#EF4444" : "#60a5fa" }}>
-                                        🔸 PPM: <strong>{dataItem.ppmTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                        PPM: <strong>{dataItem.ppmTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                     </span>
                                 </div>
-                                <div style={{ display: "flex", gap: 12, color: "#cbd5e1" }}>
-                                    <span>📦 Prod: {dataItem.production.toLocaleString("pt-BR")}</span>
-                                    <span style={{ color: "#fca5a5" }}>🔴 Def: {dataItem.defects.toLocaleString("pt-BR")}</span>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 4, color: "#cbd5e1", marginTop: 4 }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <Package size={14} /> 
+                                        <span>Prod: {dataItem.production.toLocaleString("pt-BR")}</span>
+                                    </div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#fca5a5" }}>
+                                        <AlertCircle size={14} /> 
+                                        <span>Def: {dataItem.defects.toLocaleString("pt-BR")}</span>
+                                    </div>
                                 </div>
                             </div>
                         );

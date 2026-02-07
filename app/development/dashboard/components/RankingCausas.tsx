@@ -13,26 +13,35 @@ import {
   Cell
 } from "recharts";
 import { CauseItem } from "../hooks/useDashboard";
+import { 
+  BarChart2, 
+  Search, 
+  FileWarning, 
+  Trophy, 
+  Activity, 
+  AlertCircle 
+} from "lucide-react";
 
 interface Props {
   data: {
     byAnalysis: CauseItem[];
     byFailure: CauseItem[];
-    // byPosition removido
   };
 }
 
-// ✅ REMOVIDO "posicao" DA TIPAGEM
-type RankingMode = "analise" | "falha";
+// ✅ 1 & 2. Renomeação e Reordenação Lógica
+// Agora trabalhamos com "sintoma" (falha) e "causa" (analise)
+type RankingMode = "sintoma" | "causa";
 
 export default function RankingCausas({ data }: Props) {
-  const [mode, setMode] = useState<RankingMode>("analise");
+  // ✅ Padrão agora é "sintoma" (Falha)
+  const [mode, setMode] = useState<RankingMode>("sintoma");
 
-  // ✅ LOGICA ATUALIZADA (SEM POSIÇÃO)
   const chartData = useMemo(() => {
     if (!data) return [];
-    if (mode === "analise") return data.byAnalysis || [];
-    if (mode === "falha") return data.byFailure || [];
+    // Mapeamento: "causa" busca dados de Análise, "sintoma" busca dados de Falha
+    if (mode === "causa") return data.byAnalysis || [];
+    if (mode === "sintoma") return data.byFailure || [];
     return [];
   }, [data, mode]);
 
@@ -53,11 +62,15 @@ export default function RankingCausas({ data }: Props) {
     <div style={containerStyle}>
       <div style={headerWrapper}>
         <div style={{ marginBottom: 12 }}>
-          <h2 style={{ fontSize: "1.1rem", color: "#fff", margin: 0 }}>
-            🚧 Ranking de Ofensores
-          </h2>
-          <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: 0 }}>
-            Principais análises e falhas
+          {/* ✅ 3. SVG no Título */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+            <BarChart2 size={18} color="#60A5FA" />
+            <h2 style={{ fontSize: "1.1rem", color: "#fff", margin: 0 }}>
+              Ranking de Ofensores
+            </h2>
+          </div>
+          <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: 0, paddingLeft: 26 }}>
+            Principais sintomas e causas raiz
           </p>
         </div>
         
@@ -70,7 +83,7 @@ export default function RankingCausas({ data }: Props) {
           <BarChart
             layout="vertical"
             data={chartData}
-            margin={{ top: 5, right: 35, left: 10, bottom: 5 }}
+            margin={{ top: 5, right: 65, left: 10, bottom: 5 }} // Aumentei a margem direita para caber " PPM"
             barCategoryGap={6}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
@@ -113,9 +126,9 @@ export default function RankingCausas({ data }: Props) {
 function Tabs({ mode, setMode }: { mode: RankingMode, setMode: (m: RankingMode) => void }) {
     return (
         <div style={{ display: "flex", gap: 4, background: "rgba(0,0,0,0.2)", padding: 4, borderRadius: 8 }}>
-            <TabBtn active={mode === "analise"} label="Análise" onClick={() => setMode("analise")} />
-            <TabBtn active={mode === "falha"} label="Falha" onClick={() => setMode("falha")} />
-            {/* Botão Posição Removido */}
+            {/* ✅ Ordem Invertida: Sintoma Primeiro */}
+            <TabBtn active={mode === "sintoma"} label="Sintoma" onClick={() => setMode("sintoma")} />
+            <TabBtn active={mode === "causa"} label="Causa" onClick={() => setMode("causa")} />
         </div>
     );
 }
@@ -149,23 +162,40 @@ const CustomTooltip = ({ active, payload, mode }: any) => {
             <p style={{ fontWeight: "bold", color: "#fff", marginBottom: 8, borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 4 }}>
                 {d.name}
             </p>
-            <div style={{ marginBottom: 8 }}>
-                <span style={{ color: "#3B82F6" }}>🔸 PPM: <strong>{Math.round(d.ppm)}</strong></span>
-                <span style={{ color: "#cbd5e1", marginLeft: 10 }}>🔴 Qtd: <strong>{d.defects}</strong></span>
+            <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ color: "#3B82F6", display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Activity size={12} /> 
+                    {/* ✅ Formatação no Tooltip */}
+                    PPM: <strong>{d.ppm.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong>
+                </span>
+                <span style={{ color: "#cbd5e1", display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <AlertCircle size={12} /> Qtd: <strong>{d.defects}</strong>
+                </span>
             </div>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: 8 }}>
-                {d.topModel && <div><span style={{color: "#94a3b8"}}>🏆 Modelo:</span> {d.topModel.name} {formatPercent(d.topModel.percent)}</div>}
-                
-                {mode !== "analise" && d.topAnalysis && (
-                    <div><span style={{color: "#94a3b8"}}>🔎 Análise:</span> {d.topAnalysis.name} {formatPercent(d.topAnalysis.percent)}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: 8 }}>
+                {d.topModel && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Trophy size={12} color="#F59E0B" /> 
+                        <span style={{color: "#94a3b8"}}>Modelo:</span> {d.topModel.name} {formatPercent(d.topModel.percent)}
+                    </div>
                 )}
                 
-                {mode !== "falha" && d.topFailure && (
-                    <div><span style={{color: "#94a3b8"}}>📝 Falha:</span> {d.topFailure.name} {formatPercent(d.topFailure.percent)}</div>
+                {/* Lógica Inversa: Se estou vendo Causa, mostro qual o Sintoma principal associado */}
+                {mode !== "causa" && d.topAnalysis && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Search size={12} color="#8B5CF6" />
+                        <span style={{color: "#94a3b8"}}>Causa Princ.:</span> {d.topAnalysis.name} {formatPercent(d.topAnalysis.percent)}
+                    </div>
                 )}
                 
-                {/* Linha de Contexto de Posição Removida do Tooltip para limpar */}
+                {/* Se estou vendo Sintoma, mostro qual a Causa principal associada */}
+                {mode !== "sintoma" && d.topFailure && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <FileWarning size={12} color="#EC4899" />
+                        <span style={{color: "#94a3b8"}}>Sintoma Princ.:</span> {d.topFailure.name} {formatPercent(d.topFailure.percent)}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -175,7 +205,8 @@ const renderCustomLabel = (props: any) => {
     const { x, y, width, height, value } = props;
     return (
         <text x={x + width + 5} y={y + height / 2 + 1} fill="#cbd5e1" textAnchor="start" dominantBaseline="middle" style={{ fontSize: 10, fontWeight: "bold" }}>
-            {Math.round(value).toLocaleString("pt-BR")}
+            {/* ✅ Formatação na Barra + Texto PPM */}
+            {value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} PPM
         </text>
     );
 };

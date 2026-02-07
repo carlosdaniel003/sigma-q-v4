@@ -14,6 +14,12 @@ import {
   Label,
   CartesianGrid,
 } from "recharts";
+import { 
+  BarChart3, 
+  Package, 
+  AlertCircle, 
+  Activity 
+} from "lucide-react";
 
 /* ======================================================
    CONSTANTES
@@ -196,7 +202,7 @@ export default function PpmDinamico({
 }: Props) {
 
   /* ======================================================
-      SELEÇÃO DE DADOS (CONTEXTO + DETALHE)
+     SELEÇÃO DE DADOS (CONTEXTO + DETALHE)
   ====================================================== */
   const chartData = useMemo(() => {
     let rawItems: TrendItem[] = [];
@@ -272,7 +278,7 @@ export default function PpmDinamico({
   }, [trendData, filters, viewMode]);
 
   /* ======================================================
-      CONFIGURAÇÃO DE CORES E CHAVES
+     CONFIGURAÇÃO DE CORES E CHAVES
   ====================================================== */
   const keys = useMemo(() => {
     if (viewMode === "geral") return ["PPM Geral"];
@@ -337,7 +343,7 @@ export default function PpmDinamico({
   }, [viewMode, keys]);
 
   /* ======================================================
-      DADOS FINAIS E INSIGHT DE DOMINANTE
+     DADOS FINAIS E INSIGHT DE DOMINANTE
   ====================================================== */
   const finalData = useMemo(() => {
       return chartData.map(d => {
@@ -357,9 +363,7 @@ export default function PpmDinamico({
     ? Math.max(...chartData.map((d: any) => d.totalPpmDisplay || 0), META_PPM) * 1.2
     : META_PPM;
 
-  // ✅ NOVO: Cálculo do "Dominante" para o Insight Visual
   const dominantInsight = useMemo(() => {
-      // Se não houver dados ou só tiver uma chave (Geral), não mostra
       if (!finalData.length || keys.length <= 1) return null;
 
       const totals: Record<string, number> = {};
@@ -368,7 +372,6 @@ export default function PpmDinamico({
       keys.forEach(key => {
           totals[key] = 0;
           finalData.forEach(item => {
-              // Ignora GAP e Contexto (pega apenas o detalhe)
               if ((item as any).isGap || (item as any).isContext) return;
               
               const val = item[key];
@@ -381,7 +384,6 @@ export default function PpmDinamico({
 
       if (grandTotal === 0) return null;
 
-      // Encontra quem tem o maior acumulado
       const winnerKey = Object.keys(totals).reduce((a, b) => totals[a] > totals[b] ? a : b);
       const winnerValue = totals[winnerKey];
       const percentage = (winnerValue / grandTotal) * 100;
@@ -393,34 +395,54 @@ export default function PpmDinamico({
       };
   }, [finalData, keys, colors]);
 
+  const customTicks = useMemo(() => {
+      const tickCount = 5;
+      const step = Math.ceil(maxVal / tickCount / 1000) * 1000;
+      const ticks = [];
+      
+      for (let i = 0; i * step <= maxVal; i++) {
+          const val = i * step;
+          if (Math.abs(val - META_PPM) > (maxVal * 0.05)) {
+              ticks.push(val);
+          }
+      }
+
+      ticks.push(META_PPM);
+      
+      return ticks.sort((a, b) => a - b);
+  }, [maxVal]);
+
   return (
     <div style={containerStyle}>
       <div style={{ marginBottom: 16 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <h2 style={{ fontSize: "1.1rem", margin: 0 }}>
-              {viewMode === "geral" && "📊 PPM Geral (Evolução)"}
-              {viewMode === "responsabilidade" && `📊 PPM por Responsabilidade${filters?.categoria ? ` (${filters.categoria})` : ""}`}
-              {viewMode === "categoria" && `📊 PPM por Categoria${filters?.modelo ? ` (${filters.modelo})` : ""}`}
-              {viewMode === "modelo" && `📊 PPM por Modelo${filters?.categoria ? ` (${filters.categoria})` : ""}`}
+            {/* ✅ TITULO COM ÍCONE SVG */}
+            <h2 style={{ fontSize: "1.1rem", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              <BarChart3 size={18} color="#60A5FA" />
+              <span>
+                {viewMode === "geral" && "PPM Geral (Evolução)"}
+                {viewMode === "responsabilidade" && `PPM por Responsabilidade${filters?.categoria ? ` (${filters.categoria})` : ""}`}
+                {viewMode === "categoria" && `PPM por Categoria${filters?.modelo ? ` (${filters.modelo})` : ""}`}
+                {viewMode === "modelo" && `PPM por Modelo${filters?.categoria ? ` (${filters.categoria})` : ""}`}
+              </span>
             </h2>
             
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                <span style={{ fontSize: "0.90rem", color: "#64748b" }}>
                     {filters?.periodo?.tipo === "mes" && filters.periodo.valor ? "Total Mensal + Detalhe Diário" :
                     filters?.periodo?.tipo === "semana" && filters.periodo.valor ? "Total Semanal + Detalhe Diário" : 
                     filters?.periodo?.tipo === "semana" ? "Visualização Semanal (Ano Todo)" :
                     "Visualização Mensal"}
                 </span>
 
-                {/* ✅ NOVO: Exibição do Insight Dominante */}
                 {dominantInsight && (
                     <>
                         <span style={{ color: "#475569" }}>|</span>
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: dominantInsight.color }} />
-                            <span style={{ fontSize: "0.75rem", color: "#e2e8f0" }}>
+                            <span style={{ fontSize: "0.90rem", color: "#e2e8f0" }}>
                                 <strong style={{ color: dominantInsight.color }}>{dominantInsight.name}</strong>
                                 <span style={{ opacity: 0.7 }}> domina com </span>
                                 <strong>{dominantInsight.percentage}%</strong>
@@ -461,11 +483,8 @@ export default function PpmDinamico({
                     tick={(props) => {
                         const { x, y, payload, index } = props;
                         const dataItem = finalData[index];
-                        
                         if (!dataItem || (dataItem as any).isGap) return null;
-
                         const isTotal = (dataItem as any).isContext;
-
                         return (
                             <g transform={`translate(${x},${y})`}>
                                 <text x={0} y={0} dy={16} 
@@ -480,18 +499,28 @@ export default function PpmDinamico({
                     }}
                     axisLine={false} tickLine={false} interval={0} 
                 />
+                
                 <YAxis 
                     domain={[0, maxVal]} 
-                    tickFormatter={(v: any) => {
-                        const val = Number(v);
-                        return val >= 1000 ? `${(val/1000).toFixed(1)}k` : val.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-                    }} 
-                    tick={{ fill: "#cbd5e1", fontSize: 11 }} width={35} axisLine={false} tickLine={false} 
+                    ticks={customTicks} 
+                    tick={({ x, y, payload }) => {
+                        const val = Number(payload.value);
+                        const isMeta = Math.abs(val - META_PPM) < 10; 
+                        return (
+                            <text x={x} y={y} dy={4} textAnchor="end" 
+                                  fill={isMeta ? "#EF4444" : "#cbd5e1"} 
+                                  fontWeight={isMeta ? "bold" : "normal"}
+                                  fontSize={isMeta ? 12 : 11}>
+                                {val >= 1000 ? `${(val/1000).toFixed(1)}k` : val}
+                            </text>
+                        );
+                    }}
+                    width={40} 
+                    axisLine={false} 
+                    tickLine={false} 
                 />
                 
-                <ReferenceLine y={META_PPM} stroke="#EF4444" strokeDasharray="4 4">
-                    <Label value={`Meta ${META_PPM}`} position="insideTopRight" fill="#EF4444" fontSize={10} offset={10} />
-                </ReferenceLine>
+                <ReferenceLine y={META_PPM} stroke="#EF4444" strokeDasharray="4 4" />
 
                 {hasContextItem && (
                     <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
@@ -507,15 +536,33 @@ export default function PpmDinamico({
 
                     const isCtx = dataItem.isContext;
                     return (
-                        <div style={{ background: "#0f172a", border: isCtx ? "1px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)", padding: "12px", borderRadius: "8px", fontSize: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)", minWidth: 180 }}>
+                        <div style={{ background: "#0f172a", border: isCtx ? "1px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)", padding: "12px", borderRadius: "8px", fontSize: "13px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)", minWidth: 180 }}>
                         <p style={{ fontWeight: "bold", marginBottom: "8px", color: isCtx ? "#60A5FA" : "#fff", fontSize: "13px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px" }}>
                             {dataItem.fullLabel}
                         </p>
+                        
+                        {/* ✅ TOOLTIP COM ÍCONES SVG */}
                         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#cbd5e1" }}><span>📦 Produção:</span><strong>{Number(dataItem.production).toLocaleString("pt-BR")}</strong></div>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#fca5a5" }}><span>🔴 Defeitos:</span><strong>{Number(dataItem.totalDefects).toLocaleString("pt-BR")}</strong></div>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#60a5fa" }}><span>🔹 PPM Total:</span><strong>{Number(dataItem.totalPpmDisplay).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div>
+                            <div style={{ display: "flex", justifyContent: "space-between", color: "#cbd5e1" }}>
+                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <Package size={14} /> Produção:
+                                </span>
+                                <strong>{Number(dataItem.production).toLocaleString("pt-BR")}</strong>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", color: "#fca5a5" }}>
+                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <AlertCircle size={14} /> Defeitos:
+                                </span>
+                                <strong>{Number(dataItem.totalDefects).toLocaleString("pt-BR")}</strong>
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", color: "#60a5fa" }}>
+                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <Activity size={14} /> PPM Total:
+                                </span>
+                                <strong>{Number(dataItem.totalPpmDisplay).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                            </div>
                         </div>
+
                         {payload.map((entry: any, index: number) => {
                             if (entry.dataKey === "_stackTotal") return null;
                             return (
@@ -585,5 +632,5 @@ const emptyContainerStyle: React.CSSProperties = {
 };
 
 const legendContainerStyle: React.CSSProperties = {
-  display: "flex", gap: 12, fontSize: 11, opacity: 0.8, flexWrap: "wrap", color: "#cbd5e1", justifyContent: "flex-end", maxWidth: "60%"
+  display: "flex", gap: 12, fontSize: 15, fontWeight: 500, opacity: 0.9, flexWrap: "wrap", color: "#cbd5e1", justifyContent: "flex-end", maxWidth: "60%"
 };

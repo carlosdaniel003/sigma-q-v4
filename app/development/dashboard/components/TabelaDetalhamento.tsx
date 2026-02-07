@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { TurnoStats } from "../hooks/useDashboard";
 
 interface Props {
@@ -20,9 +20,25 @@ export default function TabelaDetalhamento({ data, filterLabel }: Props) {
       return label; 
   };
 
+  // ✅ NOVA ORDENAÇÃO: Força Comercial primeiro
+  const sortedData = useMemo(() => {
+      return [...data].sort((a, b) => {
+          const turnoA = a.turno.toLowerCase();
+          const turnoB = b.turno.toLowerCase();
+          
+          // Se A for comercial, ele vem antes (-1)
+          if (turnoA.includes("comercial")) return -1;
+          // Se B for comercial, ele vem antes (1)
+          if (turnoB.includes("comercial")) return 1;
+          
+          // Fallback para ordem alfabética se não for comercial
+          return turnoA.localeCompare(turnoB);
+      });
+  }, [data]);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 32, marginTop: 24 }}>
-      {data.map((turnoData) => (
+      {sortedData.map((turnoData) => (
         <TurnoTable 
             key={turnoData.turno} 
             stats={turnoData} 

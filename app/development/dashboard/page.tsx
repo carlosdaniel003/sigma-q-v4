@@ -272,8 +272,8 @@ export default function DevelopmentDashboardPage() {
                                     
                                     if (itemAnterior) {
                                          const formatCardLabel = (name: string) => {
-                                            const parts = name.split("-");
-                                            return parts.length === 3 ? `${parts[2]}/${parts[1]}` : name;
+                                             const parts = name.split("-");
+                                             return parts.length === 3 ? `${parts[2]}/${parts[1]}` : name;
                                          };
                                          return (
                                             <TendenciaPpm
@@ -350,11 +350,6 @@ export default function DevelopmentDashboardPage() {
                                 allowedModels={allowedModels}
                             />
 
-                            <TabelaDetalhamento 
-                                data={data.details} 
-                                filterLabel={tabelaLabel}
-                            />
-
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                                 <RankingCausas data={data.topCauses} />
                                 <IndicePorMes 
@@ -362,6 +357,12 @@ export default function DevelopmentDashboardPage() {
                                     tipoLabel={labelType} 
                                 />
                             </div>
+
+                            {/* ✅ MOVIDO PARA O FINAL */}
+                            <TabelaDetalhamento 
+                                data={data.details} 
+                                filterLabel={tabelaLabel}
+                            />
                         </>
                     )}
                 </>

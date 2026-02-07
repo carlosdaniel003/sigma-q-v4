@@ -6,7 +6,6 @@ import { TrendingUp, TrendingDown, Minus, Activity } from "lucide-react";
 interface IndiceDefeitosCardProps {
   meta: number;
   real: number | null;
-  // ✅ Prop Opcional para Projeção
   projection?: number | null;
 }
 
@@ -15,7 +14,6 @@ export default function IndiceDefeitosCard({
   real,
   projection,
 }: IndiceDefeitosCardProps) {
-  // Lógica de Validação (PPM: Quanto maior, pior)
   const isAboveTarget = real !== null ? real > meta : false;
 
   // 1. Cálculo do Delta (Desvio %)
@@ -30,9 +28,16 @@ export default function IndiceDefeitosCard({
   const deltaBg = isNegativeDelta ? "rgba(239, 68, 68, 0.15)" : "rgba(34, 197, 94, 0.15)";
   const DeltaIcon = deltaPercent === 0 ? Minus : isNegativeDelta ? TrendingUp : TrendingDown;
 
+  // 2.1 Texto Descritivo do Delta
+  const deltaText = deltaPercent === 0 
+    ? "na meta" 
+    : deltaPercent > 0 
+      ? "acima da meta" 
+      : "abaixo da meta";
+
   // 3. Configuração da Projeção
   const projIsBad = projection !== null && projection !== undefined ? projection > meta : false;
-  const projColor = projIsBad ? "#fb923c" : "#94a3b8"; // Laranja (Alerta) ou Cinza (Neutro)
+  const projColor = projIsBad ? "#fb923c" : "#94a3b8";
 
   const formatPpm = (valor: number) => {
     return valor.toLocaleString("pt-BR", {
@@ -72,7 +77,8 @@ export default function IndiceDefeitosCard({
       </div>
 
       {/* Valor Real e Delta */}
-      <div style={{ marginTop: 12, display: "flex", alignItems: "flex-end", gap: 12 }}>
+      {/* ✅ Alterado alignItems para 'center' para alinhar melhor o bloco vertical */}
+      <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 12 }}>
         
         {/* Valor Principal */}
         <div
@@ -88,30 +94,44 @@ export default function IndiceDefeitosCard({
             {real !== null ? formatPpm(real) : "—"}
         </div>
 
-        {/* Badge de Delta */}
+        {/* ✅ NOVA ESTRUTURA: Container Vertical para o Delta */}
         {real !== null && (
-            <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "4px 8px",
-                borderRadius: 6,
-                background: deltaBg,
-                color: deltaColor,
-                fontSize: "0.85rem",
-                fontWeight: 700,
-                marginBottom: 4
-            }}>
-                <DeltaIcon size={14} strokeWidth={3} />
-                <span>
-                    {deltaPercent > 0 ? "+" : ""}
-                    {deltaPercent.toFixed(1)}%
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
+                
+                {/* 1. O Badge Original (Ícone + %) */}
+                <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    background: deltaBg,
+                    color: deltaColor,
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                }}>
+                    <DeltaIcon size={14} strokeWidth={3} />
+                    <span>
+                        {deltaPercent > 0 ? "+" : ""}
+                        {deltaPercent.toFixed(1)}%
+                    </span>
+                </div>
+
+                {/* 2. O Texto Descritivo (Agora abaixo do badge) */}
+                <span style={{ 
+                    fontSize: "0.75rem", 
+                    color: deltaColor, // Usa a mesma cor do indicador
+                    opacity: 0.9,
+                    paddingLeft: 4, // Pequeno ajuste visual
+                    whiteSpace: "nowrap"
+                }}>
+                    {deltaText}
                 </span>
             </div>
         )}
       </div>
       
-      {/* ✅ NOVA ÁREA DE PROJEÇÃO (Rodapé condicional) */}
+      {/* Rodapé de Projeção */}
       {projection !== null && projection !== undefined && (
           <div style={{ 
               marginTop: 12, 
@@ -129,7 +149,6 @@ export default function IndiceDefeitosCard({
           </div>
       )}
 
-      {/* Estilo para animação simples */}
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(5px); }
