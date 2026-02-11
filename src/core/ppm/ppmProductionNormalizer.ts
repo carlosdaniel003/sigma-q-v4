@@ -16,11 +16,41 @@ function norm(value: any): string {
     .trim();
 }
 
+/**
+ * ✅ PADRONIZAÇÃO UNIFICADA DE TURNO
+ * Garante que "C" vire "COMERCIAL", "2" vire "2º TURNO", etc.
+ * Isso permite o match perfeito com o SQL de defeitos.
+ */
+function normalizeTurno(val: any): string {
+  const s = String(val ?? "").trim().toUpperCase();
+  if (!s || s === "UNDEFINED" || s === "NULL" || s === "") return "GERAL";
+
+  if (s === "C" || s === "COM" || s.includes("COMERCIAL")) return "COMERCIAL";
+  if (s === "1" || s === "1º" || s.includes("1 TURNO")) return "1º TURNO";
+  if (s === "2" || s === "2º" || s.includes("2 TURNO")) return "2º TURNO";
+  if (s === "3" || s === "3º" || s.includes("3 TURNO")) return "3º TURNO";
+
+  return s;
+}
+
+// ✅ ATUALIZADO: Chave agora inclui TURNO padronizado
 function buildGroupKey(row: ProductionInputRow): string {
   const categoria = norm(row.CATEGORIA);
   const modelo = norm(row.MODELO);
+  
+  // Usa a nova função de normalização para bater com o SQL
+  const turno = normalizeTurno(row.TURNO); 
+  
   if (!categoria || !modelo) return "";
-  return `${categoria}::${modelo}`;
+
+  // 🕵️‍♂️ LOG DIAGNÓSTICO MANTIDO PARA VALIDAÇÃO
+  if (modelo.includes("MICRO") || modelo.includes("MO-01")) {
+    // eslint-disable-next-line no-console
+    console.log(`🏭 [PROD FIX] "${modelo}" -> Turno Original: "${row.TURNO}" -> Final: "${turno}"`);
+    console.log(`   - Chave Final: "${categoria}::${modelo}::${turno}"`);
+  }
+  
+  return `${categoria}::${modelo}::${turno}`;
 }
 
 /* ======================================================
@@ -44,8 +74,13 @@ function parseExcelDate(value: any): Date | null {
 
     const parts = trimmed.split(/[\/\-]/);
     if (parts.length === 3) {
-      const [d, m, y] = parts.map(Number);
-      date = new Date(y, m - 1, d);
+      if (parts[0].length === 4) {
+          const [y, m, d] = parts.map(Number);
+          date = new Date(y, m - 1, d);
+      } else {
+          const [d, m, y] = parts.map(Number);
+          date = new Date(y, m - 1, d);
+      }
     } else {
       const parsed = new Date(trimmed);
       if (!isNaN(parsed.getTime())) {
@@ -60,7 +95,7 @@ function parseExcelDate(value: any): Date | null {
 }
 
 /* ======================================================
-   🔥 LOAD RAW — PRODUÇÃO (Agora com Mapeamento Seguro)
+   🔥 LOAD RAW — PRODUÇÃO
 ====================================================== */
 export function loadProductionRaw(): ProductionInputRow[] {
   const filePath = path.join(
@@ -79,29 +114,37 @@ export function loadProductionRaw(): ProductionInputRow[] {
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
   const rawRows = XLSX.utils.sheet_to_json<any>(sheet);
+  
+  const validRows: ProductionInputRow[] = [];
 
-  // ✅ MAPEAR COLUNAS PARA O PADRÃO DO SISTEMA
-  // Procura por variações de nomes comuns no Excel
-  return rawRows.map(r => {
-      // Tenta achar a quantidade em várias colunas possíveis
-      const rawQtd = r.QTY_GERAL ?? r.Qty_Geral ?? r.QUANTIDADE ?? r.Quantidade ?? r.PRODUZIDO ?? r.Produzido ?? 0;
+  for (const r of rawRows) {
+      const dataObj = parseExcelDate(r.DATA || r.Data || r.Date);
       
-      // Tenta achar o turno
-      const rawTurno = r.TURNO ?? r.Turno ?? "Geral";
+      if (!dataObj || dataObj.getFullYear() !== 2026) {
+          continue; 
+      }
 
-      return {
-          DATA: r.DATA || r.Data || r.Date,
-          // Normaliza Categoria e Modelo para evitar falhas de case
+      const rawQtd = r.QTY_GERAL ?? r.Qty_Geral ?? r.QUANTIDADE ?? r.Quantidade ?? r.PRODUZIDO ?? r.Produzido ?? 0;
+      // Pegamos o turno bruto aqui para o buildGroupKey normalizar
+      const rawTurno = r.TURNO ?? r.Turno ?? "GERAL";
+
+      validRows.push({
+          DATA: dataObj,
           MODELO: norm(r.MODELO || r.Modelo),
           CATEGORIA: norm(r.CATEGORIA || r.Categoria),
-          TURNO: String(rawTurno).toUpperCase(),
+          TURNO: String(rawTurno).trim(), 
           QTY_GERAL: Number(rawQtd)
-      };
-  });
+      });
+  }
+
+  // eslint-disable-next-line no-console
+  console.log(`🧹 [LoadProduction] Filtrado para 2026: ${validRows.length} registros.`);
+
+  return validRows;
 }
 
 /* ======================================================
-   NORMALIZA PRODUÇÃO (Mantido igual, mas agora recebe dados limpos)
+   NORMALIZA PRODUÇÃO
 ====================================================== */
 export function normalizeProductionForPpm(
   rows: ProductionInputRow[]
@@ -115,13 +158,14 @@ export function normalizeProductionForPpm(
     const groupKey = buildGroupKey(r);
     if (!groupKey) continue;
 
-    const dataProducao = parseExcelDate(r.DATA);
+    const dataProducao = r.DATA instanceof Date ? r.DATA : parseExcelDate(r.DATA);
 
     if (!map.has(groupKey)) {
       map.set(groupKey, {
         groupKey,
         categoria: norm(r.CATEGORIA),
         modelo: norm(r.MODELO),
+        turno: normalizeTurno(r.TURNO),
         produzido: 0,
         datasProducao: [],
       });

@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { AlertTriangle, Layers, Info, CheckCircle2, FlaskConical, Component } from "lucide-react";
+import { 
+  AlertTriangle, 
+  Layers, 
+  CheckCircle2, 
+  FlaskConical, 
+  Component, 
+  SearchX,
+  ShieldCheck 
+} from "lucide-react";
 
 type Props = {
   data: any; // Mantido para compatibilidade, mas vamos focar no diagnostico
@@ -33,11 +41,11 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
   return (
     <div className="glass-card fade-in" style={{ marginTop: 20, padding: 24 }}>
 
-      <h2 className="section-title">
-        <Layers size={20} style={{ marginRight: 8 }} />
+      <h2 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Layers size={22} className="text-brand" />
         Diagnóstico Inteligente • Visão Geral
       </h2>
-      <p className="muted small" style={{ marginBottom: 30 }}>
+      <p className="muted small" style={{ marginBottom: 30, marginLeft: 32 }}>
         Análises automáticas sobre falhas estruturais, discrepâncias de produção e categorias que exigem revisão.
       </p>
 
@@ -46,8 +54,8 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
       ============================================================ */}
       {categoriasCriticas.length > 0 && (
         <div style={{ marginBottom: 40 }}>
-          <h3 className="section-title-small">
-            <Layers size={14} style={{ marginRight: 6 }} />
+          <h3 className="section-title-small" style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}>
+            <AlertTriangle size={18} />
             Categorias Críticas — Detalhamento
           </h3>
           <div className="glass-table-container" style={{ marginTop: 12 }}>
@@ -67,12 +75,12 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
                   const pct = Number(c.identifiedPct);
                   return (
                     <tr key={i}>
-                      <td><strong>{c.categoria}</strong></td>
+                      <td><strong style={{ color: 'var(--text-main)' }}>{c.categoria}</strong></td>
                       <td>{c.volume.toLocaleString()}</td>
-                      <td style={{ color: "#4ade80" }}>{c.identifiedRows}</td>
-                      <td style={{ color: "#ef4444" }}>{c.notIdentifiedRows}</td>
-                      <td>{pct.toFixed(1)}%</td>
-                      <td><span className="status-tag bad">Revisar</span></td>
+                      <td style={{ color: "var(--success)" }}>{c.identifiedRows}</td>
+                      <td style={{ color: "var(--danger)" }}>{c.notIdentifiedRows}</td>
+                      <td style={{ fontWeight: 600 }}>{pct.toFixed(1)}%</td>
+                      <td><span className="status-tag bad" style={{ fontSize: '0.7rem' }}>REVISAR</span></td>
                     </tr>
                   );
                 })}
@@ -87,15 +95,18 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
       ============================================================ */}
       <div style={{ marginBottom: 30 }}>
         <h3 className="section-title-small" style={{ color: "var(--danger)", display: 'flex', alignItems: 'center', gap: 8 }}>
-          <AlertTriangle size={16} />
-          🔴 Erros de Validação (Críticos)
+          <SearchX size={18} />
+          Erros de Validação (Críticos)
         </h3>
-        <p className="muted small" style={{ marginBottom: 10 }}>
-          Modelos com defeitos registrados mas sem produção (TV-xxx). <strong>Impactam o KPI.</strong>
+        <p className="muted small" style={{ marginBottom: 12 }}>
+          Modelos com defeitos registrados mas sem produção. <strong>Impactam o KPI.</strong>
         </p>
 
         {defeitosSemProducao.length === 0 ? (
-          <div className="empty-state">Nenhum erro crítico detectado.</div>
+          <div className="empty-state">
+             <CheckCircle2 size={16} style={{ opacity: 0.5 }} />
+             Nenhum erro crítico detectado.
+          </div>
         ) : (
           <div className="grid-list">
             {defeitosSemProducao.map((d: any, i: number) => (
@@ -112,19 +123,22 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
       </div>
 
       {/* ============================================================
-          🟡 GRUPO B1: PRÉ-PRODUÇÃO (ATENÇÃO)
+          🟡 GRUPO B1: INCONSISTÊNCIA NA PRODUÇÃO (ATENÇÃO)
       ============================================================ */}
       <div style={{ marginBottom: 30 }}>
         <h3 className="section-title-small" style={{ color: "var(--warn)", display: 'flex', alignItems: 'center', gap: 8 }}>
-          <FlaskConical size={16} />
-          🟡 Produtos em Engenharia / Pré-Produção
+          <FlaskConical size={18} />
+          Produtos em Engenharia / Inconsistência na Produção
         </h3>
-        <p className="muted small" style={{ marginBottom: 10 }}>
+        <p className="muted small" style={{ marginBottom: 12 }}>
           Itens em cadastro ou teste inicial. <strong>Não impactam KPI global.</strong>
         </p>
 
         {preProducao.length === 0 ? (
-          <div className="empty-state">Nenhum item em pré-produção.</div>
+          <div className="empty-state">
+            <CheckCircle2 size={16} style={{ opacity: 0.5 }} />
+            Nenhum item inconsistente na produção.
+          </div>
         ) : (
           <div className="grid-list">
             {preProducao.map((d: any, i: number) => (
@@ -145,15 +159,18 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
       ============================================================ */}
       <div style={{ marginBottom: 30 }}>
         <h3 className="section-title-small" style={{ color: "#f59e0b", display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Component size={16} />
-          🟡 Produção Parcial
+          <Component size={18} />
+          Produção Parcial
         </h3>
-        <p className="muted small" style={{ marginBottom: 10 }}>
+        <p className="muted small" style={{ marginBottom: 12 }}>
           Produção incompleta (ex: placa ok, produto não). <strong>Monitoramento necessário.</strong>
         </p>
 
         {producaoParcial.length === 0 ? (
-          <div className="empty-state">Nenhum caso de produção parcial.</div>
+          <div className="empty-state">
+             <CheckCircle2 size={16} style={{ opacity: 0.5 }} />
+             Nenhum caso de produção parcial.
+          </div>
         ) : (
           <div className="grid-list">
             {producaoParcial.map((d: any, i: number) => (
@@ -174,10 +191,10 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
       ============================================================ */}
       <div style={{ marginBottom: 30 }}>
         <h3 className="section-title-small" style={{ color: "var(--success)", display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle2 size={16} />
-          🟢 Produção com Defeitos (Fluxo Normal)
+          <CheckCircle2 size={18} />
+          Produção com Defeitos (Fluxo Normal)
         </h3>
-        <p className="muted small" style={{ marginBottom: 10 }}>
+        <p className="muted small" style={{ marginBottom: 12 }}>
           Itens produzidos e identificados corretamente no fluxo.
         </p>
 
@@ -203,10 +220,10 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
       ============================================================ */}
       <div>
         <h3 className="section-title-small" style={{ color: "var(--success)", display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckCircle2 size={16} />
-          🟢 Produção sem Defeitos (Ideal)
+          <ShieldCheck size={18} />
+          Produção sem Defeitos (Ideal)
         </h3>
-        <p className="muted small" style={{ marginBottom: 10 }}>
+        <p className="muted small" style={{ marginBottom: 12 }}>
           Modelos produzidos com zero apontamentos de falha.
         </p>
 
@@ -238,16 +255,19 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
           font-size: 0.85rem;
           color: rgba(255,255,255,0.4);
           font-style: italic;
-          padding: 10px;
+          padding: 12px;
           border: 1px dashed rgba(255,255,255,0.1);
           border-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
         .diag-item {
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.08);
           border-radius: 10px;
           padding: 12px 14px;
-          transition: transform 0.2s;
+          transition: transform 0.2s, background 0.2s;
         }
         .diag-item:hover {
           background: rgba(255,255,255,0.05);

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+// ✅ O loader agora é assíncrono (busca do SQL)
 import { loadDefeitos } from "@/core/data/loadDefeitos";
 import { norm } from "@/core/diagnostico/diagnosticoUtils";
 import { parseDateSafe } from "@/core/ppm/ppmDateUtils";
@@ -31,7 +32,11 @@ function getSemanaAno(date: Date) {
 ====================================================== */
 export async function GET(req: Request) {
   try {
-    const defeitosRaw = loadDefeitos();
+    // ❌ ANTES (Dava erro pois retornava uma Promessa):
+    // const defeitosRaw = loadDefeitos();
+
+    // ✅ AGORA (Corrigido com await):
+    const defeitosRaw = await loadDefeitos();
 
     // Sets para garantir unicidade
     const semanasSet = new Set<string>();
@@ -43,6 +48,7 @@ export async function GET(req: Request) {
 
     const modeloCategoriaMap = new Map<string, string>();
 
+    // Agora o forEach funciona porque defeitosRaw é o array de dados final
     defeitosRaw.forEach((r) => {
       const date = parseDateSafe(r.DATA);
       if (!date) return;

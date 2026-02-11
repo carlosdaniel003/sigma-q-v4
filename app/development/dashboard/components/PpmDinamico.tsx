@@ -11,7 +11,6 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   LabelList,
-  Label,
   CartesianGrid,
 } from "recharts";
 import { 
@@ -22,11 +21,36 @@ import {
 } from "lucide-react";
 
 /* ======================================================
-   CONSTANTES
+   CONSTANTES & MAPEAMENTO DE SEGURANÇA
 ====================================================== */
+const KEY_MAP: Record<string, string> = {
+    "F": "FORN. IMPORTADO",
+    "FL": "FORNECEDOR LOCAL",
+    "P": "PROCESSO PA", 
+    "ENG": "ENGENHARIA/PROJETO",
+    "JIG": "ENGENHARIA/PROJETO"
+};
+
 const COLORS_RESP: Record<string, string> = {
-  "FORN. IMPORTADO": "#60A5FA", "FORN. LOCAL": "#2563EB",
-  "PROCESSO": "#F59E0B", "PROJETO": "#8B5CF6",
+  "FORN. IMPORTADO": "#60A5FA", 
+  "FORNECEDOR LOCAL": "#2563EB",
+  "ENGENHARIA/PROJETO": "#8B5CF6",
+  "PROCESSO INJEÇÃO": "#F59E0B",
+  "PROCESSO LCM": "#D97706",
+  "PROCESSO MA": "#EA580C",
+  "PROC. ALTO FALANTE": "#C2410C",
+  "DIP PTH": "#FB923C",
+  "PROCESSO PTH": "#F97316",
+  "PROCESSO PA": "#EF4444",
+  "PROCESSO SUBS": "#B91C1C",
+  "FORNECEDOR IMPORTADO": "#60A5FA", 
+  "FORN. LOCAL": "#2563EB",
+  "PROCESSO": "#F59E0B", 
+  "PROJETO": "#8B5CF6",
+  "F": "#60A5FA",
+  "FL": "#2563EB",
+  "P": "#EF4444",
+  "ENG": "#8B5CF6"
 };
 
 const COLORS_CAT: Record<string, string> = {
@@ -41,11 +65,9 @@ const PALETA_MODELOS = [
 ];
 
 const COLOR_GERAL = "#3B82F6";
-const META_PPM = 6200;
 
 export type PpmViewMode = "geral" | "responsabilidade" | "categoria" | "modelo";
 
-// Tipos
 export interface TrendItem {
   name: string; 
   label: string;
@@ -76,6 +98,7 @@ interface Props {
   trendData: TrendHierarchy; 
   filters?: any;
   allowedModels?: string[];
+  metaDinamica?: number; // ✅ Recebe a meta específica da categoria
 }
 
 /* ======================================================
@@ -87,14 +110,14 @@ function formatLabelFull(label: string | number, isContext: boolean = false): st
 
   if (isContext) {
       if (strLabel.match(/^\d{4}-\d{2}$/)) {
-          const [y, m] = strLabel.split("-").map(Number);
-          const date = new Date(y, m - 1, 1);
-          const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date);
-          return `MÊS DE ${monthName.toUpperCase()}`; 
+        const [y, m] = strLabel.split("-").map(Number);
+        const date = new Date(y, m - 1, 1);
+        const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long" }).format(date);
+        return `MÊS DE ${monthName.toUpperCase()}`; 
       }
       if (strLabel.includes("W")) {
-          const weekNum = strLabel.split("-")[1].replace("W", "");
-          return `TOTAL DA SEMANA ${Number(weekNum)}`; 
+        const weekNum = strLabel.split("-")[1].replace("W", "");
+        return `TOTAL DA SEMANA ${Number(weekNum)}`; 
       }
       return "TOTAL DO PERÍODO";
   }
@@ -168,25 +191,19 @@ const renderCustomBarLabel = (props: any) => {
   );
 };
 
-const renderTotalLabel = (props: any, chartData: any[], activeKeys: string[]) => {
+const renderTotalLabel = (props: any, chartData: any[]) => {
   const { x, y, width, index } = props;
   const item = chartData[index];
   
-  if (!item) return null; 
+  if (!item || item.isGap) return null; 
 
-  let totalVisiblePpm = 0;
-  activeKeys.forEach(key => {
-      const val = item[key];
-      if (typeof val === 'number') {
-          totalVisiblePpm += val;
-      }
-  });
+  const totalPpm = item.totalPpmDisplay || 0;
 
-  if (totalVisiblePpm === 0) return null;
+  if (totalPpm === 0) return null;
   
   return (
     <text x={x + width / 2} y={y - 12} fill="#cbd5e1" textAnchor="middle" style={{ fontSize: 11, fontWeight: "bold" }}>
-      {Number(totalVisiblePpm).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {Number(totalPpm).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </text>
   );
 };
@@ -198,17 +215,17 @@ export default function PpmDinamico({
   viewMode, 
   trendData, 
   filters,
-  allowedModels 
+  allowedModels,
+  metaDinamica = 5200 // Default fallback
 }: Props) {
 
   /* ======================================================
-     SELEÇÃO DE DADOS (CONTEXTO + DETALHE)
-  ====================================================== */
+      SELEÇÃO DE DADOS (CONTEXTO + DETALHE)
+   ====================================================== */
   const chartData = useMemo(() => {
     let rawItems: TrendItem[] = [];
     let contextItem: TrendItem | null = null;
-    let hasContext = false;
-
+    
     if (trendData) {
         const { tipo, valor, ano, dia } = filters?.periodo || {};
 
@@ -240,7 +257,6 @@ export default function PpmDinamico({
 
     let finalRawItems = [...rawItems];
     if (contextItem) {
-        hasContext = true;
         finalRawItems = [
             { ...contextItem, isContext: true } as any, 
             { name: "GAP", isGap: true } as any, 
@@ -254,7 +270,8 @@ export default function PpmDinamico({
         }
 
         const isCtx = (item as any).isContext === true;
-        const base = {
+        
+        const base: any = {
             name: item.name,
             labelAxis: formatLabelAxis(item.name, isCtx), 
             fullLabel: formatLabelFull(item.name, isCtx), 
@@ -267,10 +284,22 @@ export default function PpmDinamico({
             isContext: isCtx 
         };
 
-        if (viewMode === "geral") return { ...base, "PPM Geral": item.ppm };
-        if (viewMode === "responsabilidade") return { ...base, ...item.responsabilidade };
-        if (viewMode === "categoria") return { ...base, ...item.categoria };
-        if (viewMode === "modelo") return { ...base, ...item.modelo };
+        if (viewMode === "responsabilidade") {
+             const sourceObj = item.responsabilidade || {};
+             Object.keys(sourceObj).forEach(rawKey => {
+                 const mappedKey = KEY_MAP[rawKey] || rawKey; 
+                 base[mappedKey] = (base[mappedKey] || 0) + sourceObj[rawKey];
+             });
+        }
+        else if (viewMode === "categoria") {
+             Object.assign(base, item.categoria);
+        }
+        else if (viewMode === "modelo") {
+             Object.assign(base, item.modelo);
+        }
+        else {
+             base["PPM Geral"] = item.ppm;
+        }
         
         return base;
     });
@@ -278,8 +307,8 @@ export default function PpmDinamico({
   }, [trendData, filters, viewMode]);
 
   /* ======================================================
-     CONFIGURAÇÃO DE CORES E CHAVES
-  ====================================================== */
+      CONFIGURAÇÃO DE CORES E CHAVES
+   ====================================================== */
   const keys = useMemo(() => {
     if (viewMode === "geral") return ["PPM Geral"];
     
@@ -343,25 +372,26 @@ export default function PpmDinamico({
   }, [viewMode, keys]);
 
   /* ======================================================
-     DADOS FINAIS E INSIGHT DE DOMINANTE
-  ====================================================== */
+      DADOS FINAIS
+   ====================================================== */
   const finalData = useMemo(() => {
       return chartData.map(d => {
           if ((d as any).isGap) return { ...d, _stackTotal: null };
-          let stackSum = 0;
-          keys.forEach(k => {
-              const val = d[k];
-              if (typeof val === 'number') stackSum += val;
-          });
-          return { ...d, _stackTotal: stackSum > 0 ? stackSum : null };
+          
+          const realTotalPpm = d.totalPpmDisplay || 0;
+
+          return { 
+            ...d, 
+            _stackTotal: realTotalPpm > 0 ? realTotalPpm : null 
+          };
       });
-  }, [chartData, keys]);
+  }, [chartData]);
 
   const hasContextItem = finalData.length > 0 && (finalData[0] as any).isContext;
 
   const maxVal = chartData.length > 0 
-    ? Math.max(...chartData.map((d: any) => d.totalPpmDisplay || 0), META_PPM) * 1.2
-    : META_PPM;
+    ? Math.max(...chartData.map((d: any) => d.totalPpmDisplay || 0), metaDinamica) * 1.2
+    : metaDinamica;
 
   const dominantInsight = useMemo(() => {
       if (!finalData.length || keys.length <= 1) return null;
@@ -402,15 +432,13 @@ export default function PpmDinamico({
       
       for (let i = 0; i * step <= maxVal; i++) {
           const val = i * step;
-          if (Math.abs(val - META_PPM) > (maxVal * 0.05)) {
+          if (Math.abs(val - metaDinamica) > (maxVal * 0.05)) {
               ticks.push(val);
           }
       }
-
-      ticks.push(META_PPM);
-      
+      ticks.push(metaDinamica); // ✅ Usa a meta dinâmica para os ticks do eixo Y
       return ticks.sort((a, b) => a - b);
-  }, [maxVal]);
+  }, [maxVal, metaDinamica]);
 
   return (
     <div style={containerStyle}>
@@ -418,7 +446,6 @@ export default function PpmDinamico({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {/* ✅ TITULO COM ÍCONE SVG */}
             <h2 style={{ fontSize: "1.1rem", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
               <BarChart3 size={18} color="#60A5FA" />
               <span>
@@ -505,12 +532,12 @@ export default function PpmDinamico({
                     ticks={customTicks} 
                     tick={({ x, y, payload }) => {
                         const val = Number(payload.value);
-                        const isMeta = Math.abs(val - META_PPM) < 10; 
+                        const isMeta = Math.abs(val - metaDinamica) < 10; 
                         return (
                             <text x={x} y={y} dy={4} textAnchor="end" 
                                   fill={isMeta ? "#EF4444" : "#cbd5e1"} 
                                   fontWeight={isMeta ? "bold" : "normal"}
-                                  fontSize={isMeta ? 12 : 11}>
+                                  fontSize={11}>
                                 {val >= 1000 ? `${(val/1000).toFixed(1)}k` : val}
                             </text>
                         );
@@ -520,7 +547,8 @@ export default function PpmDinamico({
                     tickLine={false} 
                 />
                 
-                <ReferenceLine y={META_PPM} stroke="#EF4444" strokeDasharray="4 4" />
+                {/* ✅ Meta dinâmica agora controla a posição da linha de referência */}
+                <ReferenceLine y={metaDinamica} stroke="#EF4444" strokeDasharray="4 4" />
 
                 {hasContextItem && (
                     <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
@@ -528,7 +556,7 @@ export default function PpmDinamico({
 
                 <Tooltip
                 cursor={{ fill: "rgba(255,255,255,0.05)" }}
-                content={({ active, payload, label }) => {
+                content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                     const dataItem = payload[0].payload;
                     
@@ -541,7 +569,6 @@ export default function PpmDinamico({
                             {dataItem.fullLabel}
                         </p>
                         
-                        {/* ✅ TOOLTIP COM ÍCONES SVG */}
                         <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
                             <div style={{ display: "flex", justifyContent: "space-between", color: "#cbd5e1" }}>
                                 <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -598,7 +625,7 @@ export default function PpmDinamico({
                     <Bar key={key} dataKey={key} stackId="a" fill={colors[key]} maxBarSize={60}>
                     <LabelList dataKey={key} content={renderCustomBarLabel} />
                     {isLast && (
-                        <LabelList dataKey={key} position="top" content={(props) => renderTotalLabel(props, finalData, keys)} />
+                        <LabelList dataKey="_stackTotal" position="top" content={(props) => renderTotalLabel(props, finalData)} />
                     )}
                     </Bar>
                 );

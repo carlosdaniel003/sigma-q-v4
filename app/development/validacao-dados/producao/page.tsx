@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Factory, AlertTriangle } from "lucide-react";
+import { Factory, AlertTriangle, CheckCircle } from "lucide-react";
 
 import "./producao-premium.css";
 import { useValidacao } from "./hooks/useValidacao";
@@ -47,8 +47,8 @@ export default function ProducaoPage({
   const { setProductionData } = useProductionData();
 
   /* ============================================================
-     📌 GRAVA BASE DE PRODUÇÃO NO CONTEXTO (1x)
-     ============================================================ */
+      📌 GRAVA BASE DE PRODUÇÃO NO CONTEXTO (1x)
+      ============================================================ */
   React.useEffect(() => {
     if (!loading && Array.isArray(baseProducao) && baseProducao.length > 0) {
       setProductionData(baseProducao);
@@ -56,8 +56,8 @@ export default function ProducaoPage({
   }, [loading, baseProducao, setProductionData]);
 
   /* ============================================================
-     REGRAS DE VISUALIZAÇÃO
-     ============================================================ */
+      REGRAS DE VISUALIZAÇÃO
+      ============================================================ */
   const isVisaoGeral = selectedCategory === null;
 
   const categoriaInfo = selectedCategory
@@ -72,26 +72,28 @@ export default function ProducaoPage({
     categoriaInfo && Number(categoriaInfo.identifiedPct ?? 0) === 100;
 
   /* ============================================================
-     ERRO
-     ============================================================ */
+      ERRO
+      ============================================================ */
   if (error) {
     return (
       <div className="producao-wrapper fade-in">
-        <AlertTriangle size={40} color="#ef4444" />
-        <p className="error-text">{error}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, padding: 40 }}>
+            <AlertTriangle size={48} className="text-danger" />
+            <p className="error-text" style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>{error}</p>
+        </div>
       </div>
     );
   }
 
   /* ============================================================
-     PÁGINA
-     ============================================================ */
+      PÁGINA
+      ============================================================ */
   return (
     <div className="producao-wrapper fade-in">
       {/* HEADER */}
       <header className="page-header">
         <h1>
-          <Factory size={28} style={{ color: "var(--brand)" }} />
+          <Factory size={28} className="text-brand" />
           Validação de Produção
         </h1>
 
@@ -155,17 +157,32 @@ export default function ProducaoPage({
           )}
 
           {/* =========================
-              CATEGORIA 100%
+              CATEGORIA 100% (VISUAL NOVO)
               ========================= */}
           {!isVisaoGeral && isCategoria100 && (
-            <section className="friendly-box fade-in">
-              <div className="friendly-icon">✅</div>
-              <h3 className="friendly-title">Categoria Saudável</h3>
-              <p className="friendly-text">
-                A categoria <strong>{selectedCategory}</strong> não possui
+            <section className="friendly-box fade-in" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '40px',
+                textAlign: 'center',
+                background: 'rgba(34, 197, 94, 0.05)',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                borderRadius: '16px',
+                marginTop: '20px'
+            }}>
+              <div className="friendly-icon" style={{ marginBottom: '16px' }}>
+                  <CheckCircle size={56} className="text-success" strokeWidth={1.5} />
+              </div>
+              <h3 className="friendly-title" style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>
+                Categoria Saudável
+              </h3>
+              <p className="friendly-text" style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
+                A categoria <strong style={{ color: 'var(--success)' }}>{selectedCategory}</strong> não possui
                 inconsistências.
               </p>
-              <p className="friendly-subtext">
+              <p className="friendly-subtext" style={{ fontSize: '0.85rem', opacity: 0.7 }}>
                 Todos os registros foram identificados corretamente pelo
                 motor SIGMA-Q.
               </p>

@@ -133,7 +133,7 @@ export function calculateTrendHierarchy(
     const row = d as any;
     
     // Filtro Ocorrências (Catálogo)
-    const codigoFornecedor = norm(row["CÓDIGO DO FORNECEDOR"]);
+    const codigoFornecedor = norm(row["CÓDIGO DO FORNECEDOR"] || row.CODIGO);
     if (catalogoIgnorarSet.has(codigoFornecedor)) return;
 
     const rawDate = row.DATA || row.Data || row.data || row.date;
@@ -148,10 +148,6 @@ export function calculateTrendHierarchy(
     
     if (!isNaN(qtd) && qtd > 0) {
         
-        // ✅ CORREÇÃO DE CONSISTÊNCIA:
-        // Só contabiliza se tiver Responsabilidade E Categoria E Modelo definidos.
-        // Isso remove defeitos "fantasmas" (não rotulados) que inflavam o PPM mas não apareciam nos gráficos detalhados.
-        
         const rawResp = row.RESPONSABILIDADE || row.Responsabilidade;
         const rawCat = row.CATEGORIA || row.Categoria;
         const rawMod = row.MODELO || row.Modelo;
@@ -161,7 +157,6 @@ export function calculateTrendHierarchy(
             return; 
         }
 
-        // Se chegou aqui, o dado é válido ("correspondido")
         day.defects += qtd;
 
         const resp = norm(rawResp);
@@ -249,21 +244,22 @@ function accumulate(target: any, source: any) {
 }
 
 function finalizeItem(name: string, label: string, data: any): TrendItem {
-    const ppm = data.production > 0 ? (data.defects / data.production) * 1000000 : 0;
+    // ✅ UNIFICAÇÃO: Aplicado toFixed(2) convertido para Number para bater com ppmMonthlyTrend
+    const ppm = data.production > 0 ? Number(((data.defects / data.production) * 1000000).toFixed(2)) : 0;
     
     const responsabilidadePpm: Record<string, number> = {};
     Object.keys(data.abs_responsabilidade).forEach(k => {
-        responsabilidadePpm[k] = data.production > 0 ? (data.abs_responsabilidade[k] / data.production) * 1000000 : 0;
+        responsabilidadePpm[k] = data.production > 0 ? Number(((data.abs_responsabilidade[k] / data.production) * 1000000).toFixed(2)) : 0;
     });
 
     const categoriaPpm: Record<string, number> = {};
     Object.keys(data.abs_categoria).forEach(k => {
-        categoriaPpm[k] = data.production > 0 ? (data.abs_categoria[k] / data.production) * 1000000 : 0;
+        categoriaPpm[k] = data.production > 0 ? Number(((data.abs_categoria[k] / data.production) * 1000000).toFixed(2)) : 0;
     });
 
     const modeloPpm: Record<string, number> = {};
     Object.keys(data.abs_modelo).forEach(k => {
-        modeloPpm[k] = data.production > 0 ? (data.abs_modelo[k] / data.production) * 1000000 : 0;
+        modeloPpm[k] = data.production > 0 ? Number(((data.abs_modelo[k] / data.production) * 1000000).toFixed(2)) : 0;
     });
 
     return {

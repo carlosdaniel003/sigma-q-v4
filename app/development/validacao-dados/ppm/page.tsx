@@ -10,6 +10,7 @@ import PpmCategoriasStatus from "./components/PpmCategoriasStatus";
 import PpmDiagnosticoInteligente from "./components/PpmDiagnosticoInteligente";
 import PpmTabelaDetalhada from "./components/PpmTabelaDetalhada";
 import PpmOcorrenciasBreakdown from "./components/PpmOcorrenciasBreakdown";
+import PpmOcorrenciasModal from "./components/PpmOcorrenciasModal";
 
 /* ======================================================
    TIPOS
@@ -20,18 +21,44 @@ type DiagnosticoReason =
   | "SEM_PRODUCAO"
   | "PPM_ZERADO";
 
+/* ======================================================
+   HELPER DE NORMALIZAÇÃO (Igual ao Breakdown)
+====================================================== */
+function normalizeForMatch(val: string) {
+    return String(val || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, "") // Remove espaços e traços: "INT MOD" -> "INTMOD"
+        .trim();
+}
+
+/* ======================================================
+   MAPA CANÔNICO REVERSO (Opcional, para garantir)
+   Se o breakdown exibe "INT MOD" (com espaço), precisamos garantir
+   que a busca entenda isso.
+====================================================== */
+const MAPA_CANONICO_FRONT: Record<string, string> = {
+    // Se o breakdown manda "INT MOD", normalizamos para "INTMOD"
+    // Isso garante que se o clique vier limpo ou sujo, funciona.
+};
+
 export default function PpmPage() {
   const { data, error } = usePpmValidation();
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
 
+  // ✅ ESTADOS PARA O MODAL
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedCode, setSelectedCode] = useState<string | null>(null);
+
   /* ======================================================
-     BASE GLOBAL
-  ====================================================== */
+      BASE GLOBAL
+   ====================================================== */
   const allRows = useMemo(() => data?.allRows ?? [], [data]);
 
   /* ======================================================
-     BASE FILTRADA POR CATEGORIA
-  ====================================================== */
+      BASE FILTRADA POR CATEGORIA
+   ====================================================== */
   const rowsBase = useMemo(() => {
     return categoriaAtiva
       ? allRows.filter((r) => r.categoria === categoriaAtiva)
@@ -39,8 +66,8 @@ export default function PpmPage() {
   }, [allRows, categoriaAtiva]);
 
   /* ======================================================
-     PRECISÃO GLOBAL
-  ====================================================== */
+      PRECISÃO GLOBAL
+   ====================================================== */
   const precisaoGlobal = useMemo(() => {
     const total = allRows.length;
     if (total === 0) return 0;
@@ -53,23 +80,57 @@ export default function PpmPage() {
   }, [allRows]);
 
   /* ======================================================
-     OCORRÊNCIAS — FONTE DINÂMICA
-  ====================================================== */
+      OCORRÊNCIAS — FONTE DINÂMICA
+   ====================================================== */
   const ocorrenciasBreakdown = useMemo(() => {
-    if (!categoriaAtiva) {
-      return data?.meta?.occurrencesByCode ?? {};
+    if (categoriaAtiva && data?.meta?.occurrencesByCategory?.[categoriaAtiva]) {
+      return data.meta.occurrencesByCategory[categoriaAtiva] as unknown as Record<string, number>;
     }
-
-    return (
-      data?.meta?.occurrencesByCategory?.[categoriaAtiva]
-        ? { [categoriaAtiva]: data.meta.occurrencesByCategory[categoriaAtiva] }
-        : {}
-    );
+    if (data?.meta?.occurrencesByCode) {
+        return data.meta.occurrencesByCode as unknown as Record<string, number>;
+    }
+    return {};
   }, [data, categoriaAtiva]);
 
+  // ✅ LOGICA DE FILTRO PARA O MODAL (DRILL-DOWN) COM DEBUG
+  const modalItems = useMemo(() => {
+      // Type Cast para acessar a lista bruta
+      const metaAny = data?.meta as any;
+      const rawList = metaAny?.occurrencesList as any[];
+
+      if (!selectedCode || !rawList) return [];
+      
+      // Normaliza o código selecionado (ex: "AC" ou "AC " vira "AC")
+      const alvo = normalizeForMatch(selectedCode);
+
+      console.log(`🔍 [MODAL FILTER] Buscando por: "${selectedCode}" -> Normalizado: "${alvo}"`);
+      console.log(`🔍 [MODAL FILTER] Total na lista bruta: ${rawList.length}`);
+
+      const filtered = rawList.filter(item => {
+          // 1. Pega o código do item (ex: "AC", "A C", "ac")
+          const itemCodeRaw = String(item["CÓDIGO DO FORNECEDOR"] || "").toUpperCase();
+          const itemCodeNorm = normalizeForMatch(itemCodeRaw);
+
+          // 2. Compara normalizado
+          const codeMatch = itemCodeNorm === alvo;
+          
+          // 3. Filtra pela Categoria Ativa (se houver)
+          const catMatch = categoriaAtiva ? item.CATEGORIA === categoriaAtiva : true;
+
+          // DEBUG ESPORÁDICO (Apenas para o primeiro item falho e sucesso)
+          // if (Math.random() < 0.01) console.log(`   Item: "${itemCodeRaw}" -> Norm: "${itemCodeNorm}" == "${alvo}"? ${codeMatch}`);
+
+          return codeMatch && catMatch;
+      });
+
+      console.log(`✅ [MODAL FILTER] Encontrados: ${filtered.length}`);
+      return filtered;
+
+  }, [data, selectedCode, categoriaAtiva]);
+
   /* ======================================================
-     KPIs
-  ====================================================== */
+      KPIs
+   ====================================================== */
   const metaDinamico = useMemo(() => {
     const totalVolume = rowsBase.reduce(
       (s, r) => s + (r.produzido || 0),
@@ -82,11 +143,11 @@ export default function PpmPage() {
     );
 
     const ppmGeral =
-  totalVolume > 0
-    ? Number(
-        ((totalDefeitos / totalVolume) * 1_000_000).toFixed(2)
-      )
-    : null;
+      totalVolume > 0
+        ? Number(
+            ((totalDefeitos / totalVolume) * 1_000_000).toFixed(2)
+          )
+        : null;
 
     const validos = rowsBase.filter(
       (r) => r.validationStatus === "VALID"
@@ -97,9 +158,15 @@ export default function PpmPage() {
         ? Math.round((validos / rowsBase.length) * 100)
         : 0;
 
-    const ocorrencias = categoriaAtiva
-      ? data?.meta?.occurrencesByCategory?.[categoriaAtiva] ?? 0
-      : data?.meta?.totalOccurrences ?? 0;
+    let ocorrencias = 0;
+    if (categoriaAtiva) {
+        const breakdown = data?.meta?.occurrencesByCategory?.[categoriaAtiva] as unknown as Record<string, number>;
+        if (breakdown) {
+             ocorrencias = Object.values(breakdown).reduce((acc, curr) => acc + (Number(curr) || 0), 0);
+        }
+    } else {
+        ocorrencias = data?.meta?.totalOccurrences ?? 0;
+    }
 
     return {
       totalVolume,
@@ -117,8 +184,8 @@ export default function PpmPage() {
   }, [rowsBase, categoriaAtiva, data]);
 
   /* ======================================================
-     SIDEBAR
-  ====================================================== */
+      SIDEBAR
+   ====================================================== */
   const metaSidebar = useMemo(
     () => ({
       totalVolume: data?.meta?.totalProduction ?? 0,
@@ -130,8 +197,8 @@ export default function PpmPage() {
   );
 
   /* ======================================================
-     DIAGNÓSTICO
-  ====================================================== */
+      DIAGNÓSTICO
+   ====================================================== */
   const diagnosticoItems = useMemo(() => {
     return rowsBase
       .map((r) => {
@@ -175,15 +242,21 @@ export default function PpmPage() {
         onSelectCategory={setCategoriaAtiva}
       />
 
-      {/* 🔥 animação ao trocar categoria */}
       <main
         className="ppm-main ppm-fade-slide"
         key={categoriaAtiva ?? "geral"}
       >
         <PpmKpis meta={metaDinamico} />
 
-        {/* 🔥 AGORA SEMPRE APARECE */}
-        <PpmOcorrenciasBreakdown data={ocorrenciasBreakdown} />
+        {/* ✅ Passando handler para abrir o modal */}
+        <PpmOcorrenciasBreakdown 
+            data={ocorrenciasBreakdown} 
+            onClickCode={(code) => {
+                console.log("🖱️ Clique no Card:", code);
+                setSelectedCode(code);
+                setModalOpen(true);
+            }}
+        />
 
         <PpmCategoriasStatus
           byCategory={Object.fromEntries(
@@ -197,6 +270,14 @@ export default function PpmPage() {
         <PpmDiagnosticoInteligente items={diagnosticoItems} />
         <PpmTabelaDetalhada items={diagnosticoItems} />
       </main>
+
+      {/* ✅ Modal de Detalhes */}
+      <PpmOcorrenciasModal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        code={selectedCode}
+        items={modalItems}
+      />
     </div>
   );
 }

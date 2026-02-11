@@ -11,11 +11,16 @@ export default function DiagnosticoAvancado({ stats }: { stats: any }) {
   const breakdown = stats?.notIdentifiedBreakdown ?? {};
 
   /* ======================================================
-     TABELA — BASES (MEMORIZADO)
+      TABELA — BASES DINÂMICAS
   ====================================================== */
   const basesTable = useMemo(() => {
-    return ["af", "lcm", "produto acabado", "pth"].map((k) => {
-      const b = perBase?.[k] ?? {};
+    // Pega todas as chaves, remove "todas" e ordena
+    const keys = Object.keys(perBase)
+        .filter(k => k !== 'todas')
+        .sort();
+
+    return keys.map((k) => {
+      const b = perBase[k] ?? {};
       const pct = Number(b?.percentIdentified ?? 0);
 
       return {
@@ -29,44 +34,29 @@ export default function DiagnosticoAvancado({ stats }: { stats: any }) {
   }, [perBase]);
 
   /* ======================================================
-     INSIGHTS OPERACIONAIS (MEMORIZADO)
+      INSIGHTS OPERACIONAIS
   ====================================================== */
   const insights = useMemo(() => {
     const list: React.ReactNode[] = [];
     let hasIssues = false;
 
-    /* ------------------------------
-       1) BASES CRÍTICAS
-    ------------------------------ */
-    ["af", "lcm", "produto acabado", "pth"].forEach((k) => {
-      const b = perBase?.[k] ?? {};
-      const pct = Number(b?.percentIdentified ?? 100);
-      const notId = Number(b?.notIdentified ?? 0);
-      const total = Number(b?.total ?? 0);
+    // 1. ANÁLISE POR CATEGORIA (Dinâmica)
+    basesTable.forEach((row) => {
+      if (row.total === 0) return; // Ignora vazias
 
-      if (total === 0) {
+      if (row.pct < 99 && row.notIdentified > 0) {
         list.push(
-          <div key={`empty-${k}`} className="insight-warn">
+          <div key={`low-${row.key}`} className="insight-danger">
             <AlertCircle size={16} />
-            A base <strong>{k.toUpperCase()}</strong> está vazia ou não carregou.
-          </div>
-        );
-        hasIssues = true;
-      } else if (pct < 99 && notId > 0) {
-        list.push(
-          <div key={`low-${k}`} className="insight-danger">
-            <AlertCircle size={16} />
-            Atenção à base <strong>{k.toUpperCase()}</strong>:{" "}
-            {pct.toFixed(1)}% de identificação ({notId} erros).
+            Atenção à categoria <strong>{row.key.toUpperCase()}</strong>:{" "}
+            {row.pct.toFixed(1)}% de identificação ({row.notIdentified} erros).
           </div>
         );
         hasIssues = true;
       }
     });
 
-    /* ------------------------------
-       2) PARETO DE INCONSISTÊNCIAS
-    ------------------------------ */
+    // 2. PARETO DE INCONSISTÊNCIAS
     if (totalInconsistencias > 0) {
       const maxKey = Object.keys(breakdown).reduce((a, b) =>
         breakdown[a] > breakdown[b] ? a : b
@@ -81,12 +71,12 @@ export default function DiagnosticoAvancado({ stats }: { stats: any }) {
 
         switch (maxKey) {
           case "responsabilidades":
-            label = "Responsabilidades / Fornecedores";
+            label = "Responsabilidades";
             action = "Padronizar códigos de fornecedor.";
             break;
           case "modelos":
             label = "Cadastro de Modelos";
-            action = "Cadastrar novos produtos detectados.";
+            action = "Cadastrar novos produtos.";
             break;
           case "falhas":
             label = "Códigos de Falha";
@@ -94,62 +84,54 @@ export default function DiagnosticoAvancado({ stats }: { stats: any }) {
             break;
           default:
             label = maxKey;
-            action = "Revisar regras de negócio.";
+            action = "Revisar regras.";
         }
 
         list.push(
           <div key="pareto" className="insight-info">
             <Info size={16} />
             <span>
-              <strong>{impact.toFixed(0)}%</strong> das inconsistências são de{" "}
+              <strong>{impact.toFixed(0)}%</strong> dos problemas são de{" "}
               <strong>{label}</strong>. Sugestão: {action}
             </span>
           </div>
         );
-
         hasIssues = true;
       }
     }
 
-    /* ------------------------------
-       3) EXCELÊNCIA OPERACIONAL
-    ------------------------------ */
-    if (!hasIssues) {
+    if (!hasIssues && basesTable.length > 0) {
       return (
         <div className="insight-success">
           <CheckCircle2 size={16} />
-          Excelência Operacional: Todas as bases estão acima de 99%.
+          Excelência Operacional: Todas as categorias estão acima de 99%.
         </div>
       );
     }
 
     return list;
-  }, [perBase, breakdown, totalInconsistencias]);
+  }, [basesTable, breakdown, totalInconsistencias]);
 
   /* ======================================================
-     RENDER
+      RENDER
   ====================================================== */
   return (
     <section className="diag-adv-card fade-in">
       <h4 className="diag-adv-title">
-        🩺 Diagnóstico Avançado do Sistema
+        🩺 Diagnóstico Avançado (SQL 2026)
       </h4>
 
-      {/* ============================ */}
-      {/*           TABELA             */}
-      {/* ============================ */}
       <div className="diag-adv-scroll">
         <table className="diag-adv-table">
           <thead>
             <tr>
-              <th>Base</th>
+              <th>Categoria</th>
               <th>Itens</th>
               <th>Identificados</th>
-              <th>Não Identificados</th>
-              <th>% Identificação</th>
+              <th>Pendentes</th>
+              <th>Qualidade</th>
             </tr>
           </thead>
-
           <tbody>
             {basesTable.map((b) => (
               <tr key={b.key}>
@@ -166,19 +148,22 @@ export default function DiagnosticoAvancado({ stats }: { stats: any }) {
                 <td>{b.pct.toFixed(2)}%</td>
               </tr>
             ))}
+            {basesTable.length === 0 && (
+                <tr>
+                    <td colSpan={5} style={{textAlign: 'center', color: '#999'}}>
+                        Nenhuma categoria processada ainda.
+                    </td>
+                </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* ============================ */}
-      {/*     INSIGHTS OPERACIONAIS    */}
-      {/* ============================ */}
       <div className="diag-adv-insight">
         <div className="diag-adv-insight-header">
           <Activity size={14} />
-          Insights Operacionais
+          Insights Automáticos
         </div>
-
         <div className="diag-adv-insight-list">
           {insights}
         </div>

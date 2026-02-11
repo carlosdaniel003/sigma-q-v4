@@ -13,7 +13,7 @@ export interface PpmMonthlyTrend {
 }
 
 /* ======================================================
-   CATÁLOGO — NÃO MOSTRAR NO ÍNDICE (OCORRÊNCIAS)
+   Utils
 ====================================================== */
 function norm(value: any): string {
   return String(value ?? "")
@@ -23,6 +23,9 @@ function norm(value: any): string {
     .trim();
 }
 
+/* ======================================================
+   CATÁLOGO — NÃO MOSTRAR NO ÍNDICE (OCORRÊNCIAS)
+====================================================== */
 let catalogoSet = new Set<string>();
 
 try {
@@ -108,7 +111,7 @@ export function calculatePpmMonthlyTrend(
   const defectsByMonth = new Map<string, number>();
 
   /* ==============================
-     PRODUÇÃO
+      PRODUÇÃO
   ============================== */
   for (const r of productionRows) {
     const qty = Number(r.QTY_GERAL) || 0;
@@ -128,14 +131,24 @@ export function calculatePpmMonthlyTrend(
   }
 
   /* ==============================
-     DEFEITOS (❌ EXCLUINDO OCORRÊNCIAS)
+      DEFEITOS (❌ EXCLUINDO OCORRÊNCIAS E DADOS INCONSISTENTES)
   ============================== */
   for (const r of defectRows) {
-    const qty = Number(r.QUANTIDADE) || 0;
+    const row = r as any;
+    const qty = Number(row.QUANTIDADE ?? row.Quantidade ?? row.defeitos ?? 0);
     if (qty <= 0) continue;
 
+    // ✅ UNIFICAÇÃO: Filtro de consistência (ignora defeitos sem rótulos essenciais)
+    const rawResp = row.RESPONSABILIDADE || row.Responsabilidade;
+    const rawCat = row.CATEGORIA || row.Categoria;
+    const rawMod = row.MODELO || row.Modelo;
+
+    if (!rawResp || !rawCat || !rawMod) {
+        continue; 
+    }
+
     const codigoFornecedor = norm(
-      (r as any)["CÓDIGO DO FORNECEDOR"]
+      row["CÓDIGO DO FORNECEDOR"] || row.CODIGO || ""
     );
 
     // 🔥 OCORRÊNCIA → NÃO CONTA
@@ -143,7 +156,7 @@ export function calculatePpmMonthlyTrend(
       continue;
     }
 
-    const d = parseDate((r as any).DATA);
+    const d = parseDate(row.DATA || row.Data || row.data || row.date);
     if (!d) continue;
 
     const month = `${d.getFullYear()}-${String(
@@ -157,7 +170,7 @@ export function calculatePpmMonthlyTrend(
   }
 
   /* ==============================
-     CONSOLIDAÇÃO FINAL
+      CONSOLIDAÇÃO FINAL
   ============================== */
   const months = Array.from(
     new Set([

@@ -27,9 +27,19 @@ import RankingCausas from "./components/RankingCausas";
 import TabelaDetalhamento from "./components/TabelaDetalhamento";
 
 /* ======================================================
-   CONSTANTES
+   CONSTANTES E METAS POR CATEGORIA (CONVERTIDAS PARA PPM)
+   Fórmula: % * 10.000
 ====================================================== */
-const META_PPM = 6200;
+const METAS_POR_CATEGORIA: Record<string, number> = {
+  "ARCON": 5200,   // 0,520%
+  "BBS": 7820,     // 0,782%
+  "CM": 5870,      // 0,587%
+  "MWO": 1730,     // 0,173%
+  "TM": 11680,     // 1,168%
+  "TV": 6870,      // 0,687%
+  "TW": 11590,     // 1,159%
+  "GERAL": 5200    // 0,52%
+};
 
 export default function DevelopmentDashboardPage() {
   const [mounted, setMounted] = useState(false);
@@ -74,6 +84,15 @@ export default function DevelopmentDashboardPage() {
       MEMOS: Lógica de Filtros e Seleção de Dados
   ====================================================== */
   
+  // ✅ IDENTIFICAÇÃO DA META ATUAL (DINÂMICA)
+  const metaAtual = useMemo(() => {
+    const cat = appliedFilters.categoria;
+    if (cat && cat !== "Todos" && METAS_POR_CATEGORIA[cat]) {
+      return METAS_POR_CATEGORIA[cat];
+    }
+    return METAS_POR_CATEGORIA["GERAL"];
+  }, [appliedFilters.categoria]);
+
   const allowedModels = useMemo(() => {
       if (!filterOptions || !appliedFilters.categoria || appliedFilters.categoria === "Todos") {
           return undefined;
@@ -119,12 +138,15 @@ export default function DevelopmentDashboardPage() {
 
   }, [data, appliedFilters.periodo]);
 
-  // 2️⃣ CÁLCULO DOS KPIs
+  // ✅ 2️⃣ CÁLCULO DOS KPIs (SINCRONIZADO COM A TIMELINE)
   const kpiData = useMemo(() => {
     if (!data) return { ppm: 0, defects: 0, production: 0 };
 
-    if (appliedFilters.periodo.dia && labelType === "Dia") {
-        const diaAlvo = appliedFilters.periodo.dia;
+    const { tipo, valor, dia } = appliedFilters.periodo;
+
+    // Caso A: Dia específico selecionado
+    if (dia && labelType === "Dia") {
+        const diaAlvo = dia;
         const diaItem = timelineItems.find(i => i.name === diaAlvo);
 
         if (diaItem) {
@@ -137,43 +159,50 @@ export default function DevelopmentDashboardPage() {
         return { ppm: 0, defects: 0, production: 0 };
     }
 
+    // Caso B: Se houver um filtro de Mês ou Semana ativo
+    if ((tipo === "mes" || tipo === "semana") && valor && timelineItems.length > 0) {
+        const totalProd = timelineItems.reduce((acc, curr) => acc + curr.production, 0);
+        const totalDef = timelineItems.reduce((acc, curr) => acc + curr.defects, 0);
+        const calculatedPpm = totalProd > 0 ? (totalDef / totalProd) * 1000000 : 0;
+
+        return {
+            ppm: Number(calculatedPpm.toFixed(2)),
+            defects: totalDef,
+            production: totalProd
+        };
+    }
+
+    // Caso C: Fallback para o total acumulado do período processado (Visão Geral)
     return {
         ppm: data.meta.ppmGeral || 0,
         defects: data.meta.totalDefects,
         production: data.meta.totalProduction
     };
-  }, [data, appliedFilters.periodo.dia, timelineItems, labelType]);
+  }, [data, appliedFilters.periodo, timelineItems, labelType]);
 
   // ✅ 3️⃣ CÁLCULO DA PROJEÇÃO (PREDICTOR COM TRAVA TEMPORAL)
   const ppmForecast = useMemo(() => {
       const { tipo, valor, ano } = appliedFilters.periodo;
 
-      // Só projeta se for Filtro MENSAL
       if (tipo !== "mes" || !valor || !ano || timelineItems.length < 2) {
           return null;
       }
 
       const hoje = new Date();
       const anoAtual = hoje.getFullYear();
-      const mesAtual = hoje.getMonth() + 1; // 0-11 virando 1-12
+      const mesAtual = hoje.getMonth() + 1;
 
-      // TRAVA DE SEGURANÇA: Não projetar o passado
-      if (ano < anoAtual) return null; // Ano passado
-      if (ano === anoAtual && valor < mesAtual) return null; // Mês passado
+      if (ano < anoAtual) return null; 
+      if (ano === anoAtual && valor < mesAtual) return null; 
 
-      // Se passou da trava, calcula a projeção
       const activeDays = timelineItems.filter(d => d.production > 0);
-      const recentDays = activeDays.slice(-3); // Últimos 3 dias de produção
+      const recentDays = activeDays.slice(-3); 
 
       if (recentDays.length === 0) return null;
 
-      // Média PPM recente (Ritmo)
       const recentPpmAvg = recentDays.reduce((acc, curr) => acc + curr.ppm, 0) / recentDays.length;
-      
-      // PPM Histórico Acumulado
       const historyPpm = kpiData.ppm;
 
-      // Projeção: 70% Ritmo Recente + 30% Histórico
       return (historyPpm * 0.3) + (recentPpmAvg * 0.7);
 
   }, [appliedFilters.periodo, timelineItems, kpiData.ppm]);
@@ -203,9 +232,6 @@ export default function DevelopmentDashboardPage() {
 
   if (!mounted || !user) return null;
 
-  /* ======================================================
-      RENDER
-  ====================================================== */
   return (
     <div style={{ color: "#fff", minHeight: "100vh", paddingBottom: 40 }}>
 
@@ -245,16 +271,14 @@ export default function DevelopmentDashboardPage() {
 
         {!loading && data && (
           <>
-            {/* LÓGICA DE EXIBIÇÃO INTELIGENTE (EMPTY STATES) */}
             {timelineItems.length === 0 && kpiData.production === 0 ? (
                 <DashboardMessage tipo="sem_dados" />
             ) : (
                 <>
                     {/* KPIs */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-                        {/* ✅ KPI COM PROJEÇÃO */}
                         <IndiceDefeitosCard 
-                            meta={META_PPM} 
+                            meta={metaAtual} // ✅ Passa a meta dinâmica por categoria
                             real={kpiData.ppm}
                             projection={ppmForecast} 
                         />
@@ -276,13 +300,13 @@ export default function DevelopmentDashboardPage() {
                                              return parts.length === 3 ? `${parts[2]}/${parts[1]}` : name;
                                          };
                                          return (
-                                            <TendenciaPpm
-                                              anterior={itemAnterior.ppm}
-                                              atual={itemAtual.ppm}
-                                              labelAnterior={formatCardLabel(itemAnterior.name)}
-                                              labelAtual={formatCardLabel(itemAtual.name)}
-                                              tipo="dia"
-                                            />
+                                           <TendenciaPpm
+                                             anterior={itemAnterior.ppm}
+                                             atual={itemAtual.ppm}
+                                             labelAnterior={formatCardLabel(itemAnterior.name)}
+                                             labelAtual={formatCardLabel(itemAtual.name)}
+                                             tipo="dia"
+                                           />
                                          );
                                     }
                                 }
@@ -323,7 +347,6 @@ export default function DevelopmentDashboardPage() {
                         <DashboardMessage tipo="sucesso" />
                     ) : (
                         <>
-                            {/* BOTÕES DE VISÃO */}
                             <div style={{ display: "flex", gap: 8 }}>
                                 <TabButton 
                                     label="Responsabilidade" 
@@ -344,10 +367,10 @@ export default function DevelopmentDashboardPage() {
 
                             <PpmDinamico
                                 viewMode={viewMode}
-                                ppmMonthlyTrend={data.ppmMonthlyTrend}
                                 trendData={data.trendData}
                                 filters={appliedFilters}
                                 allowedModels={allowedModels}
+                                metaDinamica={metaAtual} // ✅ Passa meta dinâmica para o gráfico
                             />
 
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -355,10 +378,10 @@ export default function DevelopmentDashboardPage() {
                                 <IndicePorMes 
                                     data={timelineItems} 
                                     tipoLabel={labelType} 
+                                    metaDinamica={metaAtual} // ✅ Passa meta dinâmica para o histórico
                                 />
                             </div>
 
-                            {/* ✅ MOVIDO PARA O FINAL */}
                             <TabelaDetalhamento 
                                 data={data.details} 
                                 filterLabel={tabelaLabel}

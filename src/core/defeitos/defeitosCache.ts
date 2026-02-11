@@ -1,19 +1,9 @@
-/* =====================================================================
-   SIGMA-Q V3 — Cache Inteligente com Garantia de Enriquecimento
-   ✔ Cache só é válido se refletir as flags
-   ✔ Nunca mascara erro
-   ✔ Nunca gera KPI falso
-===================================================================== */
-
 import { loadDefeitosAll } from "./defeitosLoader";
 import { enrichDefeito } from "./defeitosEnrichment";
 
 type CacheStateData = {
   enriched: any[];
-  af: any[];
-  lcm: any[];
-  produto: any[];
-  pth: any[];
+  [key: string]: any[]; // Isso permite chaves dinâmicas como 'TV', 'MWO', etc.
 };
 
 type CacheState = {
@@ -30,17 +20,6 @@ const cache: CacheState = {
   optsKey: undefined,
 };
 
-// --------------------------------------------------
-// 🔒 Validação dura de enrichment
-// --------------------------------------------------
-function isEnriched(item: any): boolean {
-  return (
-    item &&
-    Array.isArray(item._issues) &&
-    typeof item._confidence === "number"
-  );
-}
-
 export async function getDefeitosCache(catalogos: any = {}) {
   const flags = {
     usarCodigos: !!catalogos.usarCodigos,
@@ -50,82 +29,52 @@ export async function getDefeitosCache(catalogos: any = {}) {
 
   const optsKey = JSON.stringify(flags);
 
-  // ==================================================
-  // CACHE VÁLIDO → somente se flags e enrichment baterem
-  // ==================================================
+  // 1. Se já carregou, retorna
   if (cache.carregado && cache.dados && cache.optsKey === optsKey) {
-    const sample = cache.dados.enriched[0];
-    if (isEnriched(sample)) {
-      console.log("✅ Usando cache existente (válido e enriquecido).");
-      return cache.dados;
-    } else {
-      console.warn("⚠️ Cache inválido — registros não enriquecidos.");
-    }
+    return cache.dados;
   }
 
-  // ==================================================
-  // CACHE EM CONSTRUÇÃO (mesmas flags)
-  // ==================================================
+  // 2. Trava de carregamento
   if (cache.carregando && cache.optsKey === optsKey) {
-    console.log("🔄 Aguardando cache carregar (mesmas flags) …");
     await waitForCache();
     return cache.dados!;
   }
 
-  // ==================================================
-  // RECONSTRUÇÃO FORÇADA
-  // ==================================================
   cache.carregando = true;
-  cache.carregado = false;
-  cache.dados = null;
   cache.optsKey = optsKey;
 
-  console.log("🔥 Criando cache → flags:", optsKey);
-
-  // Loader bruto
+  // 3. Busca os dados brutos do Loader
   const bases = await loadDefeitosAll(flags);
+  const todosOsDados = bases.todas;
 
-  console.log("🔥 Enriquecendo registros (forçado e consistente)…");
-
-  const enriched: any[] = [];
-
-  async function push(arr: any[], fonte: string) {
-    for (let i = 0; i < arr.length; i++) {
-      const enrichedItem = await enrichDefeito(
-        { ...arr[i], fonte },
-        flags
-      );
-      enriched.push(enrichedItem);
-
-      if (i % 2000 === 0) {
-        console.log(`   ➕ Enriquecidos ${i}/${arr.length} (${fonte})`);
-      }
-    }
-  }
-
-  await push(bases.af || [], "AF");
-  await push(bases.lcm || [], "LCM");
-  await push(bases.produto || [], "PRODUTO");
-  await push(bases.pth || [], "PTH");
-
-  const dados: CacheStateData = {
-    enriched,
-    af: enriched.filter(r => r.fonte === "AF"),
-    lcm: enriched.filter(r => r.fonte === "LCM"),
-    produto: enriched.filter(r => r.fonte === "PRODUTO"),
-    pth: enriched.filter(r => r.fonte === "PTH"),
+  // 4. Criamos o objeto de retorno dinâmico
+  const dadosFinal: CacheStateData = {
+    enriched: todosOsDados // A "Visão Geral"
   };
 
-  cache.dados = dados;
+  // 5. Agrupamento por Categoria Real
+  todosOsDados.forEach(item => {
+    // Pega a categoria (ex: TV) e normaliza para ser a chave do objeto
+    const cat = (item.CATEGORIA || item.categoria || "N/A").toUpperCase().trim();
+    
+    // Se a caixa "TV" não existe, criamos ela
+    if (!dadosFinal[cat]) {
+      dadosFinal[cat] = [];
+    }
+    
+    // Coloca o registro dentro da caixa da categoria dele
+    dadosFinal[cat].push(item);
+  });
+
+  cache.dados = dadosFinal;
   cache.carregando = false;
   cache.carregado = true;
 
-  console.log("✅ Cache criado com sucesso (enriquecimento garantido).");
+  console.log("✅ Cache organizado por categorias:", Object.keys(dadosFinal).filter(k => k !== 'enriched'));
 
   return cache.dados;
 }
 
-// --------------------------------------------------
 function waitForCache(): Promise<void> {
   return new Promise(resolve => {
     const interval = setInterval(() => {

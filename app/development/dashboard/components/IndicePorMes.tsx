@@ -21,11 +21,10 @@ import {
   AlertCircle 
 } from "lucide-react";
 
-const META_PPM = 6200;
-
 interface Props {
   data: TrendItem[];
   tipoLabel: string;
+  metaDinamica?: number; // ✅ Recebe a meta dinâmica da categoria
 }
 
 /* ======================================================
@@ -65,19 +64,19 @@ function formatLabel(value: string, tipo: string): string {
 }
 
 /* ======================================================
-   CUSTOM LABELS PARA BARRAS EMPILHADAS
+   CUSTOM LABELS PARA BARRAS EMPILHADAS (COM 2 DECIMAIS)
 ====================================================== */
 
 // Label para a parte AZUL (Segura)
-const renderSafeLabel = (props: any) => {
+const renderSafeLabel = (props: any, currentMeta: number) => {
   const { x, y, width, height, value } = props;
   const totalPpm = Number(value || 0);
 
   // Se passou da meta, a responsabilidade de mostrar o número é da parte vermelha.
-  if (totalPpm > META_PPM) return null;
+  if (totalPpm > currentMeta) return null;
   
   // Se a barra azul for muito pequena, não desenha para não cortar
-  if (width < 40) return null;
+  if (width < 70) return null;
 
   return (
     <text
@@ -88,18 +87,18 @@ const renderSafeLabel = (props: any) => {
       dominantBaseline="middle"
       style={{ fontSize: 11, fontWeight: "bold", pointerEvents: "none" }}
     >
-      {totalPpm.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} PPM
+      {totalPpm.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </text>
   );
 };
 
 // Label para a parte VERMELHA (Excedente)
-const renderExcessLabel = (props: any) => {
+const renderExcessLabel = (props: any, currentMeta: number) => {
   const { x, y, width, height, value } = props;
   const totalPpm = Number(value || 0);
 
   // Segurança: se não passou da meta, não desenha
-  if (totalPpm <= META_PPM) return null;
+  if (totalPpm <= currentMeta) return null;
   
   return (
     <text
@@ -110,7 +109,7 @@ const renderExcessLabel = (props: any) => {
       dominantBaseline="middle"
       style={{ fontSize: 11, fontWeight: "bold", pointerEvents: "none" }}
     >
-      {totalPpm.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} PPM
+      {totalPpm.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </text>
   );
 };
@@ -118,21 +117,22 @@ const renderExcessLabel = (props: any) => {
 /* ======================================================
    COMPONENTE
 ====================================================== */
-export default function IndicePorMes({ data, tipoLabel }: Props) {
+export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: Props) {
   
-  // 1. PREPARAÇÃO DOS DADOS (SPLIT AZUL/VERMELHO)
+  // 1. PREPARAÇÃO DOS DADOS (UNIFICAÇÃO MATEMÁTICA E META DINÂMICA)
   const chartData = (data || [])
     .filter(d => d.production > 0)
     .map(d => {
-        const ppmReal = d.ppm || 0;
+        // ✅ RECALCULO CONSOLIDADO: Garante sincronia exata com o PpmDinamico
+        const ppmReal = d.production > 0 ? (d.defects / d.production) * 1000000 : 0;
         
-        // Separa o valor em duas partes
-        const ppmSafe = Math.min(ppmReal, META_PPM); // Azul vai até a meta no máximo
-        const ppmExcess = Math.max(0, ppmReal - META_PPM); // Vermelho é só o que sobra
+        // Separa o valor em duas partes baseando-se na meta da categoria
+        const ppmSafe = Math.min(ppmReal, metaDinamica); 
+        const ppmExcess = Math.max(0, ppmReal - metaDinamica); 
 
         return {
             labelKey: d.name, 
-            ppmTotal: ppmReal, // Valor real para tooltips e labels
+            ppmTotal: Number(ppmReal.toFixed(2)), 
             ppmSafe: ppmSafe,
             ppmExcess: ppmExcess,
             production: d.production,
@@ -148,8 +148,8 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
      );
   }
 
-  // Calcula máximo dinâmico e aumenta a margem
-  const maxVal = Math.max(...chartData.map(d => d.ppmTotal), META_PPM) * 1.3;
+  // Calcula máximo dinâmico considerando a meta atual
+  const maxVal = Math.max(...chartData.map(d => d.ppmTotal), metaDinamica) * 1.3;
 
   return (
     <div style={containerStyle}>
@@ -192,9 +192,8 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
                                     {formatLabel(label as string, tipoLabel)}
                                 </p>
                                 <div style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                                    {/* Mostra o Total Real com ícone */}
-                                    <Activity size={14} color={dataItem.ppmTotal > META_PPM ? "#EF4444" : "#60a5fa"} />
-                                    <span style={{ color: dataItem.ppmTotal > META_PPM ? "#EF4444" : "#60a5fa" }}>
+                                    <Activity size={14} color={dataItem.ppmTotal > metaDinamica ? "#EF4444" : "#60a5fa"} />
+                                    <span style={{ color: dataItem.ppmTotal > metaDinamica ? "#EF4444" : "#60a5fa" }}>
                                         PPM: <strong>{dataItem.ppmTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                     </span>
                                 </div>
@@ -215,9 +214,10 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
                 }}
             />
 
-            <ReferenceLine x={META_PPM} stroke="#EF4444" strokeDasharray="4 4">
+            {/* ✅ Linha de Referência Dinâmica baseada na meta da categoria */}
+            <ReferenceLine x={metaDinamica} stroke="#EF4444" strokeDasharray="4 4">
                 <Label 
-                    value={`Meta ${META_PPM.toLocaleString("pt-BR")} PPM`} 
+                    value={`Meta ${metaDinamica.toLocaleString("pt-BR")} PPM`} 
                     position="insideTopRight" 
                     fill="#EF4444" 
                     fontSize={10} 
@@ -234,7 +234,7 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
                 radius={[0, 4, 4, 0]} 
                 barSize={20}
             >
-                <LabelList dataKey="ppmTotal" content={renderSafeLabel} />
+                <LabelList dataKey="ppmTotal" content={(props: any) => renderSafeLabel(props, metaDinamica)} />
             </Bar>
 
             {/* BARRA VERMELHA (EXCEDENTE) */}
@@ -245,7 +245,7 @@ export default function IndicePorMes({ data, tipoLabel }: Props) {
                 radius={[0, 4, 4, 0]} 
                 barSize={20}
             >
-                <LabelList dataKey="ppmTotal" content={renderExcessLabel} />
+                <LabelList dataKey="ppmTotal" content={(props: any) => renderExcessLabel(props, metaDinamica)} />
             </Bar>
 
           </BarChart>

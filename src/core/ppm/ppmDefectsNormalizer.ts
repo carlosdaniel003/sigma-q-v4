@@ -16,33 +16,59 @@ function norm(value: any): string {
     .trim();
 }
 
+/**
+ * ✅ PADRONIZAÇÃO UNIFICADA DE TURNO
+ * Sincronizado com o ProductionNormalizer para garantir que as chaves batam.
+ */
+function normalizeTurno(val: any): string {
+    const s = String(val ?? "").trim().toUpperCase();
+    if (!s || s === "UNDEFINED" || s === "NULL" || s === "") return "GERAL";
+    
+    // Mapeamentos para padronizar com a Produção (Ex: converter "2" ou "2 TURNO" para "2º TURNO")
+    if (s === "C" || s === "COM" || s.startsWith("COM") || s.includes("COMERCIAL")) return "COMERCIAL";
+    if (s === "1" || s === "1º" || s.startsWith("1") || s.includes("1 TURNO")) return "1º TURNO";
+    if (s === "2" || s === "2º" || s.startsWith("2") || s.includes("2 TURNO")) return "2º TURNO";
+    if (s === "3" || s === "3º" || s.startsWith("3") || s.includes("3 TURNO")) return "3º TURNO";
+    
+    return s;
+}
+
+// ✅ BUILD KEY COM LOG DIAGNÓSTICO
 function buildGroupKey(row: DefectInputRow): string {
   const categoria = norm(row.CATEGORIA);
   const modelo = norm(row.MODELO);
+  
+  // Lê o turno da linha bruta e aplica a normalização unificada
+  const rawTurno = (row as any).TURNO || (row as any).Turno || (row as any).turno;
+  const turno = normalizeTurno(rawTurno);
+
+  // 🕵️‍♂️ LOG DIAGNÓSTICO MANTIDO PARA VALIDAR O MATCH
+  if (modelo.includes("MICRO") || modelo.includes("MO-01")) {
+      // eslint-disable-next-line no-console
+      console.log(`🔍 [DEFECT FIX] "${modelo}" -> Raw: "${rawTurno}" -> Final: "${turno}"`);
+      console.log(`   - Chave Final: "${categoria}::${modelo}::${turno}"`);
+  }
+
   if (!categoria || !modelo) return "";
-  return `${categoria}::${modelo}`;
+  
+  return `${categoria}::${modelo}::${turno}`;
 }
 
 /* ======================================================
-   🔥 PARSER ROBUSTO DE DATA (SEM SHIFT DE FUSO)
+   🔥 PARSER ROBUSTO DE DATA
 ====================================================== */
 function parseExcelDate(value: any): Date | null {
   if (!value) return null;
 
   let date: Date | null = null;
 
-  // Date nativo
   if (value instanceof Date && !isNaN(value.getTime())) {
     date = new Date(value.getTime());
   }
-
-  // Número serial Excel
   else if (typeof value === "number") {
     const excelEpoch = new Date(1899, 11, 30);
     date = new Date(excelEpoch.getTime() + value * 86400000);
   }
-
-  // String
   else if (typeof value === "string") {
     const trimmed = value.trim();
     if (!trimmed) return null;
@@ -60,14 +86,12 @@ function parseExcelDate(value: any): Date | null {
   }
 
   if (!date || isNaN(date.getTime())) return null;
-
-  // 🔒 trava no meio do dia (evita problema de fuso/DST)
   date.setHours(12, 0, 0, 0);
   return date;
 }
 
 /* ======================================================
-   CATÁLOGO — NÃO MOSTRAR NO ÍNDICE
+   CATÁLOGO
 ====================================================== */
 let catalogoSet = new Set<string>();
 
@@ -94,15 +118,11 @@ try {
     );
   }
 } catch (err) {
-  console.warn(
-    "⚠️ [PPM] Erro ao carregar catálogo 'não mostrar índice'.",
-    err
-  );
+  console.warn("⚠️ [PPM] Erro ao carregar catálogo 'não mostrar índice'.", err);
 }
 
 /* ======================================================
-   🔥 LOAD RAW — DEFEITOS (EXCEL → DefectInputRow[])
-   → FONTE ÚNICA PARA DASHBOARD E PPM ENGINE
+   LOAD RAW
 ====================================================== */
 export function loadDefectsRaw(): DefectInputRow[] {
   const filePath = path.join(
@@ -113,9 +133,7 @@ export function loadDefectsRaw(): DefectInputRow[] {
   );
 
   if (!fs.existsSync(filePath)) {
-    throw new Error(
-      "Arquivo defeitos_produto_acabado.xlsx não encontrado"
-    );
+    throw new Error("Arquivo defeitos não encontrado");
   }
 
   const buffer = fs.readFileSync(filePath);
@@ -126,10 +144,7 @@ export function loadDefectsRaw(): DefectInputRow[] {
 }
 
 /* ======================================================
-   NORMALIZA DEFEITOS (COM DATA REAL)
-   - Exclui ocorrências administrativas
-   - Acumula defeitos produtivos
-   - Preserva datas → base do PPM mensal
+   NORMALIZA
 ====================================================== */
 export function normalizeDefectsForPpm(
   rows: DefectInputRow[]
@@ -139,11 +154,7 @@ export function normalizeDefectsForPpm(
   occurrencesByCode: Record<string, number>;
   occurrencesByCategory: Record<string, number>;
 } {
-  const map = new Map<
-    string,
-    { defeitos: number; datasDefeito: Date[] }
-  >();
-
+  const map = new Map<string, { defeitos: number; datasDefeito: Date[] }>();
   let totalOccurrences = 0;
   const occurrencesByCode: Record<string, number> = {};
   const occurrencesByCategory: Record<string, number> = {};
@@ -153,57 +164,29 @@ export function normalizeDefectsForPpm(
     if (qtd <= 0) return;
 
     const categoria = norm(r.CATEGORIA);
-    const codigoFornecedor = norm(
-      (r as any)["CÓDIGO DO FORNECEDOR"]
-    );
+    const codigoFornecedor = norm((r as any)["CÓDIGO DO FORNECEDOR"]);
+    const dataDefeito = parseExcelDate((r as any).DATA ?? (r as any).DATA_DEFEITO);
 
-    // 🔥 DATA DO DEFEITO — robusta
-    const dataDefeito = parseExcelDate(
-      (r as any).DATA ??
-      (r as any).DATA_DEFEITO ??
-      (r as any).data ??
-      (r as any).data_defeito
-    );
-
-    /* ======================================================
-       OCORRÊNCIA (IGNORADA NO PPM)
-    ====================================================== */
     if (catalogoSet.has(codigoFornecedor)) {
       totalOccurrences += 1;
-
-      occurrencesByCode[codigoFornecedor] =
-        (occurrencesByCode[codigoFornecedor] || 0) + 1;
-
-      occurrencesByCategory[categoria] =
-        (occurrencesByCategory[categoria] || 0) + 1;
-
+      occurrencesByCode[codigoFornecedor] = (occurrencesByCode[codigoFornecedor] || 0) + 1;
+      occurrencesByCategory[categoria] = (occurrencesByCategory[categoria] || 0) + 1;
       return;
     }
 
-    /* ======================================================
-       DEFEITO REAL (PRODUTIVO)
-    ====================================================== */
     const groupKey = buildGroupKey(r);
     if (!groupKey) return;
 
     if (!map.has(groupKey)) {
-      map.set(groupKey, {
-        defeitos: 0,
-        datasDefeito: [],
-      });
+      map.set(groupKey, { defeitos: 0, datasDefeito: [] });
     }
 
     const item = map.get(groupKey)!;
     item.defeitos += qtd;
-
-    if (dataDefeito) {
-      item.datasDefeito.push(dataDefeito);
-    }
+    if (dataDefeito) item.datasDefeito.push(dataDefeito);
   });
 
-  const normalized: NormalizedDefect[] = Array.from(
-    map.entries()
-  ).map(([groupKey, info]) => ({
+  const normalized: NormalizedDefect[] = Array.from(map.entries()).map(([groupKey, info]) => ({
     groupKey,
     defeitos: info.defeitos,
     datasDefeito: info.datasDefeito,

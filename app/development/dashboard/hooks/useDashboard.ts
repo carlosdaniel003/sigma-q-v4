@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { useDashboardFilters } from "../store/dashboardFilters";
 
 /* ======================================================
-   TIPAGEM (Sincronizada com Backend e Frontend)
+   TIPAGEM
 ====================================================== */
-
 export interface DetailRow {
   rank: number;
   cod: string;
@@ -20,9 +19,8 @@ export interface DetailRow {
   ppm: number;
 }
 
-// ✅ NOVA ESTRUTURA: Grupo de Responsabilidade
 export interface ResponsibilityGroup {
-  responsibility: string; // Ex: "PROCESSO", "FORN. IMPORTADO"
+  responsibility: string;
   top3: DetailRow[];
 }
 
@@ -30,11 +28,9 @@ export interface TurnoStats {
   turno: string;
   producao: number;
   totalDefeitos: number;
-  // ✅ MUDANÇA: Em vez de top3 direto, temos uma lista de grupos
   groups: ResponsibilityGroup[]; 
 }
 
-// ... (Restante das interfaces TrendItem, ContextItem, etc. permanecem iguais)
 export interface ContextItem {
   name: string;
   qty: number;
@@ -108,9 +104,9 @@ interface DashboardData {
   topCauses: {
     byAnalysis: CauseItem[];
     byFailure: CauseItem[];
-    byPosition: CauseItem[]; // Mantido na interface para não quebrar, mesmo se vazio
+    byPosition: CauseItem[]; 
   };
-  details: TurnoStats[]; // ✅ Agora usa a nova estrutura com groups
+  details: TurnoStats[];
   ppmMonthlyTrend: PpmMonthlyTrendItem[];
   responsabilidadeMensal: ResponsabilidadeMensalItem[];
   categoriaMensal: CategoriaMensalItem[];

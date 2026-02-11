@@ -104,7 +104,7 @@ export default function KPIsGerais({
           icon={<PackageX size={20} />}
           title="Erros de Validação (Críticos)"
           value={defeitosSemProducaoCriticos}
-          subtitle="TV-xxx (Teste de Sistema)"
+          subtitle="defeitos sem produção"
           color={defeitosSemProducaoCriticos > 0 ? "var(--danger)" : "var(--success)"}
         />
       </div>

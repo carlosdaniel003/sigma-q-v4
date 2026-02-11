@@ -19,7 +19,42 @@ export function runPpmEngine(
 ): PpmEngineResult {
 
   /* ======================================================
-     1️⃣ NORMALIZAÇÃO
+      0️⃣ PRÉ-PROCESSAMENTO: DATA DE CORTE (Cut-off)
+  ====================================================== */
+  let maxProductionTimestamp = 0;
+
+  for (const row of productionRaw) {
+      if (row.DATA instanceof Date) {
+          const ts = row.DATA.getTime();
+          if (ts > maxProductionTimestamp) {
+              maxProductionTimestamp = ts;
+          }
+      }
+  }
+
+  let defectsToProcess = defectsRaw;
+  
+  if (maxProductionTimestamp > 0) {
+      defectsToProcess = defectsRaw.filter((d) => {
+          if (!d.DATA) return false;
+          const defDate = d.DATA instanceof Date ? d.DATA : new Date(d.DATA);
+          const defTs = defDate.getTime();
+          return defTs <= maxProductionTimestamp;
+      });
+
+      const descartadosPorData = defectsRaw.length - defectsToProcess.length;
+      if (descartadosPorData > 0) {
+          console.log(
+              `🗓️ [PPM Engine] Cut-off Temporal aplicado: ${descartadosPorData} defeitos ignorados.`
+          );
+      }
+  }
+
+  /* ======================================================
+      1️⃣ NORMALIZAÇÃO (AGORA COM TURNO)
+      ⚠️ Atenção: normalizeProductionForPpm agora gera chaves 
+      com Turno (ex: TV::MOD::1). O normalizeDefectsForPpm 
+      TAMBÉM precisa gerar chaves com Turno para o Merge funcionar.
   ====================================================== */
   const prod = normalizeProductionForPpm(productionRaw);
 
@@ -28,17 +63,17 @@ export function runPpmEngine(
     totalOccurrences,
     occurrencesByCode,
     occurrencesByCategory,
-  } = normalizeDefectsForPpm(defectsRaw);
+  } = normalizeDefectsForPpm(defectsToProcess); 
 
   /* ======================================================
-     2️⃣ MERGE + CÁLCULO
+      2️⃣ MERGE + CÁLCULO
   ====================================================== */
   const merged = mergeProductionAndDefects(prod, def);
   const calculationResult = calculatePpm(merged);
   const validated = validatePpm(calculationResult.results);
 
   /* ======================================================
-     3️⃣ SEPARAÇÃO CLARA
+      3️⃣ SEPARAÇÃO CLARA
   ====================================================== */
   const naoMostrarIndice = validated.filter(
     (r) => r.naoMostrarIndice === true
@@ -49,7 +84,7 @@ export function runPpmEngine(
   );
 
   /* ======================================================
-     4️⃣ KPIs GLOBAIS
+      4️⃣ KPIs GLOBAIS
   ====================================================== */
   const totalProduction = prod.reduce(
     (s, p) => s + (p.produzido || 0),
@@ -78,7 +113,7 @@ export function runPpmEngine(
       : 0;
 
   /* ======================================================
-     5️⃣ PRODUÇÃO REAL POR CATEGORIA
+      5️⃣ PRODUÇÃO REAL POR CATEGORIA
   ====================================================== */
   const productionByCategory: Record<string, number> = {};
 
@@ -88,7 +123,7 @@ export function runPpmEngine(
   }
 
   /* ======================================================
-     6️⃣ AGRUPAMENTO POR CATEGORIA
+      6️⃣ AGRUPAMENTO POR CATEGORIA
   ====================================================== */
   const byCategory: PpmEngineResult["byCategory"] = {};
 
@@ -114,15 +149,15 @@ export function runPpmEngine(
   }
 
   /* ======================================================
-     7️⃣ KPIs POR CATEGORIA
+      7️⃣ KPIs POR CATEGORIA
   ====================================================== */
   for (const categoria of Object.keys(byCategory)) {
     const c = byCategory[categoria];
 
     if (c.production > 0) {
       c.ppm = Number(
-  ((c.defects / c.production) * 1_000_000).toFixed(2)
-);
+        ((c.defects / c.production) * 1_000_000).toFixed(2)
+      );
     }
 
     const validos = c.models.filter(
@@ -138,7 +173,7 @@ export function runPpmEngine(
   }
 
   /* ======================================================
-     8️⃣ RETORNO FINAL
+      8️⃣ RETORNO FINAL
   ====================================================== */
   return {
     meta: {

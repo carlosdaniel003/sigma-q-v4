@@ -22,8 +22,7 @@ function issueCategoryKey(issue: string) {
 }
 
 // --------------------------------------------------
-// REGRA OFICIAL DO SIGMA-Q (A QUE FUNCIONAVA)
-// Identificado ⇔ NÃO EXISTEM ISSUES
+// REGRA OFICIAL DO SIGMA-Q
 // --------------------------------------------------
 function isIdentified(r: any): boolean {
   return Array.isArray(r._issues) && r._issues.length === 0;
@@ -33,18 +32,7 @@ function isIdentified(r: any): boolean {
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const fonteParam = (url.searchParams.get("fonte") || "todas").toLowerCase();
-
-    // 🔁 De-Para de nomes (frontend x backend)
-    const sourceMap: Record<string, string> = {
-      "produto acabado": "produto",
-      produto: "produto",
-      af: "af",
-      lcm: "lcm",
-      pth: "pth",
-    };
-
-    const realCacheKey = sourceMap[fonteParam] || fonteParam;
+    const fonteParam = (url.searchParams.get("fonte") || "todas").toLowerCase().trim();
 
     const catalogosRaw = url.searchParams.get("catalogos") || "";
     const catalogos: CatalogosFlags = {
@@ -53,9 +41,6 @@ export async function GET(req: Request) {
       usarResponsabilidades: catalogosRaw.includes("responsabilidades"),
     };
 
-    // ==================================================
-    // 🔒 BLOQUEIO ABSOLUTO — KPI SEM ENRIQUECIMENTO NÃO EXISTE
-    // ==================================================
     if (
       !catalogos.usarCodigos &&
       !catalogos.usarFalhas &&
@@ -65,31 +50,34 @@ export async function GET(req: Request) {
         {
           ok: false,
           error: "KPI inválido: nenhuma regra de validação ativa.",
-          hint:
-            "Use catalogos=modelos,falhas,responsabilidades para gerar KPI.",
         },
         { status: 400 }
       );
     }
 
-    // ⚡ Cache sempre alinhado às flags
     const cache = await getDefeitosCache(catalogos);
 
+    // Seleção dinâmica da lista
     const lista =
       fonteParam === "todas"
         ? cache.enriched
-        : (cache as any)[realCacheKey] || [];
+        : (cache as any)[fonteParam] || [];
 
     const totalItems = lista.length;
 
+    // =========================================================
+    // 📊 LOGS DE AUDITORIA (Para bater a conta)
+    // =========================================================
     const totalDefeitos = lista.reduce((acc, r) => {
       const v = Number(r["QUANTIDADE"] ?? r.QUANTIDADE ?? 0);
       return acc + (isFinite(v) ? v : 0);
     }, 0);
 
-    // ==================================================
-    // KPI CENTRAL (REGRA CORRETA)
-    // ==================================================
+    if (fonteParam === 'todas') {
+        console.log(`📊 [AUDITORIA] Registros (Linhas SQL): ${totalItems}`);
+        console.log(`📊 [AUDITORIA] Defeitos (Soma Qtd):   ${totalDefeitos}`);
+    }
+
     const identified = lista.filter(isIdentified).length;
     const notIdentified = totalItems - identified;
 
@@ -100,7 +88,7 @@ export async function GET(req: Request) {
     // --------------------------------------------------
     // Breakdown de não identificados
     // --------------------------------------------------
-    const notIdentifiedBreakdown = {
+    const notIdentifiedBreakdown: any = {
       modelos: 0,
       falhas: 0,
       responsabilidades: 0,
@@ -136,16 +124,16 @@ export async function GET(req: Request) {
 
       for (const c of cats) {
         if (c in notIdentifiedBreakdown) {
-          (notIdentifiedBreakdown as any)[c]++;
+          notIdentifiedBreakdown[c]++;
           issuesSummary[c].count++;
 
           if (issuesSummary[c].examples.length < 20) {
             issuesSummary[c].examples.push({
               fonte: r.fonte,
+              categoria: r.CATEGORIA || r.categoria,
               MODELO: r.MODELO,
               CODIGO_DA_FALHA: r["CÓDIGO DA FALHA"],
               _issues: r._issues,
-              _confidence: r._confidence,
             });
           }
         }
@@ -153,30 +141,17 @@ export async function GET(req: Request) {
     }
 
     // --------------------------------------------------
-    // KPI por base
+    // KPI por Categoria
     // --------------------------------------------------
-    function computeBaseMetrics(arr: any[]) {
+    function computeMetrics(arr: any[]) {
       const safeArr = arr || [];
       const total = safeArr.length;
-
       const totalDef = safeArr.reduce(
         (a, b) => a + (Number(b["QUANTIDADE"]) || 0),
         0
       );
-
       const ident = safeArr.filter(isIdentified).length;
-
-      const avgConf = total
-        ? Number(
-            (
-              safeArr.reduce(
-                (a, b) => a + (Number(b._confidence) || 0),
-                0
-              ) / total
-            ).toFixed(4)
-          )
-        : 0;
-
+      
       return {
         total,
         totalDefeitos: totalDef,
@@ -185,34 +160,31 @@ export async function GET(req: Request) {
         percentIdentified: total
           ? Number(((ident / total) * 100).toFixed(2))
           : 0,
-        avgConfidence: avgConf,
       };
     }
 
-    const perBase = {
-      af: computeBaseMetrics(cache.af),
-      lcm: computeBaseMetrics(cache.lcm),
-      "produto acabado": computeBaseMetrics(cache.produto),
-      pth: computeBaseMetrics(cache.pth),
+    // 🌟 GERAÇÃO DINÂMICA (MOSTRANDO SEM CATEGORIA)
+    const dynamicKeys = Object.keys(cache).filter(k => k !== 'enriched');
+    
+    const perBase: Record<string, any> = {
+        todas: computeMetrics(cache.enriched)
     };
 
-    const heatmapConf = {
-      af: perBase.af.avgConfidence,
-      lcm: perBase.lcm.avgConfidence,
-      "produto acabado": perBase["produto acabado"].avgConfidence,
-      pth: perBase.pth.avgConfidence,
-    };
+    dynamicKeys.forEach(key => {
+        // Normaliza a chave para verificação
+        const cleanKey = key.toLowerCase().trim();
+        
+        // Se for uma chave "vazia", renomeamos para "SEM CATEGORIA" para aparecer na tela
+        let displayKey = key;
+        if (cleanKey === 'n/a' || cleanKey === 'null' || cleanKey === 'undefined' || cleanKey === '') {
+            displayKey = "SEM CATEGORIA";
+            console.log(`⚠️ [ALERTA] Encontrados ${cache[key]?.length} registros órfãos (N/A) -> Movidos para "SEM CATEGORIA"`);
+        }
 
-    const avgConfidenceTotal = totalItems
-      ? Number(
-          (
-            lista.reduce(
-              (a, b) => a + (Number(b._confidence) || 0),
-              0
-            ) / totalItems
-          ).toFixed(4)
-        )
-      : 0;
+        // Se já existe (caso tenha n/a e null separados), soma ou sobrescreve. 
+        // Aqui vamos simplificar e assumir um único bucket.
+        perBase[displayKey] = computeMetrics((cache as any)[key]);
+    });
 
     return NextResponse.json({
       ok: true,
@@ -224,10 +196,9 @@ export async function GET(req: Request) {
       notIdentifiedBreakdown,
       issuesSummary,
       divergencias,
-      perBase,
-      heatmapConf,
-      avgConfidenceTotal,
+      perBase, 
     });
+
   } catch (err: any) {
     console.error("stats error", err);
     return NextResponse.json(

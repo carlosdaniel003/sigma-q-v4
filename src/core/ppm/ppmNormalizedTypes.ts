@@ -6,6 +6,7 @@ export interface NormalizedProduction {
   groupKey: string;
   categoria: string;
   modelo: string;
+  turno?: string; // ✅ ADICIONADO: Essencial para separar produção por turno
   produzido: number;
   datasProducao?: Date[];
 }

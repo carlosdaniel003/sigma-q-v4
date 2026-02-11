@@ -2,15 +2,14 @@
 
 import React from "react";
 
-type Fonte = "todas" | "af" | "lcm" | "produto acabado" | "pth";
-
 export default function SidebarDefeitos({
   fonte,
   setFonte,
   perBase,
 }: {
-  fonte: Fonte;
-  setFonte: (f: Fonte) => void;
+  fonte: string;
+  // Aceita função void ou o Dispatch do React, flexibilizando o uso
+  setFonte: ((f: string) => void) | React.Dispatch<React.SetStateAction<any>>;
   perBase: any;
 }) {
   function getColor(pct: number) {
@@ -19,85 +18,99 @@ export default function SidebarDefeitos({
     return "var(--danger)";
   }
 
+  // 1. Separa "todas" do resto das categorias
+  const { todas, ...categoriasRestantes } = perBase || {};
+  
+  // 2. Ordena as categorias alfabeticamente
+  const listaCategorias = Object.keys(categoriasRestantes || {}).sort();
+
+  const renderCard = (key: string, label: string, isMain: boolean = false) => {
+    const b = perBase?.[key];
+    if (!b) return null;
+
+    const pct = Number(b?.percentIdentified ?? 0);
+    const linhas = b?.total ?? 0;
+    const defeitos = b?.totalDefeitos ?? 0;
+    const isActive = fonte === key;
+
+    return (
+      <div
+        key={key}
+        className={`base-card ${isActive ? "active" : ""}`}
+        onClick={() => setFonte(key)}
+        style={isMain ? { marginBottom: "1.5rem", borderBottom: "1px solid var(--border)" } : {}}
+      >
+        <div className="base-header">
+          <span className="base-name" style={isMain ? { fontSize: "0.9rem", fontWeight: 700 } : {}}>
+            {label}
+          </span>
+
+          {!isMain && (
+            <span
+              className="base-percent"
+              style={{ color: getColor(pct) }}
+            >
+              {pct.toFixed(1)}%
+            </span>
+          )}
+        </div>
+
+        {!isMain && (
+          <>
+            <div className="base-subinfo">
+              {linhas.toLocaleString()} Linhas •{" "}
+              <strong style={{ color: "var(--text-strong)" }}>
+                {defeitos.toLocaleString()}
+              </strong>{" "}
+              defeitos
+            </div>
+
+            <div className="progress-wrapper">
+              <div
+                className="progress-bar"
+                style={{
+                  width: `${pct}%`,
+                  background: getColor(pct),
+                }}
+              />
+            </div>
+          </>
+        )}
+        
+        {isMain && (
+             <div className="base-subinfo" style={{marginTop: "0.5rem"}}>
+                Total: <strong>{defeitos.toLocaleString()}</strong> defeitos
+             </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <aside className="defeitos-sidebar">
-      {/* Título */}
       <div className="sidebar-title" style={{ color: "var(--brand)" }}>
         SIGMA-Q
       </div>
 
-      {/* ============================================================
-          BASES DE DADOS
-      ============================================================ */}
       <div className="sidebar-group">
-        <div className="sidebar-title">Bases de Dados</div>
+        <div className="sidebar-title">Global</div>
+        {renderCard("todas", "VISÃO GERAL", true)}
 
-        {(["todas", "af", "lcm", "produto acabado", "pth"] as Fonte[]).map(
-          (f) => {
-            const b = perBase?.[f];
-            const pct = Number(b?.percentIdentified ?? 0);
+        {listaCategorias.length > 0 && (
+            <>
+                <div className="sidebar-title">Categorias</div>
+                {listaCategorias.map((cat) => renderCard(cat, cat))}
+            </>
+        )}
 
-            const linhas = b?.total ?? 0;
-            const defeitos = b?.totalDefeitos ?? 0;
-
-            return (
-              <div
-                key={f}
-                className={`base-card ${fonte === f ? "active" : ""}`}
-                onClick={() => setFonte(f)}
-              >
-                <div className="base-header">
-                  <span className="base-name">
-                    {f === "todas" ? "TODAS" : f.toUpperCase()}
-                  </span>
-
-                  {f !== "todas" && (
-                    <span
-                      className="base-percent"
-                      style={{ color: getColor(pct) }}
-                    >
-                      {pct.toFixed(1)}%
-                    </span>
-                  )}
-                </div>
-
-                {f !== "todas" && (
-                  <>
-                    <div className="base-subinfo">
-                      {linhas.toLocaleString()} linhas •{" "}
-                      <strong style={{ color: "var(--text-strong)" }}>
-                        {defeitos.toLocaleString()}
-                      </strong>{" "}
-                      defeitos
-                    </div>
-
-                    <div className="progress-wrapper">
-                      <div
-                        className="progress-bar"
-                        style={{
-                          width: `${pct}%`,
-                          background: getColor(pct),
-                        }}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          }
+        {listaCategorias.length === 0 && (
+            <div style={{ padding: "1rem", color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                Carregando categorias...
+            </div>
         )}
       </div>
 
-      {/* Footer */}
-      <div
-        className="sidebar-group muted"
-        style={{ marginTop: "auto", fontSize: "0.75rem", lineHeight: "1.4" }}
-      >
-        Vercel Enterprise
-        <br />
-        Turso DB
-        <br />
-        v4.0.2
+      <div className="sidebar-group muted" style={{ marginTop: "auto", fontSize: "0.75rem", lineHeight: "1.4" }}>
       </div>
     </aside>
   );

@@ -1,6 +1,8 @@
 import * as XLSX from "xlsx";
 import path from "path";
 import fs from "fs";
+// ✅ Importamos o Adapter que busca do SQL
+import { fetchDefeitosFromSQL } from "./dataAdapter";
 
 export interface DefeitoRaw {
   DATA: any;
@@ -20,7 +22,25 @@ export interface DefeitoRaw {
   "REFERÊNCIA/POSIÇÃO MECÂNICA"?: string;
 }
 
-export function loadDefeitos(): DefeitoRaw[] {
+// ✅ Função agora é ASYNC para permitir o fetch
+export async function loadDefeitos(): Promise<DefeitoRaw[]> {
+  try {
+    // 1. Tenta buscar do SQL (via Ponte PHP)
+    const dadosSQL = await fetchDefeitosFromSQL();
+
+    if (dadosSQL && dadosSQL.length > 0) {
+      // eslint-disable-next-line no-console
+      console.log(`📡 [LoadDefeitos] Usando SQL (${dadosSQL.length} registros)`);
+      return dadosSQL;
+    }
+  } catch (err) {
+    console.warn("⚠️ [LoadDefeitos] Falha no SQL, usando fallback Excel:", err);
+  }
+
+  // 2. Fallback: Lê o arquivo Excel local (Comportamento original)
+  // eslint-disable-next-line no-console
+  console.log("📂 [LoadDefeitos] Usando Excel Local (Fallback)");
+  
   const filePath = path.join(
     process.cwd(),
     "public",

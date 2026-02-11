@@ -5,11 +5,9 @@ import { Squares2X2Icon } from "@heroicons/react/24/outline";
 
 interface Props {
   data: Record<string, number>;
+  onClickCode?: (code: string) => void; // ✅ Callback para clique
 }
 
-/* ======================================================
-   NORMALIZAÇÃO LOCAL (IGUAL AO BACKEND)
-====================================================== */
 function normalizeCode(value: string) {
   return value
     .normalize("NFD")
@@ -19,40 +17,18 @@ function normalizeCode(value: string) {
     .trim();
 }
 
-/* ======================================================
-   MAPA CANÔNICO DE OCORRÊNCIAS
-====================================================== */
 const CANONICAL_CODES: Record<string, string> = {
-  AC: "AC",
-  AF: "AF",
-  AN: "AN",
-  DP: "DP",
-  ENG: "ENG",
-  F: "F",
-  FL: "FL",
-  INTMOD: "INT MOD",
-  JIG: "JIG",
-  LCM: "LCM",
-  MA: "MA",
-  OC: "OC",
-  P: "P",
-  PS: "PS",
-  RC: "RC",
-  REVISAO: "REVISÃO",
-  RT: "RT",
-  RV: "RV",
-  T: "T",
+  A: "A", RC: "RC", AFRET: "AF RET", FF: "FF", VER: "VER",
+  INTMOD: "INT MOD", RT: "RT", OC: "OC", AN: "AN", AC: "AC",
+  F: "F", FL: "FL", P: "P", PS: "PS", REVISAO: "REVISÃO", RV: "RV", T: "T",
 };
 
-export default function PpmOcorrenciasBreakdown({ data }: Props) {
+export default function PpmOcorrenciasBreakdown({ data, onClickCode }: Props) {
   const aggregated: Record<string, number> = {};
 
   Object.entries(data).forEach(([rawCode, qtd]) => {
     const normalized = normalizeCode(rawCode);
-    const canonical = CANONICAL_CODES[normalized];
-
-    if (!canonical) return;
-
+    const canonical = CANONICAL_CODES[normalized] || normalized;
     aggregated[canonical] = (aggregated[canonical] || 0) + qtd;
   });
 
@@ -76,7 +52,18 @@ export default function PpmOcorrenciasBreakdown({ data }: Props) {
       <div className="glass-panel">
         <div className="grid-list">
           {sorted.map(([code, qtd]) => (
-            <div key={code} className="breakdown-item">
+            <div 
+                key={code} 
+                className="breakdown-item"
+                // ✅ Lógica de clique adicionada
+                onClick={() => onClickCode && onClickCode(code)}
+                style={{ 
+                    cursor: onClickCode ? "pointer" : "default",
+                    transition: "background 0.2s"
+                }}
+                onMouseEnter={(e) => { if(onClickCode) e.currentTarget.style.background = "rgba(255,255,255,0.05)" }}
+                onMouseLeave={(e) => { if(onClickCode) e.currentTarget.style.background = "transparent" }}
+            >
               <span className="breakdown-code">{code}</span>
               <span className="breakdown-value">
                 {qtd.toLocaleString()}

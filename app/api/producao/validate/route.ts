@@ -45,7 +45,7 @@ function isErroProposital(modelName: string): boolean {
   return modelName.startsWith("TV-");
 }
 
-// GRUPO B1: Pré-Produção / Engenharia - NÃO IMPACTA KPI
+// GRUPO B1: INCONSISTÊNCIA NA PRODUÇÃO / Engenharia - NÃO IMPACTA KPI
 function isPreProducao(modelName: string): boolean {
   const m = modelName.toUpperCase();
   return ["EVAPORADOR", "CONDENSADOR", "AWS-"].some(k => m.includes(k));
@@ -155,12 +155,31 @@ function explainMismatch(prod: any, defeitosLista: any[], catalogs: any) {
   };
 }
 
+// ⚠️ FUNÇÃO ATUALIZADA COM FILTRO DE ANO 2026
 async function readSheet(filename = "producao.xlsx") {
   const p = path.join(process.cwd(), "public", "productions", filename);
   const buf = await fs.readFile(p);
   const wb = XLSX.read(buf, { type: "buffer" });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet) as Array<any>;
+  const rawData = XLSX.utils.sheet_to_json(sheet) as Array<any>;
+
+  if (filename === "producao.xlsx") {
+      const filtered = rawData.filter(r => {
+          let d: Date | null = null;
+          if (typeof r["DATA"] === "number") {
+             d = new Date((r["DATA"] - (25567 + 1)) * 86400 * 1000); 
+          } else if (typeof r["DATA"] === "string") {
+             d = new Date(r["DATA"]);
+          } else if (r["DATA"] instanceof Date) {
+             d = r["DATA"];
+          }
+          if (!d || isNaN(d.getTime())) return false;
+          return d.getFullYear() === 2026;
+      });
+      return filtered;
+  }
+  
+  return rawData;
 }
 
 export async function GET(req: Request) {
@@ -206,7 +225,7 @@ export async function GET(req: Request) {
       if (codigo) indexByCodigo.set(codigo, [...(indexByCodigo.get(codigo) || []), r]);
     }
 
-    // 3) Carrega produção
+    // 3) Carrega produção (JÁ FILTRADA POR ANO 2026)
     const prodRaw = await readSheet(file);
     if (!Array.isArray(prodRaw)) throw new Error("Produção inválida");
 
@@ -372,7 +391,7 @@ export async function GET(req: Request) {
         if (isErroProposital(modeloDefeito)) {
           defeitosSemProducao.push({ ...item, motivo: "Teste de Validação (Proposital)" });
         } else if (isPreProducao(modeloDefeito)) {
-          preProducao.push({ ...item, motivo: "Item ainda em Engenharia/Pré-série" });
+          preProducao.push({ ...item, motivo: "Item ainda em Engenharia/Pré-série/Inconsistente na Produção" });
         } else if (isProducaoParcial(modeloDefeito)) {
           producaoParcial.push({ ...item, motivo: "Placa produzida, Produto final não" });
         } else {

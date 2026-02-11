@@ -105,12 +105,12 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 1. GRUPO B1: PRÉ-PRODUÇÃO (Verifica se está na lista de pré-produção)
+  // 1. GRUPO B1: INCONSISTÊNCIA NA PRODUÇÃO (Verifica se está na lista de INCONSISTÊNCIA)
   const isPreProd = diagnostico?.preProducao?.find((d: any) => d.modelo === nome);
   if (isPreProd) {
     return {
       tipo: "pre-producao",
-      causa: "Item classificado como Engenharia/Pré-Produção (ex: EVAPORADOR, CONDENSADOR).",
+      causa: "Item classificado como Engenharia/Inconsistência na Produção (ex: EVAPORADOR, CONDENSADOR).",
       sugestao: "Este item não deve ter produção final registrada. Acompanhar apenas se houver desvio de qualidade."
     };
   }
@@ -130,7 +130,7 @@ function analisarModelo(m: any, diagnostico: any) {
   if (isErroTeste) {
     return {
       tipo: "teste",
-      causa: "Erro de validação identificado (TV-xxx). Item de teste sem produção real.",
+      causa: "Erro de validação identificado. Item de teste sem produção real.",
       sugestao: "Confirmar se este é um teste de sistema. Se for produção real, cadastrar o modelo corretamente."
     };
   }

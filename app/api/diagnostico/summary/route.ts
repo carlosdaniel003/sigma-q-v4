@@ -473,7 +473,8 @@ export async function GET(req: Request) {
     };
 
     // 1. Carregar Bases
-    const defeitosRaw = loadDefeitos();
+    // ✅ CORRIGIDO: Adicionado await pois loadDefeitos é async (Promise)
+    const defeitosRaw = await loadDefeitos();
     const producaoRaw = loadProducao(); 
     const agrupamentos = loadAgrupamento();
     const fmeaEstatico = loadFmea(); 

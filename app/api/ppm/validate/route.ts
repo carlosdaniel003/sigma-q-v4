@@ -1,22 +1,14 @@
 import { NextResponse } from "next/server";
-import fs from "fs/promises";
-import path from "path";
-import * as XLSX from "xlsx";
-
 // 🔹 Motor PPM
 import { runPpmEngine } from "@/core/ppm/ppmEngine";
+// ✅ IMPORTAÇÃO DO CARREGADOR DE DEFEITOS (Já filtra PA no dataAdapter)
+import { loadDefeitos } from "@/core/data/loadDefeitos";
+// ✅ IMPORTAÇÃO DIRETA DO BUSCADOR DE OCORRÊNCIAS
+import { fetchOcorrenciasFromSQL } from "@/core/data/dataAdapter";
+// ✅ IMPORTAÇÃO DO CARREGADOR DE PRODUÇÃO
+import { loadProductionRaw } from "@/core/ppm/ppmProductionNormalizer";
 
-// ======================================================
-// Utils
-// ======================================================
-
-async function readXlsx<T = any>(filePath: string): Promise<T[]> {
-  const buffer = await fs.readFile(filePath);
-  const workbook = XLSX.read(buffer, { type: "buffer" });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet) as T[];
-}
-
+// eslint-disable-next-line no-console
 console.log("🚨 API PPM VALIDATE CARREGADA");
 
 // ======================================================
@@ -25,67 +17,83 @@ console.log("🚨 API PPM VALIDATE CARREGADA");
 
 export async function GET() {
   try {
+    // eslint-disable-next-line no-console
     console.log("🟢 [PPM-API] Iniciando validação de PPM");
 
     // --------------------------------------------------
     // 1️⃣ PRODUÇÃO
     // --------------------------------------------------
-    const productionPath = path.join(
-      process.cwd(),
-      "public",
-      "productions",
-      "producao.xlsx"
-    );
-
-    const productionRaw = await readXlsx(productionPath);
-
-    console.log(
-      "📦 [PPM-API] Produção carregada:",
-      productionRaw.length
-    );
+    const productionRaw = loadProductionRaw();
 
     // --------------------------------------------------
-    // 2️⃣ DEFEITOS — SOMENTE PRODUTO ACABADO (REGRA NOVA)
+    // 2️⃣ DEFEITOS (KPI) & OCORRÊNCIAS (INFO)
     // --------------------------------------------------
-    const defectsPath = path.join(
-      process.cwd(),
-      "public",
-      "defeitos",
-      "defeitos_produto_acabado.xlsx"
-    );
+    
+    // Carrega em paralelo para ser mais rápido
+    const [defectsRaw, occurrencesRaw] = await Promise.all([
+        loadDefeitos(),            // Defeitos reais (sem AC, AN, etc)
+        fetchOcorrenciasFromSQL()  // Apenas ocorrências (AC, AN, etc)
+    ]);
 
-    const defectsRaw = await readXlsx(defectsPath);
-
-    console.log(
-      "📦 [PPM-API] Defeitos PRODUTO ACABADO carregados:",
-      defectsRaw.length
-    );
+    // eslint-disable-next-line no-console
+    console.log(`📦 [PPM-API] Dados Carregados:`);
+    console.log(`   - Produção: ${productionRaw.length}`);
+    console.log(`   - Defeitos (KPI): ${defectsRaw.length}`);
+    console.log(`   - Ocorrências (Info): ${occurrencesRaw.length}`);
 
     // --------------------------------------------------
-    // 3️⃣ MOTOR PPM
+    // 3️⃣ MOTOR PPM (Calcula KPI apenas com Defeitos)
     // --------------------------------------------------
     const result = runPpmEngine(
       productionRaw,
       defectsRaw
     );
 
-    console.log("✅ [PPM-API] Motor PPM executado");
+    // --------------------------------------------------
+    // 4️⃣ PROCESSAMENTO DE OCORRÊNCIAS (Manual)
+    // --------------------------------------------------
+    // O motor de PPM ignora ocorrências, então calculamos o breakdown aqui
+    const occurrencesByCode: Record<string, number> = {};
+    const occurrencesByCategory: Record<string, Record<string, number>> = {};
+
+    occurrencesRaw.forEach((occ) => {
+        // Normaliza o código para agrupar (ex: "AC " -> "AC")
+        const code = String(occ["CÓDIGO DO FORNECEDOR"] || "N/A").trim().toUpperCase();
+        const cat = occ.CATEGORIA || "GERAL";
+
+        // Global
+        occurrencesByCode[code] = (occurrencesByCode[code] || 0) + 1;
+
+        // Por Categoria
+        if (!occurrencesByCategory[cat]) {
+            occurrencesByCategory[cat] = {};
+        }
+        occurrencesByCategory[cat][code] = (occurrencesByCategory[cat][code] || 0) + 1;
+    });
 
     // --------------------------------------------------
-    // 4️⃣ RESPONSE
+    // 5️⃣ RESPONSE
     // --------------------------------------------------
+    
+    // Mesclamos o resultado do Motor PPM com os dados de Ocorrências
+    const finalMeta = {
+        ...result.meta,
+        totalOccurrences: occurrencesRaw.length,
+        occurrencesByCode,
+        occurrencesByCategory,
+        occurrencesList: occurrencesRaw // ✅ NOVA PROPRIEDADE: LISTA BRUTA PARA O MODAL
+    };
+
     return NextResponse.json({
       ok: true,
 
-      meta: result.meta,
+      meta: finalMeta, 
       diagnostics: result.globalDiagnostics,
 
-      // ⚠️ PARA A TELA DE VALIDAÇÃO
       rows: result.allRows,
-
-      // ⚠️ FUTURO: categorias, dashboards, etc
       byCategory: result.byCategory,
     });
+
   } catch (error: any) {
     console.error("❌ [PPM-API] Erro crítico:", error);
 

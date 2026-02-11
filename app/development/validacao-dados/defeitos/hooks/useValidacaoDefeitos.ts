@@ -4,10 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useDefectsData } from "../../context/DefectsContext";
 
 /* -------------------------------------------------------
-   TIPOS OFICIAIS
+   TIPOS OFICIAIS (Agora genéricos para suportar SQL dinâmico)
 ------------------------------------------------------- */
-export type Fonte = "todas" | "af" | "lcm" | "produto acabado" | "pth";
-export type FonteFiltro = "todas" | "af" | "lcm" | "produto" | "pth";
+export type Fonte = string; // Antes era Union Type fixo, agora aceita qualquer Categoria
+export type FonteFiltro = string;
 
 interface LogEntry {
   ts: string;
@@ -20,14 +20,14 @@ interface LogEntry {
 ------------------------------------------------------- */
 export default function useValidacaoDefeitos() {
   /* -----------------------------------------
-     CONTEXTO — FONTE ÚNICA DA VERDADE
-  ----------------------------------------- */
+      CONTEXTO — FONTE ÚNICA DA VERDADE
+   ----------------------------------------- */
   // diag aqui vem BRUTO do backend (todas as inconsistências)
   const { stats, diag } = useDefectsData();
 
   /* -----------------------------------------
-     ESTADOS DE UI
-  ----------------------------------------- */
+      ESTADOS DE UI
+   ----------------------------------------- */
   const [fonte, setFonte] = useState<Fonte>("todas");
   const [diagFilter, setDiagFilter] = useState<FonteFiltro>("todas");
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -35,8 +35,8 @@ export default function useValidacaoDefeitos() {
   const mounted = useRef(true);
 
   /* -----------------------------------------
-     LOGGER
-  ----------------------------------------- */
+      LOGGER
+   ----------------------------------------- */
   const addLog = (msg: string, type: LogEntry["type"] = "info") => {
     if (!mounted.current) return;
 
@@ -51,8 +51,8 @@ export default function useValidacaoDefeitos() {
   };
 
   /* -----------------------------------------
-     STATUS DE CARGA
-  ----------------------------------------- */
+      STATUS DE CARGA
+   ----------------------------------------- */
   useEffect(() => {
     mounted.current = true;
 
@@ -71,8 +71,8 @@ export default function useValidacaoDefeitos() {
   }, [stats]);
 
   /* -----------------------------------------
-     KPIs — 100% BACKEND
-  ----------------------------------------- */
+      KPIs — 100% BACKEND
+   ----------------------------------------- */
   const total = stats?.totalItems ?? 0;
   const totalDefeitos = stats?.totalDefeitos ?? 0;
   const notIdentified = stats?.notIdentified ?? 0;
@@ -81,29 +81,34 @@ export default function useValidacaoDefeitos() {
   const breakdown = stats?.notIdentifiedBreakdown ?? {};
 
   /* -----------------------------------------
-     🔑 FILTRO POR BASE (SIDEBAR)
-     → Sidebar decide a BASE
-     → Diagnóstico decide o detalhe
-  ----------------------------------------- */
+      🔑 FILTRO POR CATEGORIA (SIDEBAR)
+      → Sidebar define a "fonte" (que agora é a Categoria: TV, CM, etc)
+      → Aqui filtramos o array de diagnósticos
+   ----------------------------------------- */
   const diagByFonte = (() => {
     if (!Array.isArray(diag)) return [];
 
-    // TODAS = sem filtro
+    // 1. Se for "todas", retorna tudo sem filtrar
     if (fonte === "todas") return diag;
 
-    // Normalização: "produto acabado" → "produto"
-    const fonteNormalizada =
-      fonte === "produto acabado" ? "produto" : fonte;
+    // 2. Filtro Inteligente por Categoria
+    // CORREÇÃO CRÍTICA: A API devolve a categoria do produto (TV, CM) na propriedade 'fonte'.
+    // A propriedade 'categoria' contém o TIPO do erro (ex: 'falhas', 'modelos').
+    // Portanto, devemos comparar a seleção da sidebar apenas com 'd.fonte'.
+    return diag.filter((d: any) => {
+        // Normaliza o item que veio da API (Pega a Categoria do Produto)
+        const itemProductCat = String(d.fonte || d.CATEGORIA || "").toUpperCase().trim();
+        
+        // Normaliza o que foi selecionado na Sidebar
+        const selectedCat = fonte.toUpperCase().trim();
 
-    return diag.filter(
-      (d: any) =>
-        String(d.fonte || "").toLowerCase() === fonteNormalizada
-    );
+        return itemProductCat === selectedCat;
+    });
   })();
 
   /* -----------------------------------------
-     EXPORTAÇÃO
-  ----------------------------------------- */
+      EXPORTAÇÃO
+   ----------------------------------------- */
   return {
     // filtros
     fonte,
@@ -115,8 +120,7 @@ export default function useValidacaoDefeitos() {
     // dados OFICIAIS
     stats,
 
-    // ✅ AGORA O DIAGNÓSTICO RECEBE
-    // SOMENTE OS DADOS DA BASE SELECIONADA
+    // ✅ DIAGNÓSTICO FILTRADO POR CATEGORIA CORRETAMENTE
     diag: diagByFonte,
 
     // logs

@@ -30,6 +30,66 @@ export default function SidebarCategorias({
     return "var(--danger)";
   }
 
+  // Função auxiliar para renderizar cards (padrão igual SidebarDefeitos)
+  const renderCard = (cat: any, isMain: boolean = false) => {
+    const key = isMain ? "null" : cat.categoria;
+    const label = isMain ? "VISÃO GERAL" : cat.categoria;
+    const isActive = isMain ? selectedCategory === null : selectedCategory === cat.categoria;
+    
+    // Se for main, não tem pct específico aqui (ou poderia ser calculado globalmente)
+    const pct = isMain ? 0 : parsePct(cat.identifiedPct);
+    const color = getColor(pct);
+
+    return (
+      <div
+        key={key}
+        className={`base-card ${isActive ? "active" : ""}`}
+        onClick={() => setSelectedCategory(isMain ? null : cat.categoria)}
+        style={isMain ? { marginBottom: "1.5rem", borderBottom: "1px solid var(--border)" } : {}}
+      >
+        <div className="base-header">
+          <span className="base-name" style={isMain ? { fontSize: "0.9rem", fontWeight: 700 } : {}}>
+            {label}
+          </span>
+          
+          {isMain && <BarChart3 size={16} />}
+
+          {!isMain && (
+            <span
+              className="base-percent"
+              style={{ color }}
+            >
+              {pct.toFixed(1)}%
+            </span>
+          )}
+        </div>
+
+        {isMain ? (
+             <div className="base-subinfo" style={{marginTop: "0.5rem"}}>
+                Resumo geral da produção
+             </div>
+        ) : (
+            <>
+                <div className="base-subinfo">
+                    <strong>{cat.volume?.toLocaleString() ?? 0}</strong> un. •{" "}
+                    {cat.rows?.toLocaleString() ?? 0} linhas
+                </div>
+
+                <div className="progress-wrapper">
+                    <div
+                    className="progress-bar"
+                    style={{
+                        width: `${pct}%`,
+                        background: color,
+                    }}
+                    />
+                </div>
+            </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <aside className="defeitos-sidebar">
       
@@ -42,75 +102,23 @@ export default function SidebarCategorias({
           CATEGORIAS
       ============================================================ */}
       <div className="sidebar-group">
-        <div className="sidebar-title">Categorias</div>
-
+        <div className="sidebar-title">Global</div>
         {/* VISÃO GERAL */}
-        <div
-          className={`base-card ${selectedCategory === null ? "active" : ""}`}
-          onClick={() => setSelectedCategory(null)}
-        >
-          <div className="base-header">
-            <span className="base-name">VISÃO GERAL</span>
-            <BarChart3 size={16} />
-          </div>
+        {renderCard({}, true)}
 
-          <div className="base-subinfo">
-            Resumo geral da produção
-          </div>
+        {categories.length > 0 && (
+            <>
+                <div className="sidebar-title" style={{marginTop: "1rem"}}>Categorias</div>
+                {/* LISTA DE CATEGORIAS */}
+                {categories.map((c) => renderCard(c))}
+            </>
+        )}
 
-          <div className="progress-wrapper">
-            <div
-              className="progress-bar"
-              style={{
-                width: "100%",
-                background: "var(--brand)",
-              }}
-            />
-          </div>
-        </div>
-
-        {/* LISTA DE CATEGORIAS */}
-        {categories.map((c) => {
-          // ✅ Usa o parser seguro aqui
-          const pct = parsePct(c.identifiedPct);
-          const color = getColor(pct);
-
-          return (
-            <div
-              key={c.categoria}
-              className={`base-card ${
-                selectedCategory === c.categoria ? "active" : ""
-              }`}
-              onClick={() => setSelectedCategory(c.categoria)}
-            >
-              <div className="base-header">
-                <span className="base-name">{c.categoria}</span>
-
-                <span
-                  className="base-percent"
-                  style={{ color }}
-                >
-                  {pct.toFixed(1)}%
-                </span>
-              </div>
-
-              <div className="base-subinfo">
-                <strong>{c.volume?.toLocaleString() ?? 0}</strong> un. •{" "}
-                {c.rows?.toLocaleString() ?? 0} linhas
-              </div>
-
-              <div className="progress-wrapper">
-                <div
-                  className="progress-bar"
-                  style={{
-                    width: `${pct}%`,
-                    background: color,
-                  }}
-                />
-              </div>
-            </div>
-          );
-        })}
+        {categories.length === 0 && (
+             <div style={{ padding: "1rem", color: "var(--text-muted)", fontSize: "0.8rem" }}>
+                Carregando categorias...
+             </div>
+        )}
       </div>
     </aside>
   );

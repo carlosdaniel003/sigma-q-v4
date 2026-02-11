@@ -13,7 +13,6 @@ export interface DetailRow {
   ppm: number;
 }
 
-// ✅ Nova interface para o Backend também
 export interface ResponsibilityGroup {
   responsibility: string;
   top3: DetailRow[];
@@ -23,7 +22,7 @@ export interface TurnoStats {
   turno: string;
   producao: number;
   totalDefeitos: number;
-  groups: ResponsibilityGroup[]; // ✅ Lista de grupos em vez de top3 plano
+  groups: ResponsibilityGroup[]; 
 }
 
 function norm(val: any) {
@@ -46,11 +45,19 @@ export function calculateDetailsRanking(
   defects: DefectInputRow[]
 ): TurnoStats[] {
   
-  // 1. Produção Unificada (para cálculo de PPM)
-  let totalPeriodProduction = 0;
+  // ✅ 1. Mapa de Produção por Turno
+  const productionByTurno = new Map<string, number>();
+  
   production.forEach(p => {
+    // Normaliza o turno da produção com a mesma lógica dos defeitos
+    const rawTurno = (p as any).TURNO || (p as any).Turno || "GERAL";
+    const turno = normalizeTurno(rawTurno);
+    
     const qtd = Number(p.QTY_GERAL ?? (p as any).produzido ?? 0);
-    if (!isNaN(qtd)) totalPeriodProduction += qtd;
+    
+    if (!isNaN(qtd)) {
+        productionByTurno.set(turno, (productionByTurno.get(turno) || 0) + qtd);
+    }
   });
 
   // 2. Agrupar Defeitos por Turno -> Assinatura Única
@@ -72,7 +79,7 @@ export function calculateDetailsRanking(
     const peca = norm(row["PEÇA/PLACA"] || row.PECA_PLACA || "");
     const ref = norm(row["REFERÊNCIA/POSIÇÃO MECÂNICA"] || row.REFERENCIA || "");
     const analise = norm(row.ANALISE || row["ANÁLISE"] || "");
-    const resp = norm(row.RESPONSABILIDADE || "OUTROS"); // Garante que tenha algo
+    const resp = norm(row.RESPONSABILIDADE || "OUTROS");
     const modelo = norm(row.MODELO || ""); 
 
     const signature = `${cod}|${falha}|${peca}|${ref}|${analise}|${resp}|${modelo}`;
@@ -95,7 +102,8 @@ export function calculateDetailsRanking(
   const turnosSorted = Array.from(turnoDefectMap.keys()).sort();
 
   turnosSorted.forEach(turno => {
-    const prod = totalPeriodProduction;
+    // ✅ CORREÇÃO: Pega a produção específica deste turno
+    const prod = productionByTurno.get(turno) || 0;
     const totalDef = turnoTotalDefects.get(turno) || 0;
     
     // Objeto temporário para separar por Responsabilidade
@@ -111,7 +119,7 @@ export function calculateDetailsRanking(
 
     const groups: ResponsibilityGroup[] = [];
 
-    // Ordena as responsabilidades alfabeticamente ou por volume (aqui alfabética)
+    // Ordena as responsabilidades alfabeticamente
     const respSorted = Array.from(byResp.keys()).sort();
 
     respSorted.forEach(respName => {
@@ -131,6 +139,7 @@ export function calculateDetailsRanking(
             responsabilidade: item.responsabilidade,
             modelo: item.modelo,
             qtd: item.qtd,
+            // PPM específico do turno e defeito
             ppm: prod > 0 ? (item.qtd / prod) * 1_000_000 : 0
         }));
 
@@ -142,9 +151,9 @@ export function calculateDetailsRanking(
 
     result.push({
         turno,
-        producao: prod,
+        producao: prod, // ✅ Agora reflete o valor correto (ex: 116k para Comercial)
         totalDefeitos: totalDef,
-        groups // ✅ Retorna os grupos em vez de lista plana
+        groups
     });
   });
 
