@@ -20,7 +20,7 @@ export default function TabelaDetalhamento({ data, filterLabel }: Props) {
       return label; 
   };
 
-  // ✅ NOVA ORDENAÇÃO: Força Comercial primeiro
+  // ✅ ORDENAÇÃO DE TURNOS: Força "Comercial" a aparecer primeiro
   const sortedData = useMemo(() => {
       return [...data].sort((a, b) => {
           const turnoA = a.turno.toLowerCase();
@@ -52,7 +52,7 @@ export default function TabelaDetalhamento({ data, filterLabel }: Props) {
 function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
   return (
     <div style={containerStyle}>
-      {/* CABEÇALHO */}
+      {/* CABEÇALHO DO TURNO */}
       <div style={headerStyle}>
         <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#fff", fontWeight: 700 }}>
           TOP 3 POR RESPONSABILIDADE ({label}) - {stats.turno}
@@ -63,7 +63,7 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
         </div>
       </div>
 
-      {/* TABELA */}
+      {/* TABELA DE DADOS */}
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", color: "#e2e8f0" }}>
           <thead>
@@ -86,10 +86,10 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                     </td>
                 </tr>
             ) : (
-                // ✅ ITERA SOBRE OS GRUPOS DE RESPONSABILIDADE
+                // ✅ ITERA SOBRE OS GRUPOS DE RESPONSABILIDADE (JÁ FILTRADOS PELO BACKEND)
                 stats.groups.map((group) => (
                     <React.Fragment key={group.responsibility}>
-                        {/* SEPARADOR DE RESPONSABILIDADE (AGORA CENTRALIZADO) */}
+                        {/* SEPARADOR DE RESPONSABILIDADE */}
                         <tr style={{ background: "rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                             <td colSpan={8} style={{ 
                                 padding: "8px 16px", 
@@ -98,7 +98,7 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                                 textTransform: "uppercase", 
                                 fontSize: "0.8rem", 
                                 letterSpacing: "0.05em",
-                                textAlign: "center" // ✅ Centralizado
+                                textAlign: "center" 
                             }}>
                                 {group.responsibility}
                             </td>
@@ -114,7 +114,6 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                                 <td style={tdStyle}>{row.ref}</td>
                                 <td style={tdStyle}>{row.analise}</td>
                                 <td style={{ ...tdStyleCenter, color: "#fff", fontWeight: "bold" }}>{row.qtd}</td>
-                                {/* ✅ Cor do PPM alterada para Azul (#3B82F6) */}
                                 <td style={{ ...tdStyleCenter, color: "#F59E0B", fontWeight: "bold" }}>
                                     {row.ppm.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>

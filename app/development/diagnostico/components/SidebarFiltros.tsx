@@ -1,4 +1,3 @@
-// C:\Users\cdaniel\Documents\sigma-q-v3\v3\app\development\diagnostico\components\SidebarFiltros.tsx
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
@@ -55,15 +54,24 @@ export default function SidebarFiltros() {
     );
   }, [options, draftFilters.categoria]);
 
-  // ✅ FILTRO DE RESPONSABILIDADE: Remove "NÃO MOSTRAR NO INDICE"
+  // ✅ FILTRO DE RESPONSABILIDADE: Injeta Grupos Virtuais
   const responsabilidadesFiltradas = useMemo(() => {
     if (!options) return [];
-    return options.responsabilidades.filter(
+    
+    // 1. Limpa a lista original
+    const listaLimpa = options.responsabilidades.filter(
       (resp) => 
         resp !== "NÃO MOSTRAR NO INDICE" && 
         resp !== "NAO MOSTRAR NO INDICE" &&
         resp !== "NÃO MOSTRAR NO ÍNDICE"
     );
+
+    // 2. Adiciona os grupos no topo da lista
+    return [
+        "AGRUPAMENTO DE PROCESSOS",
+        "AGRUPAMENTO DE FORNECEDORES",
+        ...listaLimpa
+    ];
   }, [options]);
 
   useEffect(() => {
@@ -166,8 +174,7 @@ export default function SidebarFiltros() {
         label="Responsabilidade"
         value={draftFilters.responsabilidade ?? ""}
         onChange={(v: string) => setDraftFilter("responsabilidade", v)}
-        // ✅ Agora usamos a lista filtrada aqui
-        options={responsabilidadesFiltradas}
+        options={responsabilidadesFiltradas} // ✅ Lista com grupos injetados
       />
 
       <Select

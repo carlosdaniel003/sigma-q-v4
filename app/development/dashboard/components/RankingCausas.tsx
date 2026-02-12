@@ -214,6 +214,7 @@ const renderCustomLabel = (props: any) => {
 /* ======================================================
    ESTILOS
 ====================================================== */
+// ✅ CORREÇÃO Z-INDEX: Assegura que o RankingCausas fique "abaixo"
 const containerStyle: React.CSSProperties = { 
     background: "rgba(255,255,255,0.04)", 
     border: "1px solid rgba(255,255,255,0.08)", 
@@ -221,7 +222,9 @@ const containerStyle: React.CSSProperties = {
     padding: 24, 
     height: 480, 
     display: "flex", 
-    flexDirection: "column" 
+    flexDirection: "column",
+    position: "relative", // Necessário para z-index funcionar
+    zIndex: 1,            // Fica abaixo do gráfico superior
 };
 
 const headerWrapper: React.CSSProperties = { 

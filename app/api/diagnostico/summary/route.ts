@@ -454,6 +454,34 @@ function montarLabelsSustentacao(
     }
 }
 
+// ✅ LÓGICA DE FILTRO INTELIGENTE PARA DIAGNÓSTICO
+// Garante que o motor de filtragem entenda os grupos virtuais
+function matchResponsabilidade(itemValue: string, filtro: string): boolean {
+    if (!filtro || filtro === "Todos") return true;
+
+    const val = norm(itemValue);
+    const filter = norm(filtro);
+
+    // 1. Grupo Virtual: AGRUPAMENTO DE PROCESSOS
+    if (filter === "AGRUPAMENTO DE PROCESSOS") {
+        return (
+            val.startsWith("PROC") || 
+            val.includes("PROCESSO") || 
+            val.includes("PTH") || 
+            val.includes("LCM") ||
+            val.includes("DIP")
+        ); 
+    }
+
+    // 2. Grupo Virtual: AGRUPAMENTO DE FORNECEDORES
+    if (filter === "AGRUPAMENTO DE FORNECEDORES") {
+        return val.includes("FORNECEDOR") || val.includes("FORN"); 
+    }
+
+    // 3. Filtro Exato
+    return val === filter;
+}
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -473,7 +501,6 @@ export async function GET(req: Request) {
     };
 
     // 1. Carregar Bases
-    // ✅ CORRIGIDO: Adicionado await pois loadDefeitos é async (Promise)
     const defeitosRaw = await loadDefeitos();
     const producaoRaw = loadProducao(); 
     const agrupamentos = loadAgrupamento();
@@ -482,8 +509,20 @@ export async function GET(req: Request) {
 
     /* ------------------------------------------------------
         2. DADOS ATUAIS (T)
+        ✅ Injetando matchResponsabilidade no motor de filtragem
     ------------------------------------------------------ */
-    let dadosAtual = filtrarDefeitosDiagnostico(defeitosRaw, { ...filtrosBase, periodo: { semanas: ranges.atual.semanas } }, ocorrenciasIgnorar);
+    // Precisamos de um wrapper que sobrescreva a lógica de filtro padrão apenas para responsabilidade
+    // Como a função filtrarDefeitosDiagnostico pode não suportar a lógica complexa, 
+    // faremos uma pré-filtragem manual se for um grupo virtual.
+    
+    let dadosFiltradosRaw = defeitosRaw;
+    if (filtrosBase.responsabilidade && filtrosBase.responsabilidade[0] !== "Todos") {
+        dadosFiltradosRaw = defeitosRaw.filter(d => matchResponsabilidade(d.RESPONSABILIDADE, filtrosBase.responsabilidade![0]));
+        // Removemos o filtro de responsabilidade do objeto para não filtrar duas vezes (e errado)
+        filtrosBase.responsabilidade = undefined;
+    }
+
+    let dadosAtual = filtrarDefeitosDiagnostico(dadosFiltradosRaw, { ...filtrosBase, periodo: { semanas: ranges.atual.semanas } }, ocorrenciasIgnorar);
     dadosAtual = aplicarPenteFinoDatas(dadosAtual, ranges.atual);
 
     const fmeaDinamico = calcularFmeaDinamico(fmeaEstatico, dadosAtual);
@@ -497,7 +536,7 @@ export async function GET(req: Request) {
     /* ------------------------------------------------------
         3. DADOS ANTERIORES (T-1)
     ------------------------------------------------------ */
-    let dadosAnterior = filtrarDefeitosDiagnostico(defeitosRaw, { ...filtrosBase, periodo: { semanas: ranges.anterior.semanas } }, ocorrenciasIgnorar);
+    let dadosAnterior = filtrarDefeitosDiagnostico(dadosFiltradosRaw, { ...filtrosBase, periodo: { semanas: ranges.anterior.semanas } }, ocorrenciasIgnorar);
     dadosAnterior = aplicarPenteFinoDatas(dadosAnterior, ranges.anterior);
     
     const agregacaoAnterior = agruparDiagnostico(dadosAnterior, agrupamentos, fmeaEstatico); 
@@ -509,7 +548,7 @@ export async function GET(req: Request) {
     /* ------------------------------------------------------
         4. DADOS ANTEPENÚLTIMOS (T-2)
     ------------------------------------------------------ */
-    let dadosAnt2 = filtrarDefeitosDiagnostico(defeitosRaw, { ...filtrosBase, periodo: { semanas: ranges.antepenultimo.semanas } }, ocorrenciasIgnorar);
+    let dadosAnt2 = filtrarDefeitosDiagnostico(dadosFiltradosRaw, { ...filtrosBase, periodo: { semanas: ranges.antepenultimo.semanas } }, ocorrenciasIgnorar);
     dadosAnt2 = aplicarPenteFinoDatas(dadosAnt2, ranges.antepenultimo);
     const totalProducaoAnt2 = calcularProducaoFiltrada(producaoRaw, ranges.antepenultimo, filtrosBase, "ANTEPENULTIMO");
 
@@ -533,7 +572,7 @@ export async function GET(req: Request) {
     /* ------------------------------------------------------
         7. TENDÊNCIAS & REINCIDÊNCIA (HISTÓRICO EXPANDIDO)
     ------------------------------------------------------ */
-    const dadosParaTendencia = filtrarDefeitosDiagnostico(defeitosRaw, { ...filtrosBase, periodo: { semanas: ranges.rangeTendencia.semanas } }, ocorrenciasIgnorar);
+    const dadosParaTendencia = filtrarDefeitosDiagnostico(dadosFiltradosRaw, { ...filtrosBase, periodo: { semanas: ranges.rangeTendencia.semanas } }, ocorrenciasIgnorar);
     
     const streakReincidencia = calcularSequenciaReincidencia(
         dadosParaTendencia, 

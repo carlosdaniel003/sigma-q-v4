@@ -50,14 +50,23 @@ export default function SidebarDashboard() {
     );
   }, [options, draftFilters.categoria]);
 
-  // Filtra responsabilidades inválidas/internas
+  // ✅ Filtra responsabilidades e INJETA os grupos virtuais
   const responsabilidadesFiltradas = useMemo(() => {
     if (!options) return [];
-    return options.responsabilidades.filter(
+    
+    // 1. Limpa a lista original
+    const listaLimpa = options.responsabilidades.filter(
       (resp) => 
         !resp.includes("NÃO MOSTRAR") && 
         !resp.includes("NAO MOSTRAR")
     );
+
+    // 2. Adiciona os grupos no topo da lista
+    return [
+        "AGRUPAMENTO DE PROCESSOS",
+        "AGRUPAMENTO DE FORNECEDORES",
+        ...listaLimpa
+    ];
   }, [options]);
 
   // Auto-seleciona categoria ao escolher modelo
@@ -76,7 +85,7 @@ export default function SidebarDashboard() {
       return !!tipo;
   }, [draftFilters.periodo]);
 
-  // ✅ NOVO: Calcula os dias da semana selecionada
+  // Calcula os dias da semana selecionada
   const diasDaSemana = useMemo(() => {
       if (draftFilters.periodo.tipo !== "semana" || !draftFilters.periodo.valor || !draftFilters.periodo.ano) {
           return [];
@@ -167,7 +176,7 @@ export default function SidebarDashboard() {
           />
         )}
 
-        {/* ✅ 3. DIA ESPECÍFICO (Só aparece se semana estiver selecionada) */}
+        {/* 3. DIA ESPECÍFICO (Só aparece se semana estiver selecionada) */}
         {draftFilters.periodo.tipo === "semana" && draftFilters.periodo.valor && (
             <Select
                 label="Dia Específico"
@@ -240,7 +249,7 @@ export default function SidebarDashboard() {
   );
 }
 
-// ✅ Função auxiliar para gerar dias da semana ISO
+// Função auxiliar para gerar dias da semana ISO
 function getDaysOfWeek(week: number, year: number) {
     const simple = new Date(year, 0, 1 + (week - 1) * 7);
     const dayOfWeek = simple.getDay();

@@ -1,12 +1,12 @@
 import { DefeitoRaw } from "./loadDefeitos";
-import { DefeitoSQL } from "./types/SigmaSqlTypes"; // ✅ Importando Tipos
+import { DefeitoSQL } from "./types/SigmaSqlTypes"; 
 import {
   CAUSA_TRANSLATION,
   DEFEITO_TRANSLATION,
   RESPONSABILIDADE_TRANSLATION,
   TURNO_TRANSLATION,
   CODIGOS_OCORRENCIA
-} from "./constants/sigmaTranslations"; // ✅ Importando Constantes
+} from "./constants/sigmaTranslations"; 
 
 const API_URL = "http://10.110.100.227/qualitycontrol/SIGMA/teste_integracao/uploads/sigma_api.php";
 
@@ -16,6 +16,70 @@ const API_URL = "http://10.110.100.227/qualitycontrol/SIGMA/teste_integracao/upl
 let CACHE_MEMORIA: DefeitoRaw[] | null = null;
 let ULTIMA_BUSCA = 0;
 const TEMPO_CACHE_MS = 1000 * 60 * 5; // 5 Minutos de Cache
+
+// ======================================================
+// 🧠 HELPER: NORMALIZAÇÃO CANÔNICA (LIMPEZA TOTAL)
+// ======================================================
+function normalizeResponsibilityName(raw: string): string {
+    if (!raw) return "N/A";
+    const v = raw.trim().toUpperCase();
+
+    // 1. FORNECEDORES (Unifica tudo em 2 categorias)
+    if (v === "F" || v.includes("IMPORTADO") || v.includes("IMP")) return "FORNECEDOR IMPORTADO";
+    if (v === "FL" || (v.includes("LOCAL") && (v.includes("FORN") || v.includes("FORNECEDOR")))) return "FORNECEDOR LOCAL";
+
+    // 2. PROCESSOS (Mapeamento Rígido para sua Lista Oficial)
+    
+    // Agrupa DIP e PTH no mesmo pote
+    if (v.includes("DIP") || v.includes("PTH")) return "PROCESSO PTH";
+    
+    // Injeção
+    if (v.includes("INJE") || v.includes("INJEÇÃO")) return "PROCESSO INJEÇÃO";
+    
+    // LCM
+    if (v.includes("LCM")) return "PROCESSO LCM";
+    
+    // MA (Montagem Automática/Manual)
+    if (v === "PROCESSO MA" || v.includes(" MA ")) return "PROCESSO MA"; 
+    
+    // Alto Falante
+    if (v.includes("ALTO FALANTE") || v.includes("ALTO-FALANTE")) return "PROC. ALTO FALANTE";
+
+    // Engenharia/Projeto/JIG
+    if (v.includes("ENG") || v.includes("PROJETO") || v.includes("JIG")) return "ENGENHARIA/PROJETO";
+
+    // 3. FALLBACKS E LIMPEZA
+    // Se for "PROCESSO", "P", "PROCESSO SUBS" ou qualquer outro processo não mapeado acima, cai em PA
+    if (v.startsWith("PROC") || v === "P") {
+        return "PROCESSO PA";
+    }
+    
+    // Se não for nada disso (ex: "LOGÍSTICA"), mantém como está
+    return v;
+}
+
+// ======================================================
+// 🧠 LÓGICA DE GRUPOS INTELIGENTES (FILTROS)
+// ======================================================
+function matchResponsabilidade(itemValue: string, filtro: string): boolean {
+    if (!filtro || filtro === "Todos") return true;
+
+    const val = itemValue.toUpperCase().trim();
+    const filter = filtro.toUpperCase().trim();
+
+    // 1. Lógica para "AGRUPAMENTO DE PROCESSOS"
+    if (filter === "AGRUPAMENTO DE PROCESSOS") {
+        return val.startsWith("PROC"); 
+    }
+
+    // 2. Lógica para "AGRUPAMENTO DE FORNECEDORES"
+    if (filter === "AGRUPAMENTO DE FORNECEDORES") {
+        return val.startsWith("FORN"); 
+    }
+
+    // 3. Filtro Específico
+    return val === filter;
+}
 
 // ======================================================
 // FUNÇÃO INTERNA: CARREGA E NORMALIZA TUDO (COM CACHE)
@@ -71,7 +135,11 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             const defeitoTraduzido = DEFEITO_TRANSLATION[codigoDefeito] || codigoDefeito;
 
             const codigoResp = String(sqlItem.cod_mot || "").trim().toUpperCase();
-            const respTraduzida = RESPONSABILIDADE_TRANSLATION[codigoResp] || codigoResp;
+            let respTraduzida = RESPONSABILIDADE_TRANSLATION[codigoResp] || codigoResp;
+            
+            // ✅ APLICAÇÃO DA NORMALIZAÇÃO NA FONTE
+            // Isso garante que "DIP PTH" vire "PROCESSO PTH" e "F" vire "FORNECEDOR IMPORTADO" antes de qualquer filtro
+            respTraduzida = normalizeResponsibilityName(respTraduzida);
 
             const codigoTurno = String(sqlItem.turno || "").trim().toUpperCase();
             const turnoTraduzido = TURNO_TRANSLATION[codigoTurno] || codigoTurno;
@@ -114,22 +182,41 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
 
 // ======================================================
 // 1️⃣ BUSCAR DEFEITOS (PARA KPI/PPM) - SEM OCORRÊNCIAS
+// ✅ Agora aceita filtro opcional de Responsabilidade
 // ======================================================
-export async function fetchDefeitosFromSQL(): Promise<DefeitoRaw[]> {
+export async function fetchDefeitosFromSQL(filtroResponsabilidade?: string): Promise<DefeitoRaw[]> {
     const todos = await _loadAllFromSQL();
+    
     return todos.filter(item => {
+        // 1. Remove Ocorrências (Regra Padrão)
         const codMot = String(item["CÓDIGO DO FORNECEDOR"] || "").trim().toUpperCase();
-        return !CODIGOS_OCORRENCIA.includes(codMot);
+        if (CODIGOS_OCORRENCIA.includes(codMot)) return false;
+
+        // 2. Aplica Filtro Inteligente de Responsabilidade (Se houver)
+        if (filtroResponsabilidade && filtroResponsabilidade !== "Todos") {
+            return matchResponsabilidade(item.RESPONSABILIDADE, filtroResponsabilidade);
+        }
+
+        return true;
     });
 }
 
 // ======================================================
 // 2️⃣ ✅ BUSCAR OCORRÊNCIAS (PARA DETALHAMENTO)
 // ======================================================
-export async function fetchOcorrenciasFromSQL(): Promise<DefeitoRaw[]> {
+export async function fetchOcorrenciasFromSQL(filtroResponsabilidade?: string): Promise<DefeitoRaw[]> {
     const todos = await _loadAllFromSQL();
+    
     return todos.filter(item => {
+        // 1. Apenas Ocorrências
         const codMot = String(item["CÓDIGO DO FORNECEDOR"] || "").trim().toUpperCase();
-        return CODIGOS_OCORRENCIA.includes(codMot);
+        if (!CODIGOS_OCORRENCIA.includes(codMot)) return false;
+
+        // 2. Aplica Filtro Inteligente
+        if (filtroResponsabilidade && filtroResponsabilidade !== "Todos") {
+            return matchResponsabilidade(item.RESPONSABILIDADE, filtroResponsabilidade);
+        }
+
+        return true;
     });
 }

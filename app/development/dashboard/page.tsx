@@ -31,13 +31,13 @@ import TabelaDetalhamento from "./components/TabelaDetalhamento";
    Fórmula: % * 10.000
 ====================================================== */
 const METAS_POR_CATEGORIA: Record<string, number> = {
-  "ARCON": 5200,   // 0,520%
+  "ARCON": 3600,   // 0,360%
   "BBS": 7820,     // 0,782%
   "CM": 5870,      // 0,587%
   "MWO": 1730,     // 0,173%
   "TM": 11680,     // 1,168%
   "TV": 6870,      // 0,687%
-  "TW": 11590,     // 1,159%
+  "TW": 11680,     // 1,168%
   "GERAL": 5200    // 0,52%
 };
 

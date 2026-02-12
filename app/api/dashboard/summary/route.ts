@@ -21,7 +21,6 @@ function norm(val: any) {
 }
 
 // 🔄 NORMALIZADOR DE TURNO ROBUSTO
-// Garante que "Comercial", "C", "comercial" virem todos "COMERCIAL"
 function normalizeTurno(val: any): string {
     if (!val) return "";
     const v = norm(val);
@@ -32,7 +31,7 @@ function normalizeTurno(val: any): string {
     if (v === "A" || v === "1" || v === "1º" || v.includes("1º TURNO") || v.includes("1 TURNO")) return "1º TURNO";
     if (v === "3" || v === "3º" || v.includes("3º TURNO")) return "3º TURNO";
     
-    return v; // Retorna o valor original normalizado se não cair nos casos acima
+    return v; 
 }
 
 function parseDate(val: any): Date | null {
@@ -66,7 +65,28 @@ function getWeekNumber(d: Date): number {
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
 }
 
-const VALID_CAT = new Set(["BBS", "CM", "TV", "MWO", "TW", "TM", "ARCON", "NBX"]);
+// ✅ HELPER: Verifica se uma responsabilidade bate com o filtro (incluindo grupos virtuais)
+function matchResponsabilidade(itemResp: string, filtros: string[]): boolean {
+    if (!itemResp) return false;
+    const resp = norm(itemResp);
+
+    return filtros.some(filtro => {
+        const f = norm(filtro);
+        
+        // Grupo: AGRUPAMENTO DE PROCESSOS
+        if (f === "AGRUPAMENTO DE PROCESSOS") {
+            return resp.startsWith("PROC") || resp.includes("PROCESSO") || resp.includes("PTH") || resp.includes("LCM");
+        }
+        
+        // Grupo: AGRUPAMENTO DE FORNECEDORES
+        if (f === "AGRUPAMENTO DE FORNECEDORES") {
+            return resp.includes("FORN") || resp === "F" || resp === "FL";
+        }
+
+        // Filtro Exato
+        return resp === f;
+    });
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -83,9 +103,9 @@ export async function GET(request: NextRequest) {
 
     const filterCategoria = getMultiFilter("categoria");
     const filterModelo = getMultiFilter("modelo");
-    const filterResponsabilidade = getMultiFilter("responsabilidade");
+    const filterResponsabilidade = getMultiFilter("responsabilidade"); // ✅ Pega o filtro (ex: ["AGRUPAMENTO DE PROCESSOS"])
     
-    // ✅ 1. PEGA E NORMALIZA O FILTRO DE TURNO DA URL
+    // 1. PEGA E NORMALIZA O FILTRO DE TURNO DA URL
     let filterTurnoRaw = getMultiFilter("turno");
     let filterTurno: string[] | null = null;
     if (filterTurnoRaw) {
@@ -98,10 +118,7 @@ export async function GET(request: NextRequest) {
     const filterSemana = searchParams.get("semana") ? parseInt(searchParams.get("semana")!) : null;
 
     // --- CARREGAMENTO DE DADOS ---
-    // ProductionInputRow[] já vem com { DATA, MODELO, CATEGORIA, TURNO, QTY_GERAL }
     let productionRaw = loadProductionRaw(); 
-    
-    // DefectInputRow[]
     let defectsRaw = await loadDefeitos(); 
 
     // --- SANITIZAÇÃO DE DEFEITOS ---
@@ -109,8 +126,6 @@ export async function GET(request: NextRequest) {
         const cat = norm(row.CATEGORIA || row.Categoria);
         const mod = row.MODELO || row.Modelo; 
         if (!cat || !mod) return false;
-        // Permite flexibilidade mas foca nas categorias principais
-        // if (!VALID_CAT.has(cat)) return false; 
         return true;
     });
 
@@ -125,7 +140,6 @@ export async function GET(request: NextRequest) {
             
             // Tratamento de Turno na Linha (Row)
             const rawTurno = r.TURNO || r.Turno || r.turno; 
-            // Se for defeito, às vezes o turno vem null, podemos assumir algo ou deixar null
             const turno = rawTurno ? normalizeTurno(rawTurno) : null;
 
             const resp = isDefect ? norm(r.RESPONSABILIDADE || r.Responsabilidade) : null;
@@ -141,16 +155,16 @@ export async function GET(request: NextRequest) {
             // 2. Modelo
             if (filterModelo && !filterModelo.includes(mod)) return false;
             
-            // ✅ 3. TURNO (CORREÇÃO CRÍTICA)
+            // 3. TURNO
             if (filterTurno) {
-                 // Se o usuário selecionou um turno, a linha PRECISA ter turno e bater com o filtro
-                 if (!turno) return false; // Descarta linhas sem turno definido (Geral)
-                 if (!filterTurno.includes(turno)) return false; // Descarta turno errado
+                 if (!turno) return false; 
+                 if (!filterTurno.includes(turno)) return false; 
             }
             
             // 4. Responsabilidade (Só para defeitos)
+            // ✅ CORREÇÃO: Usa o helper matchResponsabilidade para entender os grupos
             if (isDefect && filterResponsabilidade && resp) {
-                 if (!filterResponsabilidade.includes(resp)) return false;
+                 if (!matchResponsabilidade(resp, filterResponsabilidade)) return false;
             }
 
             // --- FILTROS DE TEMPO ---
@@ -175,7 +189,6 @@ export async function GET(request: NextRequest) {
                         if (semObj !== filterSemana) return false;
                     }
                 } else {
-                    // Se tem filtro de tempo mas o dado não tem data, descarta
                     if (filterAno || filterMes || filterSemana) return false;
                 }
             }
@@ -187,12 +200,10 @@ export async function GET(request: NextRequest) {
     // --- APLICAÇÃO ---
 
     // 1. Dados Recortados (KPIs, Ranking e Detalhes) 
-    // isStrictDay = true (filtra dia se selecionado)
     const productionCut = applyFilters(productionRaw, false, true, true);
     const defectsCut = applyFilters(defectsRaw, true, true, true);
 
     // 2. Dados Históricos (Gráficos e Tendência) 
-    // isStrictDay = false (pega o mês todo mesmo se dia selecionado, para mostrar linha do tempo)
     const productionFull = applyFilters(productionRaw, false, true, false);
     const defectsFull = applyFilters(defectsRaw, true, true, false);
 

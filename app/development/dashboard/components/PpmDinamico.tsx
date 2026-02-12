@@ -22,35 +22,23 @@ import {
 
 /* ======================================================
    CONSTANTES & MAPEAMENTO DE SEGURANÇA
+   ✅ Agora usamos apenas os nomes normalizados vindos do Adapter
 ====================================================== */
-const KEY_MAP: Record<string, string> = {
-    "F": "FORN. IMPORTADO",
-    "FL": "FORNECEDOR LOCAL",
-    "P": "PROCESSO PA", 
-    "ENG": "ENGENHARIA/PROJETO",
-    "JIG": "ENGENHARIA/PROJETO"
-};
-
 const COLORS_RESP: Record<string, string> = {
-  "FORN. IMPORTADO": "#60A5FA", 
+  // Fornecedores
+  "FORNECEDOR IMPORTADO": "#60A5FA", 
   "FORNECEDOR LOCAL": "#2563EB",
+  
+  // Engenharia
   "ENGENHARIA/PROJETO": "#8B5CF6",
+
+  // Processos
   "PROCESSO INJEÇÃO": "#F59E0B",
   "PROCESSO LCM": "#D97706",
   "PROCESSO MA": "#EA580C",
   "PROC. ALTO FALANTE": "#C2410C",
-  "DIP PTH": "#FB923C",
-  "PROCESSO PTH": "#F97316",
-  "PROCESSO PA": "#EF4444",
-  "PROCESSO SUBS": "#B91C1C",
-  "FORNECEDOR IMPORTADO": "#60A5FA", 
-  "FORN. LOCAL": "#2563EB",
-  "PROCESSO": "#F59E0B", 
-  "PROJETO": "#8B5CF6",
-  "F": "#60A5FA",
-  "FL": "#2563EB",
-  "P": "#EF4444",
-  "ENG": "#8B5CF6"
+  "PROCESSO PTH": "#F97316", // Inclui DIP
+  "PROCESSO PA": "#EF4444"   // Inclui Genéricos e SUBS
 };
 
 const COLORS_CAT: Record<string, string> = {
@@ -98,7 +86,7 @@ interface Props {
   trendData: TrendHierarchy; 
   filters?: any;
   allowedModels?: string[];
-  metaDinamica?: number; // ✅ Recebe a meta específica da categoria
+  metaDinamica?: number; 
 }
 
 /* ======================================================
@@ -216,7 +204,7 @@ export default function PpmDinamico({
   trendData, 
   filters,
   allowedModels,
-  metaDinamica = 5200 // Default fallback
+  metaDinamica = 5200 
 }: Props) {
 
   /* ======================================================
@@ -285,11 +273,9 @@ export default function PpmDinamico({
         };
 
         if (viewMode === "responsabilidade") {
+             // O dado já vem normalizado do Adapter, basta copiar.
              const sourceObj = item.responsabilidade || {};
-             Object.keys(sourceObj).forEach(rawKey => {
-                 const mappedKey = KEY_MAP[rawKey] || rawKey; 
-                 base[mappedKey] = (base[mappedKey] || 0) + sourceObj[rawKey];
-             });
+             Object.assign(base, sourceObj); 
         }
         else if (viewMode === "categoria") {
              Object.assign(base, item.categoria);
@@ -313,14 +299,31 @@ export default function PpmDinamico({
     if (viewMode === "geral") return ["PPM Geral"];
     
     if (viewMode === "responsabilidade") {
-        if (filters?.responsabilidade && filters.responsabilidade !== "Todos") {
-            return [filters.responsabilidade];
+        const respFilter = filters?.responsabilidade;
+
+        // Lógica de Grupos Especiais
+        if (respFilter && respFilter !== "Todos") {
+            if (respFilter === "AGRUPAMENTO DE PROCESSOS") {
+                return Object.keys(COLORS_RESP).filter(key => 
+                    key.startsWith("PROC") || key.includes("PTH") || key.includes("LCM") || key.includes("DIP")
+                );
+            }
+            if (respFilter === "AGRUPAMENTO DE FORNECEDORES") {
+                return ["FORNECEDOR IMPORTADO", "FORNECEDOR LOCAL"];
+            }
+            // Filtro específico
+            return [respFilter];
         }
+
+        // Caso padrão (Todos): Mostra o que tiver dados > 0
         const activeResp = new Set<string>();
         chartData.forEach(d => {
              if ((d as any).isGap) return;
-             Object.keys(COLORS_RESP).forEach(key => {
-                 if (typeof d[key] === 'number' && d[key] > 0) activeResp.add(key);
+             Object.keys(d).forEach(key => {
+                 // Verifica se a chave é válida na nossa lista oficial
+                 if (COLORS_RESP[key] && typeof d[key] === 'number' && d[key] > 0) {
+                     activeResp.add(key);
+                 }
              });
         });
         return activeResp.size > 0 ? Array.from(activeResp) : Object.keys(COLORS_RESP);
@@ -436,7 +439,7 @@ export default function PpmDinamico({
               ticks.push(val);
           }
       }
-      ticks.push(metaDinamica); // ✅ Usa a meta dinâmica para os ticks do eixo Y
+      ticks.push(metaDinamica); 
       return ticks.sort((a, b) => a - b);
   }, [maxVal, metaDinamica]);
 
@@ -547,7 +550,6 @@ export default function PpmDinamico({
                     tickLine={false} 
                 />
                 
-                {/* ✅ Meta dinâmica agora controla a posição da linha de referência */}
                 <ReferenceLine y={metaDinamica} stroke="#EF4444" strokeDasharray="4 4" />
 
                 {hasContextItem && (
@@ -649,6 +651,8 @@ const containerStyle: React.CSSProperties = {
   height: 480, 
   display: "flex",
   flexDirection: "column",
+  position: "relative",
+  zIndex: 20,
 };
 
 const emptyContainerStyle: React.CSSProperties = {

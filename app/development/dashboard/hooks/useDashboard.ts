@@ -160,6 +160,9 @@ export function useDashboard() {
         if (appliedFilters.turno && appliedFilters.turno !== "Todos") {
           params.set("turno", appliedFilters.turno);
         }
+        
+        // ✅ Suporta "AGRUPAMENTO DE PROCESSOS" e "AGRUPAMENTO DE FORNECEDORES" automaticamente
+        // O Adapter no backend interceptará essas strings e fará o agrupamento.
         if (appliedFilters.responsabilidade && appliedFilters.responsabilidade !== "Todos") {
           params.set("responsabilidade", appliedFilters.responsabilidade);
         }

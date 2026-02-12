@@ -49,6 +49,8 @@ export function useDiagnosticoIa() {
           params.set("categoria", filters.categoria);
         }
 
+        // ✅ Passa a string do filtro (ex: "AGRUPAMENTO DE PROCESSOS") para a API.
+        // A API usará o DataAdapter atualizado para interpretar isso corretamente.
         if (filters.responsabilidade) {
           params.set("responsabilidade", filters.responsabilidade);
         }
