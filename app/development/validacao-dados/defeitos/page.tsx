@@ -1,3 +1,4 @@
+// app/development/validacao-dados/defeitos/page.tsx
 "use client";
 
 import React from "react";
@@ -12,9 +13,10 @@ import useValidacaoDefeitos from "./hooks/useValidacaoDefeitos";
 import SidebarDefeitos from "./components/SidebarDefeitos";
 import KPIsDefeitos from "./components/KPIsDefeitos";
 import PainelInconsistencias from "./components/PainelInconsistencias";
-import PerformancePorBase from "./components/PerformancePorBase";
 import DiagnosticoInteligente from "./components/DiagnosticoInteligente";
+// ✅ DiagnosticoAvancado no lugar de PerformancePorBase
 import DiagnosticoAvancado from "./components/DiagnosticoAvancado";
+import AuditoriaNaoClassificados from "./components/AuditoriaNaoClassificados"; 
 
 export default function DefeitosPage({
   embedded = false,
@@ -119,7 +121,8 @@ export default function DefeitosPage({
 
                 <section className="breakdown-grid">
                   <PainelInconsistencias breakdown={breakdown} />
-                  <PerformancePorBase perBase={perBase} />
+                  {/* PerformancePorBase foi removido daqui e o Painel de Inconsistências
+                      agora assumirá a organização de layout natural do CSS */}
                 </section>
               </>
             )}
@@ -131,8 +134,16 @@ export default function DefeitosPage({
               setDiagFilter={setDiagFilter}
             />
 
-            {/* Diagnóstico Avançado */}
-            {!showKPIs && <DiagnosticoAvancado stats={stats} />}
+            {/* ✅ Diagnóstico Avançado posicionado exatamente onde você pediu: 
+                 Abaixo do Diagnóstico Inteligente e Acima da Auditoria FMEA.
+                 Ele é exibido na Visão Geral (showKPIs) consolidando todas as bases. */}
+            {showKPIs && (
+              <DiagnosticoAvancado stats={stats} />
+            )}
+
+            {/* Auditoria FMEA */}
+            <AuditoriaNaoClassificados fonte={fonte} />
+
           </>
         )}
       </main>

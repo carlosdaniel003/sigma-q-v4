@@ -1,23 +1,77 @@
-// app/development/diagnostico/page.tsx
 "use client";
 
+import { useState } from "react";
 import SidebarFiltros from "./components/SidebarFiltros";
-import KpiPrincipalCausa from "./components/KpiPrincipalCausa"; // Representa o Agrupamento
-import KpiPrincipalDefeito from "./components/KpiPrincipalDefeito"; // Representa a Causa Específica
+import KpiPrincipalCausa from "./components/KpiPrincipalCausa"; 
+import KpiPrincipalDefeito from "./components/KpiPrincipalDefeito"; 
 import KpiDefeitoCritico from "./components/KpiDefeitoCritico";
-import KpiStatusGeral from "./components/KpiStatusGeral"; // Representa a Tendência
+import KpiStatusGeral from "./components/KpiStatusGeral"; 
 import DefeitosCriticosNpr from "./components/DefeitosCriticosNpr";
 import PrincipaisCausas from "./components/PrincipaisCausas";
 import DiagnosticoIaTexto from "./components/DiagnosticoIaTexto";
 import DiagnosticoLoading from "./components/DiagnosticoLoading";
+import DefectDetailsDrawer from "./components/DefectDetailsDrawer";
 
 import { useDiagnosticoIa } from "./hooks/useDiagnosticoIa";
+import { useDiagnosticoFilters } from "./store/diagnosticoFilters"; 
 
 export default function DiagnosticoIaPage() {
   const { data, loading, error } = useDiagnosticoIa();
+  const { filters } = useDiagnosticoFilters(); 
+
+  // ✅ ESTADOS DO DRAWER DE DETALHES
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerRows, setDrawerRows] = useState([]);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [drawerTitle, setDrawerTitle] = useState("");
 
   /* ======================================================
-      ✅ LÓGICA DE ESTADOS ESPECIAIS
+     ✅ LÓGICA DE CLICK ATUALIZADA (3 PARÂMETROS)
+  ====================================================== */
+  const handleSelectPosition = async (analise: string, modelo: string, posicao: string) => {
+    setIsDrawerOpen(true);
+    // Título da Gaveta mais rico e claro para o usuário
+    setDrawerTitle(`Causa: ${analise} | Mod: ${modelo} | Pos: ${posicao}`);
+    setDrawerLoading(true);
+    setDrawerRows([]); 
+
+    try {
+        const params = new URLSearchParams();
+        
+        // 1. Filtros de Tempo (respeitando o que o usuário selecionou na sidebar)
+        if (filters.periodo.tipo && filters.periodo.valor && filters.periodo.ano) {
+            params.set("periodoTipo", filters.periodo.tipo);
+            params.set("periodoValor", String(filters.periodo.valor));
+            params.set("ano", String(filters.periodo.ano));
+        }
+        
+        // 2. Filtros de Dimensão
+        if (filters.turno && filters.turno !== "Todos") params.set("turno", filters.turno);
+        if (filters.categoria && filters.categoria !== "Todos") params.set("categoria", filters.categoria);
+        
+        // 3. Filtros Específicos do Drill-down (Os 3 cliques)
+        params.set("analise", analise); // A API agora vai buscar por essa causa exata
+        params.set("modelo", modelo);
+        params.set("posicao", posicao); 
+
+        // 4. Chamada à API de detalhes
+        const res = await fetch(`/api/diagnostico/detalhes?${params.toString()}`);
+        
+        if (res.ok) {
+            const json = await res.json();
+            setDrawerRows(json.rows || []);
+        } else {
+            console.error("❌ Erro ao buscar detalhes técnicos do SQL");
+        }
+    } catch (err) {
+        console.error("❌ Erro no fetch de detalhes:", err);
+    } finally {
+        setDrawerLoading(false);
+    }
+  };
+
+  /* ======================================================
+      LÓGICA DE ESTADOS ESPECIAIS (IA)
   ====================================================== */
   const tituloIa = data?.diagnosticoIa?.titulo;
   
@@ -38,6 +92,15 @@ export default function DiagnosticoIaPage() {
         alignItems: "start",
       }}
     >
+      {/* ✅ COMPONENTE DRAWER */}
+      <DefectDetailsDrawer 
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        title={drawerTitle}
+        loading={drawerLoading}
+        rows={drawerRows}
+      />
+
       {/* SIDEBAR FIXA A ESQUERDA */}
       <SidebarFiltros />
 
@@ -120,7 +183,7 @@ export default function DiagnosticoIaPage() {
                     </div>
                 </div>
             ) : isZeroDefeitos ? (
-                /* 2️⃣ CENÁRIO: EXCELÊNCIA (ZERO DEFEITOS) - Card Bonito e Centralizado */
+                /* 2️⃣ CENÁRIO: EXCELÊNCIA (ZERO DEFEITOS) */
                 <div
                     style={{
                         display: "flex",
@@ -128,30 +191,24 @@ export default function DiagnosticoIaPage() {
                         alignItems: "center",
                         justifyContent: "center",
                         padding: "60px 20px",
-                        background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%)", // Verde Suave
+                        background: "linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.02) 100%)",
                         border: "1px solid rgba(16, 185, 129, 0.15)",
                         borderRadius: 24,
                         textAlign: "center",
                         marginTop: 20,
                     }}
                 >
-                    {/* Ícone de Troféu/Sucesso */}
                     <div style={{ fontSize: "3.5rem", marginBottom: 16 }}>🏆</div>
-                    
                     <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#34d399", marginBottom: 12 }}>
                         Excelência em Qualidade
                     </h2>
-                    
                     <div style={{ fontSize: "1.1rem", color: "#e2e8f0", marginBottom: 8 }}>
                         Zero Defeitos Registrados
                     </div>
-
                     <p style={{ maxWidth: 600, color: "#94a3b8", lineHeight: 1.6, marginBottom: 24 }}>
                         Parabéns! Houve produção registrada para este período, mas <strong>nenhuma falha</strong> foi apontada. 
                         O processo demonstrou robustez total nos filtros selecionados.
                     </p>
-
-                    {/* Badge de PPM 0 */}
                     <div 
                         style={{ 
                             padding: "6px 16px", 
@@ -170,7 +227,7 @@ export default function DiagnosticoIaPage() {
             ) : (
                 /* 3️⃣ CENÁRIO: PADRÃO (COM DADOS) */
                 <>
-                    {/* LINHA 1: KPIS SUPERIORES (Reordenados) */}
+                    {/* LINHA 1: KPIS SUPERIORES */}
                     <div
                       style={{
                         display: "grid",
@@ -178,16 +235,9 @@ export default function DiagnosticoIaPage() {
                         gap: 16,
                       }}
                     >
-                      {/* 1. Defeito Crítico */}
                       <KpiDefeitoCritico data={data.defeitoCritico} />
-                      
-                      {/* 2. Principal Agrupamento (Causa) */}
                       <KpiPrincipalCausa data={data.principalCausa} />
-                      
-                      {/* 3. Principal Causa (Defeito) */}
                       <KpiPrincipalDefeito data={data.principalDefeito} />
-                      
-                      {/* 4. Tendência de Qualidade (Status Geral) */}
                       <KpiStatusGeral data={data.statusGeral} />
                     </div>
 
@@ -200,11 +250,17 @@ export default function DiagnosticoIaPage() {
                       }}
                     >
                       <DefeitosCriticosNpr data={data.defeitosCriticos} />
-                      <PrincipaisCausas data={data.principaisCausas} />
+                      
+                      <PrincipaisCausas 
+                        data={data.principaisCausas} 
+                        onSelectPosition={handleSelectPosition}
+                      />
                     </div>
 
                     {/* LINHA 3: DIAGNÓSTICO IA (Texto) */}
-                    <DiagnosticoIaTexto data={data.diagnosticoIa} />
+                    <div style={{ paddingBottom: 40 }}>
+                        <DiagnosticoIaTexto data={data.diagnosticoIa} />
+                    </div>
                 </>
             )}
           </>

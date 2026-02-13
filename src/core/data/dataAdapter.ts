@@ -20,18 +20,27 @@ const TEMPO_CACHE_MS = 1000 * 60 * 5; // 5 Minutos de Cache
 // ======================================================
 // 🧠 HELPER: NORMALIZAÇÃO CANÔNICA (LIMPEZA TOTAL)
 // ======================================================
-function normalizeResponsibilityName(raw: string): string {
-    if (!raw) return "N/A";
-    const v = raw.trim().toUpperCase();
+function normalizeResponsibilityName(raw: string, codMot: string = ""): string {
+    const v = (raw || "").trim().toUpperCase();
+    const cod = codMot.trim().toUpperCase();
 
-    // 1. FORNECEDORES (Unifica tudo em 2 categorias)
+    // ✅ 1. REGRA EXCLUSIVA: DIP PTH (cod_mot = "DP" ou contém "DIP")
+    // Note que não colocamos a palavra "PROCESSO" no início. 
+    // Isso garante que ele pule fora do "AGRUPAMENTO DE PROCESSOS" nas filtragens.
+    if (cod === "DP" || v.includes("DIP") || v === "DP") {
+        return "DIP PTH";
+    }
+
+    if (!v) return "N/A";
+
+    // 2. FORNECEDORES (Unifica tudo em 2 categorias)
     if (v === "F" || v.includes("IMPORTADO") || v.includes("IMP")) return "FORNECEDOR IMPORTADO";
     if (v === "FL" || (v.includes("LOCAL") && (v.includes("FORN") || v.includes("FORNECEDOR")))) return "FORNECEDOR LOCAL";
 
-    // 2. PROCESSOS (Mapeamento Rígido para sua Lista Oficial)
+    // 3. PROCESSOS (Mapeamento Rígido para sua Lista Oficial)
     
-    // Agrupa DIP e PTH no mesmo pote
-    if (v.includes("DIP") || v.includes("PTH")) return "PROCESSO PTH";
+    // PTH Normal (Separado do DIP)
+    if (v.includes("PTH")) return "PROCESSO PTH";
     
     // Injeção
     if (v.includes("INJE") || v.includes("INJEÇÃO")) return "PROCESSO INJEÇÃO";
@@ -48,7 +57,7 @@ function normalizeResponsibilityName(raw: string): string {
     // Engenharia/Projeto/JIG
     if (v.includes("ENG") || v.includes("PROJETO") || v.includes("JIG")) return "ENGENHARIA/PROJETO";
 
-    // 3. FALLBACKS E LIMPEZA
+    // 4. FALLBACKS E LIMPEZA
     // Se for "PROCESSO", "P", "PROCESSO SUBS" ou qualquer outro processo não mapeado acima, cai em PA
     if (v.startsWith("PROC") || v === "P") {
         return "PROCESSO PA";
@@ -68,6 +77,7 @@ function matchResponsabilidade(itemValue: string, filtro: string): boolean {
     const filter = filtro.toUpperCase().trim();
 
     // 1. Lógica para "AGRUPAMENTO DE PROCESSOS"
+    // Como "DIP PTH" não começa com "PROC", ele não será pego por essa regra!
     if (filter === "AGRUPAMENTO DE PROCESSOS") {
         return val.startsWith("PROC"); 
     }
@@ -102,7 +112,7 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             throw new Error(`Erro na API PHP: ${response.status} ${response.statusText}`);
         }
 
-        const dadosSQL: DefeitoSQL[] = await response.json();
+        const dadosSQL: any[] = await response.json();
 
         if (!Array.isArray(dadosSQL)) {
             console.error("❌ Resposta da API não é um array:", dadosSQL);
@@ -118,7 +128,7 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             return area === "PA" || area === "PRODUTO ACABADO";
         });
 
-        // Tradução e Mapeamento (Fazemos isso UMA vez para tudo)
+        // Tradução e Mapeamento (Capturando todas as colunas do SQL para o detalhamento)
         const dadosTraduzidos = dadosPA.map((sqlItem) => {
             const dataString = `${sqlItem.data_criacao}T12:00:00`;
             const dataObj = new Date(dataString);
@@ -137,14 +147,14 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             const codigoResp = String(sqlItem.cod_mot || "").trim().toUpperCase();
             let respTraduzida = RESPONSABILIDADE_TRANSLATION[codigoResp] || codigoResp;
             
-            // ✅ APLICAÇÃO DA NORMALIZAÇÃO NA FONTE
-            // Isso garante que "DIP PTH" vire "PROCESSO PTH" e "F" vire "FORNECEDOR IMPORTADO" antes de qualquer filtro
-            respTraduzida = normalizeResponsibilityName(respTraduzida);
+            // ✅ Aplicação da normalização na fonte, passando a variável codigoResp (cod_mot)
+            respTraduzida = normalizeResponsibilityName(respTraduzida, codigoResp);
 
             const codigoTurno = String(sqlItem.turno || "").trim().toUpperCase();
             const turnoTraduzido = TURNO_TRANSLATION[codigoTurno] || codigoTurno;
 
             return {
+                ID: sqlItem.id,
                 DATA: dataObj,
                 MÊS: mes,
                 SEMANA: semana,
@@ -154,7 +164,14 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
                 MODELO: sqlItem.descricao_prod,
                 CATEGORIA: sqlItem.categoria, 
                 LINHA: sqlItem.linha,
-                TÉCNICO: sqlItem.usuario,
+                
+                // Dados para o Drawer de Detalhes
+                HORA: sqlItem.hora_criacao || "--:--",
+                TÉCNICO: sqlItem.usuario || "N/A",
+                OBSERVACAO: sqlItem.obs || "",
+                CODIGO_MOTIVO: sqlItem.cod_mot || "N/A",
+                POSICAO_MECANICA: sqlItem.referencia || "N/A",
+                
                 "CÓDIGO DA FALHA": sqlItem.code_def, 
                 "DESCRIÇÃO DA FALHA": defeitoTraduzido, 
                 "PEÇA/PLACA": sqlItem.desc_componente,
@@ -182,13 +199,12 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
 
 // ======================================================
 // 1️⃣ BUSCAR DEFEITOS (PARA KPI/PPM) - SEM OCORRÊNCIAS
-// ✅ Agora aceita filtro opcional de Responsabilidade
 // ======================================================
 export async function fetchDefeitosFromSQL(filtroResponsabilidade?: string): Promise<DefeitoRaw[]> {
     const todos = await _loadAllFromSQL();
     
     return todos.filter(item => {
-        // 1. Remove Ocorrências (Regra Padrão)
+        // 1. Remove Ocorrências (Regra Padrão baseada no Código do Fornecedor/Motivo)
         const codMot = String(item["CÓDIGO DO FORNECEDOR"] || "").trim().toUpperCase();
         if (CODIGOS_OCORRENCIA.includes(codMot)) return false;
 
@@ -202,7 +218,7 @@ export async function fetchDefeitosFromSQL(filtroResponsabilidade?: string): Pro
 }
 
 // ======================================================
-// 2️⃣ ✅ BUSCAR OCORRÊNCIAS (PARA DETALHAMENTO)
+// 2️⃣ BUSCAR OCORRÊNCIAS (PARA DETALHAMENTO)
 // ======================================================
 export async function fetchOcorrenciasFromSQL(filtroResponsabilidade?: string): Promise<DefeitoRaw[]> {
     const todos = await _loadAllFromSQL();

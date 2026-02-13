@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { AlertTriangle } from "lucide-react"; // Opcional: ícone para o estado vazio
 
 interface TendenciaPpmProps {
   anterior: number;
@@ -20,8 +21,8 @@ export default function TendenciaPpm({
   const [flipped, setFlipped] = useState(false);
 
   /* ======================================================
-      UTIL — FORMATAÇÃO INTELIGENTE DE RÓTULOS
-      Lida com Meses, Semanas e Dias dinamicamente
+     UTIL — FORMATAÇÃO INTELIGENTE DE RÓTULOS
+     Lida com Meses, Semanas e Dias dinamicamente
   ====================================================== */
   function formatDynamicLabel(label: string): string {
     // 1. Caso seja Dia (formato DD/MM enviado pela page.tsx)
@@ -54,10 +55,15 @@ export default function TendenciaPpm({
   }
 
   /* ======================================================
-      CÁLCULOS
+     CÁLCULOS
   ====================================================== */
+  // ✅ VERIFICAÇÃO DE DADOS: Se não houver histórico ou dados atuais, trata como "Sem Dados"
+  const hasData = anterior > 0 || atual > 0;
+  // Se anterior for 0, não dá pra calcular % de crescimento matematicamente
+  const hasHistory = anterior > 0; 
+
   const diff = atual - anterior;
-  const percent = anterior > 0 ? (diff / anterior) * 100 : 0;
+  const percent = hasHistory ? (diff / anterior) * 100 : 0;
 
   const melhorou = diff < 0;
   const piorou = diff > 0;
@@ -83,11 +89,11 @@ export default function TendenciaPpm({
     });
 
   /* ======================================================
-      STYLES
+     STYLES
   ====================================================== */
   const containerStyle: React.CSSProperties = {
     perspective: "1200px",
-    height: 180,
+    height: 200,
   };
 
   const cardStyle: React.CSSProperties = {
@@ -97,7 +103,7 @@ export default function TendenciaPpm({
     transformStyle: "preserve-3d",
     transition: "transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)",
     transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-    cursor: "pointer",
+    cursor: hasData ? "pointer" : "default", // Desativa cursor se não tiver dados
   };
 
   const faceStyle: React.CSSProperties = {
@@ -107,7 +113,7 @@ export default function TendenciaPpm({
     borderRadius: 16,
     padding: 20,
     background: "rgba(255,255,255,0.04)",
-    border: `1px solid ${cor}66`,
+    border: `1px solid ${hasData ? cor + '66' : 'rgba(255,255,255,0.1)'}`, // Borda neutra se sem dados
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
@@ -120,6 +126,39 @@ export default function TendenciaPpm({
     justifyContent: "space-between",
   };
 
+  /* ======================================================
+     RENDER: ESTADO "SEM DADOS" (MENSAGEM AMIGÁVEL)
+  ====================================================== */
+  if (!hasData || !hasHistory) {
+      return (
+        <div style={containerStyle}>
+            <div style={{ ...faceStyle, alignItems: "center", textAlign: "center", background: "rgba(255,255,255,0.02)" }}>
+                <div style={{ opacity: 0.5, fontSize: 13, marginBottom: 8 }}>
+                    Tendência de PPM
+                </div>
+                
+                {/* Ícone ou Indicador Visual */}
+                <div style={{ color: "#64748b", marginBottom: 8 }}>
+                    <span style={{ fontSize: "1.5rem", opacity: 0.5 }}>—</span> 
+                </div>
+
+                <div style={{ fontSize: "0.95rem", fontWeight: 600, color: "#94a3b8" }}>
+                    {!hasData ? "Sem dados registrados" : "Histórico insuficiente"}
+                </div>
+                
+                <div style={{ fontSize: 12, opacity: 0.5, marginTop: 4, maxWidth: "90%" }}>
+                    {!hasData 
+                        ? "Não há produção ou defeitos para o período selecionado." 
+                        : "Não há dados do período anterior para calcular a evolução."}
+                </div>
+            </div>
+        </div>
+      );
+  }
+
+  /* ======================================================
+     RENDER: ESTADO NORMAL
+  ====================================================== */
   return (
     <div style={containerStyle}>
       <div

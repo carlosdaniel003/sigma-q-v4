@@ -1,6 +1,9 @@
 // app/api/defeitos/stats/route.ts
 import { NextResponse } from "next/server";
 import { getDefeitosCache } from "@/core/defeitos/defeitosCache";
+import { auditarNaoClassificados } from "@/core/data/loadAgrupamento"; 
+// ✅ A PEÇA QUE FALTAVA: Importando o normalizador oficial!
+import { norm } from "@/core/diagnostico/diagnosticoUtils";
 
 type CatalogosFlags = {
   usarCodigos?: boolean;
@@ -18,17 +21,21 @@ function issueCategoryKey(issue: string) {
   if (s.includes("respons")) return "responsabilidades";
   if (s.includes("índice") || s.includes("indice")) return "naoMostrar";
   if (s.includes("codigo") && !s.includes("falha")) return "modelos";
+  if (s.includes("fmea") || s.includes("classificado") || s.includes("agrupamento")) return "falhas"; 
   return "outros";
 }
 
 // --------------------------------------------------
-// REGRA OFICIAL DO SIGMA-Q
+// REGRA OFICIAL DO SIGMA-Q (BLINDADA COM NORM)
 // --------------------------------------------------
-function isIdentified(r: any): boolean {
-  return Array.isArray(r._issues) && r._issues.length === 0;
+function isIdentified(r: any, naoClassificadosSet: Set<string>): boolean {
+  const hasIssues = Array.isArray(r._issues) && r._issues.length > 0;
+  // ✅ CORREÇÃO CRÍTICA: norm() garante que acentos não causem fuga de dados
+  const isFmeaOrphan = naoClassificadosSet.has(norm(r.ANALISE));
+  
+  return !hasIssues && !isFmeaOrphan;
 }
 
-// --------------------------------------------------
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
@@ -41,49 +48,45 @@ export async function GET(req: Request) {
       usarResponsabilidades: catalogosRaw.includes("responsabilidades"),
     };
 
-    if (
-      !catalogos.usarCodigos &&
-      !catalogos.usarFalhas &&
-      !catalogos.usarResponsabilidades
-    ) {
+    if (!catalogos.usarCodigos && !catalogos.usarFalhas && !catalogos.usarResponsabilidades) {
       return NextResponse.json(
-        {
-          ok: false,
-          error: "KPI inválido: nenhuma regra de validação ativa.",
-        },
+        { ok: false, error: "KPI inválido: nenhuma regra de validação ativa." },
         { status: 400 }
       );
     }
 
     const cache = await getDefeitosCache(catalogos);
+    const lista = fonteParam === "todas" ? cache.enriched : (cache as any)[fonteParam] || [];
 
-    // Seleção dinâmica da lista
-    const lista =
-      fonteParam === "todas"
-        ? cache.enriched
-        : (cache as any)[fonteParam] || [];
+    // =========================================================
+    // 📊 INTEGRAÇÃO COM AUDITORIA FMEA
+    // =========================================================
+    const auditoriaFmea = auditarNaoClassificados(lista);
+    
+    // ✅ Garante que o Set usa apenas chaves super normalizadas
+    const setNaoClassificados = new Set(auditoriaFmea.lista.map(i => norm(i.analise)));
 
     const totalItems = lista.length;
 
-    // =========================================================
-    // 📊 LOGS DE AUDITORIA (Para bater a conta)
-    // =========================================================
+    // SOMA DO VOLUME TOTAL
     const totalDefeitos = lista.reduce((acc, r) => {
-      const v = Number(r["QUANTIDADE"] ?? r.QUANTIDADE ?? 0);
-      return acc + (isFinite(v) ? v : 0);
+      const v = Number(r["QUANTIDADE"] ?? r.quantidade ?? 1); 
+      return acc + (isFinite(v) ? v : 1);
     }, 0);
 
-    if (fonteParam === 'todas') {
-        console.log(`📊 [AUDITORIA] Registros (Linhas SQL): ${totalItems}`);
-        console.log(`📊 [AUDITORIA] Defeitos (Soma Qtd):   ${totalDefeitos}`);
-    }
+    // VOLUME IDENTIFICADO (Usando a regra blindada)
+    const identifiedVolume = lista.filter(r => isIdentified(r, setNaoClassificados))
+      .reduce((acc, r) => {
+        const v = Number(r["QUANTIDADE"] ?? r.quantidade ?? 1);
+        return acc + (isFinite(v) ? v : 1);
+      }, 0);
 
-    const identified = lista.filter(isIdentified).length;
-    const notIdentified = totalItems - identified;
+    // O "notIdentified" agora vai cravar perfeitamente com a tabela
+    const notIdentified = totalDefeitos - identifiedVolume;
 
-    const percentIdentified = totalItems
-      ? Number(((identified / totalItems) * 100).toFixed(2))
-      : 0;
+    const percentIdentified = totalDefeitos > 0
+      ? Number(((identifiedVolume / totalDefeitos) * 100).toFixed(2))
+      : 100;
 
     // --------------------------------------------------
     // Breakdown de não identificados
@@ -107,82 +110,84 @@ export async function GET(req: Request) {
     const divergencias: Record<string, number> = {};
 
     for (const r of lista) {
-      if (isIdentified(r)) continue;
+      if (isIdentified(r, setNaoClassificados)) continue;
 
-      const issues = r._issues || [];
-      const cats = new Set<string>();
+      // ✅ Usamos norm() aqui também para evitar fuga na injeção da tag
+      const analiseNorm = norm(r.ANALISE);
+      const isFmeaIssue = setNaoClassificados.has(analiseNorm);
+      
+      const issues = [...(r._issues || [])];
+      if (isFmeaIssue) issues.push("Falha Sem Agrupamento FMEA");
+
+      if (issues.length === 0) issues.push("Inconsistência Desconhecida");
+
+      const qtdLinha = Number(r["QUANTIDADE"] ?? r.quantidade ?? 1);
+      const volumeLinha = isFinite(qtdLinha) ? qtdLinha : 1;
+
+      const catsNaLinha = issues.map(issueCategoryKey);
+
+      let categoriaPrincipal = "outros";
+      
+      if (catsNaLinha.includes("modelos")) {
+        categoriaPrincipal = "modelos";
+      } else if (catsNaLinha.includes("falhas")) {
+        categoriaPrincipal = "falhas";
+      } else if (catsNaLinha.includes("responsabilidades")) {
+        categoriaPrincipal = "responsabilidades";
+      } else if (catsNaLinha.includes("naoMostrar")) {
+        categoriaPrincipal = "naoMostrar";
+      }
+
+      notIdentifiedBreakdown[categoriaPrincipal] += volumeLinha;
+      issuesSummary[categoriaPrincipal].count += volumeLinha;
 
       for (const issue of issues) {
-        divergencias[issue] = (divergencias[issue] || 0) + 1;
-        cats.add(issueCategoryKey(issue));
+        divergencias[issue] = (divergencias[issue] || 0) + volumeLinha;
       }
 
-      if (cats.size === 0) {
-        notIdentifiedBreakdown.outros++;
-        continue;
-      }
-
-      for (const c of cats) {
-        if (c in notIdentifiedBreakdown) {
-          notIdentifiedBreakdown[c]++;
-          issuesSummary[c].count++;
-
-          if (issuesSummary[c].examples.length < 20) {
-            issuesSummary[c].examples.push({
-              fonte: r.fonte,
-              categoria: r.CATEGORIA || r.categoria,
-              MODELO: r.MODELO,
-              CODIGO_DA_FALHA: r["CÓDIGO DA FALHA"],
-              _issues: r._issues,
-            });
-          }
-        }
+      if (issuesSummary[categoriaPrincipal].examples.length < 20) {
+        issuesSummary[categoriaPrincipal].examples.push({
+          fonte: r.fonte,
+          categoria: r.CATEGORIA || r.categoria,
+          MODELO: r.MODELO,
+          CODIGO_DA_FALHA: r["CÓDIGO DA FALHA"],
+          _issues: issues, 
+        });
       }
     }
 
     // --------------------------------------------------
-    // KPI por Categoria
+    // KPI por Categoria (Abas Laterais)
     // --------------------------------------------------
     function computeMetrics(arr: any[]) {
       const safeArr = arr || [];
-      const total = safeArr.length;
-      const totalDef = safeArr.reduce(
-        (a, b) => a + (Number(b["QUANTIDADE"]) || 0),
-        0
-      );
-      const ident = safeArr.filter(isIdentified).length;
+      const tItems = safeArr.length;
+      
+      const tDef = safeArr.reduce((a, b) => a + (Number(b["QUANTIDADE"] ?? b.quantidade ?? 1) || 1), 0);
+      
+      const idVolume = safeArr.filter(r => isIdentified(r, setNaoClassificados))
+        .reduce((a, b) => a + (Number(b["QUANTIDADE"] ?? b.quantidade ?? 1) || 1), 0);
       
       return {
-        total,
-        totalDefeitos: totalDef,
-        identified: ident,
-        notIdentified: total - ident,
-        percentIdentified: total
-          ? Number(((ident / total) * 100).toFixed(2))
-          : 0,
+        total: tItems,
+        totalDefeitos: tDef,
+        identified: idVolume, 
+        notIdentified: tDef - idVolume, 
+        percentIdentified: tDef > 0 ? Number(((idVolume / tDef) * 100).toFixed(2)) : 100,
       };
     }
 
-    // 🌟 GERAÇÃO DINÂMICA (MOSTRANDO SEM CATEGORIA)
     const dynamicKeys = Object.keys(cache).filter(k => k !== 'enriched');
-    
     const perBase: Record<string, any> = {
         todas: computeMetrics(cache.enriched)
     };
 
     dynamicKeys.forEach(key => {
-        // Normaliza a chave para verificação
         const cleanKey = key.toLowerCase().trim();
-        
-        // Se for uma chave "vazia", renomeamos para "SEM CATEGORIA" para aparecer na tela
         let displayKey = key;
         if (cleanKey === 'n/a' || cleanKey === 'null' || cleanKey === 'undefined' || cleanKey === '') {
             displayKey = "SEM CATEGORIA";
-            console.log(`⚠️ [ALERTA] Encontrados ${cache[key]?.length} registros órfãos (N/A) -> Movidos para "SEM CATEGORIA"`);
         }
-
-        // Se já existe (caso tenha n/a e null separados), soma ou sobrescreve. 
-        // Aqui vamos simplificar e assumir um único bucket.
         perBase[displayKey] = computeMetrics((cache as any)[key]);
     });
 
@@ -190,10 +195,10 @@ export async function GET(req: Request) {
       ok: true,
       totalItems,
       totalDefeitos,
-      identified,
-      notIdentified,
+      identified: identifiedVolume, 
+      notIdentified, 
       percentIdentified,
-      notIdentifiedBreakdown,
+      notIdentifiedBreakdown, 
       issuesSummary,
       divergencias,
       perBase, 

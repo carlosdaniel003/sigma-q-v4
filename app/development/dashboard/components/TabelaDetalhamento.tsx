@@ -8,6 +8,29 @@ interface Props {
   filterLabel: string;
 }
 
+// ✅ Metas Oficiais por Categoria
+const METAS_POR_CATEGORIA: Record<string, number> = {
+  "ARCON": 3600,   // 0,360%
+  "BBS": 7820,     // 0,782%
+  "CM": 5870,      // 0,587%
+  "MWO": 1730,     // 0,173%
+  "TM": 11680,     // 1,168%
+  "TV": 6870,      // 0,687%
+  "TW": 11680,     // 1,168%
+  "GERAL": 5200    // 0,52%
+};
+
+/**
+ * Função para definir a cor do PPM baseada na meta da categoria
+ */
+function getPpmColor(ppmValue: number, categoria?: string) {
+  const cat = String(categoria || "").toUpperCase().trim();
+  const meta = METAS_POR_CATEGORIA[cat] ?? METAS_POR_CATEGORIA["GERAL"];
+
+  // Se o PPM for maior que a meta, fica em Vermelho. Caso contrário, Verde.
+  return ppmValue > meta ? "#EF4444" : "#22C55E";
+}
+
 export default function TabelaDetalhamento({ data, filterLabel }: Props) {
   
   if (!data || data.length === 0) return null;
@@ -20,18 +43,12 @@ export default function TabelaDetalhamento({ data, filterLabel }: Props) {
       return label; 
   };
 
-  // ✅ ORDENAÇÃO DE TURNOS: Força "Comercial" a aparecer primeiro
   const sortedData = useMemo(() => {
       return [...data].sort((a, b) => {
           const turnoA = a.turno.toLowerCase();
           const turnoB = b.turno.toLowerCase();
-          
-          // Se A for comercial, ele vem antes (-1)
           if (turnoA.includes("comercial")) return -1;
-          // Se B for comercial, ele vem antes (1)
           if (turnoB.includes("comercial")) return 1;
-          
-          // Fallback para ordem alfabética se não for comercial
           return turnoA.localeCompare(turnoB);
       });
   }, [data]);
@@ -52,7 +69,6 @@ export default function TabelaDetalhamento({ data, filterLabel }: Props) {
 function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
   return (
     <div style={containerStyle}>
-      {/* CABEÇALHO DO TURNO */}
       <div style={headerStyle}>
         <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#fff", fontWeight: 700 }}>
           TOP 3 POR RESPONSABILIDADE ({label}) - {stats.turno}
@@ -63,7 +79,6 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
         </div>
       </div>
 
-      {/* TABELA DE DADOS */}
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", color: "#e2e8f0" }}>
           <thead>
@@ -86,10 +101,8 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                     </td>
                 </tr>
             ) : (
-                // ✅ ITERA SOBRE OS GRUPOS DE RESPONSABILIDADE (JÁ FILTRADOS PELO BACKEND)
                 stats.groups.map((group) => (
                     <React.Fragment key={group.responsibility}>
-                        {/* SEPARADOR DE RESPONSABILIDADE */}
                         <tr style={{ background: "rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                             <td colSpan={8} style={{ 
                                 padding: "8px 16px", 
@@ -104,7 +117,6 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                             </td>
                         </tr>
                         
-                        {/* LISTA DE DEFEITOS DESTA RESPONSABILIDADE */}
                         {group.top3.map((row, idx) => (
                             <tr key={`${group.responsibility}-${idx}`} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
                                 <td style={tdStyle}>{row.cod}</td>
@@ -114,7 +126,13 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                                 <td style={tdStyle}>{row.ref}</td>
                                 <td style={tdStyle}>{row.analise}</td>
                                 <td style={{ ...tdStyleCenter, color: "#fff", fontWeight: "bold" }}>{row.qtd}</td>
-                                <td style={{ ...tdStyleCenter, color: "#F59E0B", fontWeight: "bold" }}>
+                                
+                                <td style={{ 
+                                    ...tdStyleCenter, 
+                                    color: getPpmColor(row.ppm, (row as any).categoria), 
+                                    fontWeight: "bold"
+                                }}>
+                                    {/* ✅ PPM Formatado com duas casas decimais */}
                                     {row.ppm.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>
                             </tr>
@@ -129,7 +147,7 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
   );
 }
 
-// Estilos
+// Estilos permanentes
 const containerStyle: React.CSSProperties = {
   background: "rgba(15, 23, 42, 0.6)",
   border: "1px solid rgba(255,255,255,0.1)",

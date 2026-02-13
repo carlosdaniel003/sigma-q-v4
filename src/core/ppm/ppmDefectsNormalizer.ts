@@ -45,8 +45,6 @@ function buildGroupKey(row: DefectInputRow): string {
   // 🕵️‍♂️ LOG DIAGNÓSTICO MANTIDO PARA VALIDAR O MATCH
   if (modelo.includes("MICRO") || modelo.includes("MO-01")) {
       // eslint-disable-next-line no-console
-      console.log(`🔍 [DEFECT FIX] "${modelo}" -> Raw: "${rawTurno}" -> Final: "${turno}"`);
-      console.log(`   - Chave Final: "${categoria}::${modelo}::${turno}"`);
   }
 
   if (!categoria || !modelo) return "";

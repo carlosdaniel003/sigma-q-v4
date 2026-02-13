@@ -27,9 +27,22 @@ export interface DefeitoFiltrado {
   CODIGO_FALHA: string;
   DESCRICAO_FALHA: string;
   QUANTIDADE: number;
-  
-  // ✅ NOVO CAMPO: Essencial para o Drill-down de nível 4
   REFERENCIA_POSICAO_MECANICA?: string;
+  
+  // ✅ CAMPOS DE AUDITORIA (DRILL-DOWN)
+  ID?: string | number;
+  HORA?: string;
+  TECNICO?: string;
+  OBSERVACAO?: string;
+  CODIGO_MOTIVO?: string;
+  COMPONENTE?: string;
+  SINTOMA?: string; 
+  CAUSA_BRUTA?: string;
+  LINHA?: string;
+  
+  // ✅ NOVOS: Textos originais para exibição amigável na gaveta
+  MODELO_ORIGINAL?: string;
+  POSICAO_ORIGINAL?: string;
 }
 
 /* ======================================================
@@ -56,7 +69,6 @@ export function filtrarDefeitosDiagnostico(
   console.log("🟦 [AUDITORIA] FILTRANDO BASE DE DADOS...");
   console.log(`   - Base Total: ${defeitosRaw.length} linhas`);
 
-  // Validação do Período
   if (!filtros.periodo?.semanas || filtros.periodo.semanas.length < 2) {
     return [];
   }
@@ -71,29 +83,25 @@ export function filtrarDefeitosDiagnostico(
   
   const filtrados: DefeitoFiltrado[] = [];
   
-  // Contadores de Exclusão
   let excluidosOcorrencia = 0;
-  let excluidosResponsabilidade = 0; // Novo contador para "NÃO MOSTRAR"
+  let excluidosResponsabilidade = 0;
   let excluidosData = 0;
   let excluidosPeriodo = 0;
   let excluidosFiltro = 0;
 
   for (const r of defeitosRaw) {
-    // 1. Filtro de Ocorrência (Lista Negra - Código Fornecedor)
-    const codigoFornecedor = norm(r["CÓDIGO DO FORNECEDOR"]);
+    const codigoFornecedor = norm(r["CÓDIGO DO FORNECEDOR"] || r.CODIGO_MOTIVO);
     if (codigoFornecedor && ocorrenciasIgnorar.has(codigoFornecedor)) {
       excluidosOcorrencia++;
       continue;
     }
 
-    // 2. ✅ NOVO FILTRO: Responsabilidade "NÃO MOSTRAR NO ÍNDICE"
     const respCheck = norm(r.RESPONSABILIDADE);
     if (respCheck === "NAO MOSTRAR NO INDICE" || respCheck.includes("NAO MOSTRAR")) {
         excluidosResponsabilidade++;
         continue;
     }
 
-    // 3. Validação de Data
     const date = parseDateSafe(r.DATA);
     if (!date) {
       excluidosData++;
@@ -103,22 +111,16 @@ export function filtrarDefeitosDiagnostico(
     const { semana, ano } = getSemanaAno(date);
     const valorRegistro = ano * 100 + semana;
 
-    // 4. Filtro Temporal
     if (valorRegistro < valorInicio || valorRegistro > valorFim) {
       excluidosPeriodo++;
       continue;
     }
 
-    // 5. Filtros de Atributo (Categoria, Modelo, Resp, Turno)
     let passou = true;
 
     if (filtros.modelo?.length && !filtros.modelo.includes(norm(r.MODELO))) passou = false;
     if (filtros.categoria?.length && !filtros.categoria.includes(norm(r.CATEGORIA))) passou = false;
-    
-    // Obs: Se o usuário filtrar por "Responsabilidade", aplicamos. 
-    // Mas a regra de exclusão "NÃO MOSTRAR" já rodou antes, garantindo limpeza.
     if (filtros.responsabilidade?.length && !filtros.responsabilidade.includes(norm(r.RESPONSABILIDADE))) passou = false;
-    
     if (filtros.turno?.length && !filtros.turno.includes(norm(r.TURNO))) passou = false;
 
     if (!passou) {
@@ -126,12 +128,13 @@ export function filtrarDefeitosDiagnostico(
       continue;
     }
 
-    // ✅ CORREÇÃO AQUI: LER 'ANÁLISE' (Excel) OU 'ANALISE' (Interface)
-    // Isso garante que o valor não venha undefined
     const rawAnalise = r["ANÁLISE"] || r.ANALISE;
+    const nomeDoComponente = (r as any)["PEÇA/PLACA"] || r.COMPONENTE || "Não informado";
+    const nomeDoSintoma = (r as any)["DESCRIÇÃO DA FALHA"] || (r as any)["DESCRIÇÃO DA FALHA"] || r["DESCRIÇÃO DA FALHA"] || "Não informado";
+    const posMecanicaOriginal = r["REFERÊNCIA/POSIÇÃO MECÂNICA"] || r.POSICAO_MECANICA || "Não informada";
 
-    // ✅ Adiciona registro válido
     filtrados.push({
+      // Campos originais para o painel de contagem (Normalizados)
       DATA: date,
       SEMANA: semana,
       ANO: ano,
@@ -139,22 +142,32 @@ export function filtrarDefeitosDiagnostico(
       CATEGORIA: norm(r.CATEGORIA),
       RESPONSABILIDADE: norm(r.RESPONSABILIDADE),
       TURNO: norm(r.TURNO),
-      
-      // ✅ AQUI ESTAVA O ERRO: Agora lemos a variável corrigida
       ANALISE: norm(rawAnalise),
-      
-      CODIGO_FALHA: norm(r["CÓDIGO DA FALHA"]),
-      DESCRICAO_FALHA: norm(r["DESCRIÇÃO DA FALHA"]),
+      CODIGO_FALHA: norm(r["CÓDIGO DA FALHA"] || (r as any).CODIGO_FALHA),
+      DESCRICAO_FALHA: norm(nomeDoSintoma),
       QUANTIDADE: Number(r.QUANTIDADE) || 0,
+      REFERENCIA_POSICAO_MECANICA: posMecanicaOriginal, // Será norm() no route.ts se precisar
+
+      // DADOS PARA A GAVETA (Passando limpo, com formatação original preservada)
+      ID: r.ID,
+      HORA: r.HORA,
+      TECNICO: r.TÉCNICO || (r as any).TECNICO,
+      OBSERVACAO: r.OBSERVACAO,
+      CODIGO_MOTIVO: r.CODIGO_MOTIVO || r["CÓDIGO DO FORNECEDOR"],
+      COMPONENTE: nomeDoComponente, 
+      SINTOMA: nomeDoSintoma,
+      CAUSA_BRUTA: (r as any).causa || r.ANALISE, 
+      LINHA: (r as any).LINHA || (r as any).linha,
       
-      // ✅ MAPEAMENTO DA COLUNA DE POSIÇÃO
-      REFERENCIA_POSICAO_MECANICA: r["REFERÊNCIA/POSIÇÃO MECÂNICA"]
+      // ✅ AQUI VÃO OS TEXTOS ORIGINAIS (Preserva espaços e pontuação)
+      MODELO_ORIGINAL: r.MODELO,
+      POSICAO_ORIGINAL: posMecanicaOriginal
     });
   }
 
   console.log("\n📊 RESUMO DO FUNIL:");
   console.log(`   ❌ Excluídos por Lista Negra (Cód. Fornecedor): ${excluidosOcorrencia}`);
-  console.log(`   ❌ Excluídos por 'NÃO MOSTRAR NO ÍNDICE': ${excluidosResponsabilidade}`);
+  console.log(`   ❌ Excluídos por 'NÃO MOSTRAR NO INDICE': ${excluidosResponsabilidade}`);
   console.log(`   ❌ Excluídos por Data Inválida: ${excluidosData}`);
   console.log(`   ❌ Excluídos por Período: ${excluidosPeriodo}`);
   console.log(`   ❌ Excluídos por Filtros (Cat/Resp...): ${excluidosFiltro}`);

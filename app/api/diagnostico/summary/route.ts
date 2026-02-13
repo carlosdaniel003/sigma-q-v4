@@ -463,13 +463,13 @@ function matchResponsabilidade(itemValue: string, filtro: string): boolean {
     const filter = norm(filtro);
 
     // 1. Grupo Virtual: AGRUPAMENTO DE PROCESSOS
+    // ✅ CORREÇÃO: Removido val.includes("DIP") para que o DIP PTH seja independente
     if (filter === "AGRUPAMENTO DE PROCESSOS") {
         return (
             val.startsWith("PROC") || 
             val.includes("PROCESSO") || 
             val.includes("PTH") || 
-            val.includes("LCM") ||
-            val.includes("DIP")
+            val.includes("LCM")
         ); 
     }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { getUser } from "@/services/userStorage";
 import { useDashboard, TrendItem } from "./hooks/useDashboard";
 import { useDashboardFilters } from "./store/dashboardFilters";
@@ -9,6 +9,7 @@ import { useDashboardFilters } from "./store/dashboardFilters";
 import SidebarDashboard from "./components/SidebarDashboard";
 import DashboardLoading from "./components/DashboardLoading";
 import DashboardMessage from "./components/DashboardMessage";
+import DashboardHeader from "./components/DashboardHeader"; // ✅ Importado aqui
 
 // KPIs
 import IndiceDefeitosCard from "./components/IndiceDefeitosCard";
@@ -45,10 +46,14 @@ export default function DevelopmentDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<PpmViewMode>("responsabilidade");
-  
   const [filterOptions, setFilterOptions] = useState<any>(null);
 
-  const { data, loading, error } = useDashboard();
+  // Estados para notificação de novos dados
+  const [newDefectsCount, setNewDefectsCount] = useState(0);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Hooks principais
+  const { data, loading, error, lastUpdated, refresh } = useDashboard();
   const { appliedFilters } = useDashboardFilters();
 
   /* ======================================================
@@ -61,8 +66,7 @@ export default function DevelopmentDashboardPage() {
 
     if (!storedUser || storedUser.role === "viewer") {
       localStorage.removeItem("sigma_user");
-      document.cookie =
-        "sigma_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+      document.cookie = "sigma_auth=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;";
       window.location.href = "/login";
     }
 
@@ -81,10 +85,51 @@ export default function DevelopmentDashboardPage() {
   }, []);
 
   /* ======================================================
+      🔄 SISTEMA DE POLLING (VERIFICAÇÃO SILENCIOSA)
+  ====================================================== */
+  useEffect(() => {
+    if (!data) return;
+
+    const checkNewData = async () => {
+        try {
+            const params = new URLSearchParams();
+            const { tipo, valor, ano, dia } = appliedFilters.periodo;
+            
+            if (tipo === "mes" && valor && ano) { params.set("mes", valor.toString()); params.set("ano", ano.toString()); }
+            if (tipo === "semana" && valor && ano) { params.set("semana", valor.toString()); params.set("ano", ano.toString()); }
+            if (dia) params.set("dia", dia);
+            
+            const res = await fetch(`/api/dashboard/summary?${params.toString()}`);
+            if (res.ok) {
+                const newData = await res.json();
+                const currentCount = data.meta.totalDefects;
+                const serverCount = newData.meta.totalDefects;
+
+                if (serverCount > currentCount) {
+                    setNewDefectsCount(serverCount - currentCount);
+                }
+            }
+        } catch (err) {
+            console.warn("Polling falhou:", err);
+        }
+    };
+
+    pollingRef.current = setInterval(checkNewData, 60000); // 60 segundos
+
+    return () => {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [data, appliedFilters]);
+
+  const handleRefresh = () => {
+      setNewDefectsCount(0);
+      refresh();
+  };
+
+  /* ======================================================
       MEMOS: Lógica de Filtros e Seleção de Dados
   ====================================================== */
   
-  // ✅ IDENTIFICAÇÃO DA META ATUAL (DINÂMICA)
   const metaAtual = useMemo(() => {
     const cat = appliedFilters.categoria;
     if (cat && cat !== "Todos" && METAS_POR_CATEGORIA[cat]) {
@@ -102,7 +147,7 @@ export default function DevelopmentDashboardPage() {
       );
   }, [filterOptions, appliedFilters.categoria]);
 
-  // 1️⃣ CÁLCULO DOS DADOS DA TIMELINE
+  // 1️⃣ CÁLCULO DOS DADOS DA TIMELINE (GRÁFICO)
   const { timelineItems, labelType } = useMemo(() => {
       if (!data) return { timelineItems: [], labelType: "Mês" };
 
@@ -144,110 +189,73 @@ export default function DevelopmentDashboardPage() {
 
     const { tipo, valor, dia } = appliedFilters.periodo;
 
-    // Caso A: Dia específico selecionado
+    // Caso A: Dia específico
     if (dia && labelType === "Dia") {
         const diaAlvo = dia;
         const diaItem = timelineItems.find(i => i.name === diaAlvo);
-
-        if (diaItem) {
-            return {
-                ppm: diaItem.ppm,
-                defects: diaItem.defects,
-                production: diaItem.production
-            };
-        }
+        if (diaItem) return { ppm: diaItem.ppm, defects: diaItem.defects, production: diaItem.production };
         return { ppm: 0, defects: 0, production: 0 };
     }
 
-    // Caso B: Se houver um filtro de Mês ou Semana ativo
+    // Caso B: Mês ou Semana
     if ((tipo === "mes" || tipo === "semana") && valor && timelineItems.length > 0) {
         const totalProd = timelineItems.reduce((acc, curr) => acc + curr.production, 0);
         const totalDef = timelineItems.reduce((acc, curr) => acc + curr.defects, 0);
         const calculatedPpm = totalProd > 0 ? (totalDef / totalProd) * 1000000 : 0;
-
-        return {
-            ppm: Number(calculatedPpm.toFixed(2)),
-            defects: totalDef,
-            production: totalProd
-        };
+        return { ppm: Number(calculatedPpm.toFixed(2)), defects: totalDef, production: totalProd };
     }
 
-    // Caso C: Fallback para o total acumulado do período processado (Visão Geral)
-    return {
-        ppm: data.meta.ppmGeral || 0,
-        defects: data.meta.totalDefects,
-        production: data.meta.totalProduction
-    };
+    // Caso C: Geral
+    return { ppm: data.meta.ppmGeral || 0, defects: data.meta.totalDefects, production: data.meta.totalProduction };
   }, [data, appliedFilters.periodo, timelineItems, labelType]);
 
-  // ✅ 3️⃣ CÁLCULO DA PROJEÇÃO (PREDICTOR COM TRAVA TEMPORAL)
+  // ✅ 3️⃣ CÁLCULO DA PROJEÇÃO
   const ppmForecast = useMemo(() => {
       const { tipo, valor, ano } = appliedFilters.periodo;
-
-      if (tipo !== "mes" || !valor || !ano || timelineItems.length < 2) {
-          return null;
-      }
-
+      if (tipo !== "mes" || !valor || !ano || timelineItems.length < 2) return null;
       const hoje = new Date();
       const anoAtual = hoje.getFullYear();
       const mesAtual = hoje.getMonth() + 1;
-
       if (ano < anoAtual) return null; 
       if (ano === anoAtual && valor < mesAtual) return null; 
-
       const activeDays = timelineItems.filter(d => d.production > 0);
       const recentDays = activeDays.slice(-3); 
-
       if (recentDays.length === 0) return null;
-
       const recentPpmAvg = recentDays.reduce((acc, curr) => acc + curr.ppm, 0) / recentDays.length;
       const historyPpm = kpiData.ppm;
-
       return (historyPpm * 0.3) + (recentPpmAvg * 0.7);
-
   }, [appliedFilters.periodo, timelineItems, kpiData.ppm]);
 
   // 4️⃣ GERA O LABEL AMIGÁVEL
   const tabelaLabel = useMemo(() => {
       const { tipo, valor, ano, dia } = appliedFilters.periodo;
-
-      if (dia) {
-          const [y, m, d] = dia.split("-");
-          return `Dia ${d}/${m}/${y}`;
-      }
-
+      if (dia) { const [y, m, d] = dia.split("-"); return `Dia ${d}/${m}/${y}`; }
       if (tipo === "mes" && valor && ano) {
           const date = new Date(ano, valor - 1, 1);
           const mesExtenso = date.toLocaleDateString("pt-BR", { month: "long" });
           return `${mesExtenso.charAt(0).toUpperCase() + mesExtenso.slice(1)} de ${ano}`;
       }
-
-      if (tipo === "semana" && valor) {
-          return `Semana ${valor} de ${ano}`;
-      }
-
+      if (tipo === "semana" && valor) return `Semana ${valor} de ${ano}`;
       return "Período Completo";
   }, [appliedFilters.periodo]);
-
 
   if (!mounted || !user) return null;
 
   return (
     <div style={{ color: "#fff", minHeight: "100vh", paddingBottom: 40 }}>
 
-      {/* HEADER */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: 700 }}>
-          SIGMA-Q | Dashboard Técnico
-        </h1>
-        <p style={{ opacity: 0.7, fontSize: "0.9rem", marginBottom: 20 }}>
-          Visão geral dinâmica de indicadores de qualidade e produtividade.
-        </p>
-        <SidebarDashboard />
-      </div>
+      {/* ✅ HEADER COMPONENTE */}
+      <DashboardHeader 
+        lastUpdated={lastUpdated} 
+        loading={loading} 
+        onRefresh={handleRefresh} 
+        newDefectsCount={newDefectsCount} 
+      />
+
+      <SidebarDashboard />
 
       {/* CONTEÚDO */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 24, marginTop: 20 }}>
 
         {loading && <DashboardLoading />}
 
@@ -258,13 +266,7 @@ export default function DevelopmentDashboardPage() {
         )}
 
         {!loading && !error && !data && (
-          <div style={{
-            padding: 40,
-            border: "1px dashed rgba(255,255,255,0.15)",
-            borderRadius: 16,
-            textAlign: "center",
-            color: "#94a3b8"
-          }}>
+          <div style={{ padding: 40, border: "1px dashed rgba(255,255,255,0.15)", borderRadius: 16, textAlign: "center", color: "#94a3b8" }}>
             Selecione os filtros e clique em <strong>Buscar</strong>.
           </div>
         )}
@@ -278,7 +280,7 @@ export default function DevelopmentDashboardPage() {
                     {/* KPIs */}
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
                         <IndiceDefeitosCard 
-                            meta={metaAtual} // ✅ Passa a meta dinâmica por categoria
+                            meta={metaAtual} 
                             real={kpiData.ppm}
                             projection={ppmForecast} 
                         />
@@ -288,81 +290,56 @@ export default function DevelopmentDashboardPage() {
 
                         {/* TENDÊNCIA DE PPM */}
                         {(() => {
-                            if (appliedFilters.periodo.dia) {
-                                const idxAtual = timelineItems.findIndex(t => t.name === appliedFilters.periodo.dia);
+                            const { tipo, valor, ano, dia } = appliedFilters.periodo;
+
+                            if (dia) {
+                                const idxAtual = timelineItems.findIndex(t => t.name === dia);
                                 if (idxAtual >= 0) {
                                     const itemAtual = timelineItems[idxAtual];
                                     const itemAnterior = idxAtual > 0 ? timelineItems[idxAtual - 1] : null;
-                                    
-                                    if (itemAnterior) {
-                                         const formatCardLabel = (name: string) => {
-                                             const parts = name.split("-");
-                                             return parts.length === 3 ? `${parts[2]}/${parts[1]}` : name;
-                                         };
-                                         return (
-                                           <TendenciaPpm
-                                             anterior={itemAnterior.ppm}
-                                             atual={itemAtual.ppm}
-                                             labelAnterior={formatCardLabel(itemAnterior.name)}
-                                             labelAtual={formatCardLabel(itemAtual.name)}
-                                             tipo="dia"
-                                           />
-                                         );
-                                    }
+                                    const formatCardLabel = (name: string) => {
+                                         const parts = name.split("-");
+                                         return parts.length === 3 ? `${parts[2]}/${parts[1]}` : name;
+                                    };
+                                    return (
+                                      <TendenciaPpm
+                                        anterior={itemAnterior ? itemAnterior.ppm : 0}
+                                        atual={itemAtual.ppm}
+                                        labelAnterior={itemAnterior ? formatCardLabel(itemAnterior.name) : "Dia Anterior"}
+                                        labelAtual={formatCardLabel(itemAtual.name)}
+                                        tipo="dia"
+                                      />
+                                    );
                                 }
                             }
 
-                            if (timelineItems.length >= 2) {
-                              const a = timelineItems[timelineItems.length - 2]; 
-                              const b = timelineItems[timelineItems.length - 1]; 
-                              const formatCardLabel = (name: string) => {
-                                  if (labelType === "Dia") {
-                                      const [y, m, d] = name.split("-");
-                                      return `${d}/${m}`;
-                                  }
-                                  if (labelType === "Semana") {
-                                      const w = name.split("-W")[1];
-                                      return `S${Number(w)}`;
-                                  }
-                                  return name;
-                              };
-                              return (
-                                <TendenciaPpm
-                                  anterior={a.ppm}
-                                  atual={b.ppm}
-                                  labelAnterior={formatCardLabel(a.name)}
-                                  labelAtual={formatCardLabel(b.name)}
-                                  tipo={labelType.toLowerCase()}
-                                />
-                              );
+                            if (tipo === "mes" && valor && ano) {
+                                let prevMes = valor - 1; let prevAno = ano;
+                                if (prevMes < 1) { prevMes = 12; prevAno--; }
+                                const prevKey = `${prevAno}-${String(prevMes).padStart(2, '0')}`;
+                                const prevItem = data.ppmMonthlyTrend.find(p => p.month === prevKey);
+                                const dateLabel = new Date(prevAno, prevMes - 1, 1).toLocaleDateString("pt-BR", { month: "long" });
+                                return <TendenciaPpm anterior={prevItem?.ppm || 0} atual={kpiData.ppm} labelAnterior={dateLabel.charAt(0).toUpperCase() + dateLabel.slice(1)} labelAtual="Mês Atual" tipo="mês" />;
+                            }
+
+                            let itemAtual = null, itemAnterior = null;
+                            if (timelineItems.length >= 2) { itemAnterior = timelineItems[timelineItems.length - 2]; itemAtual = timelineItems[timelineItems.length - 1]; } 
+                            else if (timelineItems.length === 1) itemAtual = timelineItems[0];
+
+                            if (itemAtual) {
+                                return <TendenciaPpm anterior={itemAnterior?.ppm || 0} atual={itemAtual.ppm} labelAnterior={itemAnterior?.name || "Anterior"} labelAtual={itemAtual.name} tipo={labelType.toLowerCase()} />;
                             }
                             return <div />;
                         })()}
                     </div>
 
-                    {/* RESTO DO DASHBOARD */}
-                    {kpiData.production === 0 ? (
-                        <DashboardMessage tipo="sem_producao" />
-                    ) : kpiData.defects === 0 ? (
-                        <DashboardMessage tipo="sucesso" />
-                    ) : (
+                    {/* GRÁFICOS E TABELAS */}
+                    {kpiData.production === 0 ? <DashboardMessage tipo="sem_producao" /> : kpiData.defects === 0 ? <DashboardMessage tipo="sucesso" /> : (
                         <>
                             <div style={{ display: "flex", gap: 8 }}>
-                                <TabButton 
-                                    label="Responsabilidade" 
-                                    active={viewMode === "responsabilidade"} 
-                                    onClick={() => setViewMode("responsabilidade")} 
-                                />
-                                <TabButton 
-                                    label="Categoria" 
-                                    active={viewMode === "categoria"} 
-                                    onClick={() => setViewMode("categoria")} 
-                                />
-                                <TabButton 
-                                    label="Modelo" 
-                                    active={viewMode === "modelo"} 
-                                    onClick={() => setViewMode("modelo")} 
-                                />
+                                <TabButton label="Responsabilidade" active={viewMode === "responsabilidade"} onClick={() => setViewMode("responsabilidade")} />
+                                <TabButton label="Categoria" active={viewMode === "categoria"} onClick={() => setViewMode("categoria")} />
+                                <TabButton label="Modelo" active={viewMode === "modelo"} onClick={() => setViewMode("modelo")} />
                             </div>
 
                             <PpmDinamico
@@ -370,7 +347,7 @@ export default function DevelopmentDashboardPage() {
                                 trendData={data.trendData}
                                 filters={appliedFilters}
                                 allowedModels={allowedModels}
-                                metaDinamica={metaAtual} // ✅ Passa meta dinâmica para o gráfico
+                                metaDinamica={metaAtual} 
                             />
 
                             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
@@ -378,7 +355,7 @@ export default function DevelopmentDashboardPage() {
                                 <IndicePorMes 
                                     data={timelineItems} 
                                     tipoLabel={labelType} 
-                                    metaDinamica={metaAtual} // ✅ Passa meta dinâmica para o histórico
+                                    metaDinamica={metaAtual} 
                                 />
                             </div>
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-// ✅ O loader agora é assíncrono (busca do SQL)
-import { loadDefeitos } from "@/core/data/loadDefeitos";
+// ✅ Passamos a buscar diretamente do dataAdapter que centraliza as regras de tradução
+import { fetchDefeitosFromSQL } from "@/core/data/dataAdapter";
 import { norm } from "@/core/diagnostico/diagnosticoUtils";
 import { parseDateSafe } from "@/core/ppm/ppmDateUtils";
 
@@ -32,15 +32,12 @@ function getSemanaAno(date: Date) {
 ====================================================== */
 export async function GET(req: Request) {
   try {
-    // ❌ ANTES (Dava erro pois retornava uma Promessa):
-    // const defeitosRaw = loadDefeitos();
-
-    // ✅ AGORA (Corrigido com await):
-    const defeitosRaw = await loadDefeitos();
+    // ✅ Utilizando o Motor Principal que possui a tradução (DIP PTH) e não o Raw File.
+    const defeitos = await fetchDefeitosFromSQL();
 
     // Sets para garantir unicidade
     const semanasSet = new Set<string>();
-    const mesesSet = new Set<string>(); // ✅ Novo: Meses disponíveis
+    const mesesSet = new Set<string>();
     const modelos = new Set<string>();
     const categorias = new Set<string>();
     const responsabilidades = new Set<string>();
@@ -48,8 +45,8 @@ export async function GET(req: Request) {
 
     const modeloCategoriaMap = new Map<string, string>();
 
-    // Agora o forEach funciona porque defeitosRaw é o array de dados final
-    defeitosRaw.forEach((r) => {
+    // Varrendo os defeitos e populando os Selects
+    defeitos.forEach((r) => {
       const date = parseDateSafe(r.DATA);
       if (!date) return;
 
@@ -58,7 +55,7 @@ export async function GET(req: Request) {
       // Adiciona Semana/Ano
       semanasSet.add(JSON.stringify({ semana, ano }));
       
-      // ✅ Adiciona Mês/Ano
+      // Adiciona Mês/Ano
       mesesSet.add(JSON.stringify({ mes, ano }));
 
       const mod = norm(r.MODELO);
@@ -66,8 +63,12 @@ export async function GET(req: Request) {
       
       if (mod) modelos.add(mod);
       if (cat) categorias.add(cat);
-      if (r.RESPONSABILIDADE) responsabilidades.add(norm(r.RESPONSABILIDADE));
       if (r.TURNO) turnos.add(norm(r.TURNO));
+      
+      // ✅ Capturando a Responsabilidade já tratada pelo Adapter (Ex: DIP PTH vai entrar aqui)
+      if (r.RESPONSABILIDADE) {
+          responsabilidades.add(norm(r.RESPONSABILIDADE));
+      }
 
       if (mod && cat && !modeloCategoriaMap.has(mod)) {
         modeloCategoriaMap.set(mod, cat);
@@ -81,14 +82,14 @@ export async function GET(req: Request) {
       .map((s) => JSON.parse(s))
       .sort((a, b) => b.ano - a.ano || b.semana - a.semana);
 
-    // ✅ Ordena meses (mais recente primeiro)
+    // Ordena meses (mais recente primeiro)
     const mesesOrdenados = Array.from(mesesSet)
       .map((m) => JSON.parse(m))
       .sort((a, b) => b.ano - a.ano || b.mes - a.mes);
 
     return NextResponse.json({
       semanas: semanasOrdenadas,
-      meses: mesesOrdenados, // ✅ Retorna para o front
+      meses: mesesOrdenados, 
       modelos: [...modelos].sort(),
       categorias: [...categorias].sort(),
       responsabilidades: [...responsabilidades].sort(),

@@ -204,70 +204,76 @@ export default function PpmOcorrenciasModal({ isOpen, onClose, code, items }: Pr
 }
 
 /* ======================================================
-   STYLES (GLASSMORPHISM AJUSTADO PARA REFERÊNCIA)
+   STYLES — SIGMA-Q DESIGN SYSTEM
 ====================================================== */
 
 const overlayStyle: React.CSSProperties = {
-  position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-  background: "rgba(0, 0, 0, 0.8)", 
-  backdropFilter: "blur(6px)",
-  zIndex: 9999, 
-  display: "flex", 
-  alignItems: "center", 
+  position: "fixed",
+  inset: 0,
+  background: "rgba(2, 6, 23, 0.75)", // menos preto puro
+  backdropFilter: "blur(8px)",
+  zIndex: 9999,
+  display: "flex",
+  alignItems: "center",
   justifyContent: "center",
   animation: "fadeIn 0.2s ease-out"
 };
 
 const glassModalStyle: React.CSSProperties = {
-  background: "#0f172a", 
-  border: "1px solid rgba(255, 255, 255, 0.08)",
-  borderRadius: 16, 
+  background: "linear-gradient(145deg, #0f172a, #0b1220)",
+  border: "1px solid rgba(59,130,246,0.15)",
+  borderRadius: 18,
   width: "95%",
-  maxWidth: 1200, 
+  maxWidth: 1250,
   height: "85vh",
-  display: "flex", 
-  flexDirection: "column", 
-  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.05) inset",
+  display: "flex",
+  flexDirection: "column",
+  boxShadow: `
+    0 30px 60px rgba(0,0,0,0.6),
+    0 0 0 1px rgba(59,130,246,0.08) inset,
+    0 0 40px rgba(59,130,246,0.05)
+  `,
   overflow: "hidden"
 };
 
 const headerStyle: React.CSSProperties = {
-  padding: "20px 24px", 
-  borderBottom: "1px solid rgba(255,255,255,0.06)",
-  display: "flex", 
-  justifyContent: "space-between", 
-  alignItems: "center", 
-  background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))"
+  padding: "18px 26px",
+  borderBottom: "1px solid rgba(59,130,246,0.15)",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  background: "linear-gradient(90deg, rgba(59,130,246,0.08), rgba(59,130,246,0.02))"
 };
 
 const iconContainerStyle: React.CSSProperties = {
-  width: 48, 
-  height: 48, 
-  borderRadius: 12, 
-  background: "rgba(255, 255, 255, 0.05)", 
-  display: "flex", 
-  alignItems: "center", 
-  justifyContent: "center", 
-  border: "1px solid rgba(255, 255, 255, 0.05)",
+  width: 44,
+  height: 44,
+  borderRadius: 12,
+  background: "rgba(59,130,246,0.15)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: "1px solid rgba(59,130,246,0.25)",
 };
 
 const badgeCountStyle: React.CSSProperties = {
-    background: "#3B82F6", 
-    color: "#fff", 
-    padding: "2px 8px", 
-    borderRadius: 6, 
-    fontSize: "0.7rem", 
-    fontWeight: 700,
-    letterSpacing: "0.5px"
+  background: "linear-gradient(90deg,#2563EB,#3B82F6)",
+  color: "#fff",
+  padding: "3px 10px",
+  borderRadius: 8,
+  fontSize: "0.7rem",
+  fontWeight: 700,
+  letterSpacing: "0.5px",
+  boxShadow: "0 4px 12px rgba(37,99,235,0.4)"
 };
 
 const closeButtonStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.05)", 
-  border: "1px solid rgba(255,255,255,0.05)", 
-  color: "#94a3b8", 
-  cursor: "pointer", 
+  background: "rgba(59,130,246,0.08)",
+  border: "1px solid rgba(59,130,246,0.15)",
+  color: "#94a3b8",
+  cursor: "pointer",
   padding: 8,
-  borderRadius: 8,
+  borderRadius: 10,
   transition: "all 0.2s",
   display: "flex",
   alignItems: "center",
@@ -275,32 +281,32 @@ const closeButtonStyle: React.CSSProperties = {
 };
 
 const contentStyle: React.CSSProperties = {
-  flex: 1, 
-  overflowY: "auto", 
+  flex: 1,
+  overflowY: "auto",
   padding: 0,
   background: "transparent"
 };
 
-const thStyle: React.CSSProperties = { 
-    padding: "14px 20px",
-    fontWeight: 600, 
-    fontSize: "0.75rem", 
-    textTransform: "uppercase", 
-    letterSpacing: "0.05em", 
-    color: "#64748b",
-    background: "#0f172a", 
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    textAlign: "left",
-    whiteSpace: "nowrap"
+const thStyle: React.CSSProperties = {
+  padding: "14px 20px",
+  fontWeight: 600,
+  fontSize: "0.75rem",
+  textTransform: "uppercase",
+  letterSpacing: "0.08em",
+  color: "#64748b",
+  background: "#0b1220",
+  borderBottom: "1px solid rgba(59,130,246,0.15)",
+  textAlign: "left",
+  whiteSpace: "nowrap"
 };
 
-const tdStyle: React.CSSProperties = { 
-    padding: "14px 20px", 
-    color: "#e2e8f0", 
-    borderBottom: "1px solid rgba(255,255,255,0.03)",
-    verticalAlign: "top"
+const tdStyle: React.CSSProperties = {
+  padding: "16px 20px",
+  color: "#e2e8f0",
+  borderBottom: "1px solid rgba(59,130,246,0.05)",
+  verticalAlign: "top"
 };
 
 const rowStyle: React.CSSProperties = {
-    transition: "background 0.2s"
+  transition: "all 0.2s ease"
 };

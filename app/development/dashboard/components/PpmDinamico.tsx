@@ -37,8 +37,9 @@ const COLORS_RESP: Record<string, string> = {
   "PROCESSO LCM": "#D97706",
   "PROCESSO MA": "#EA580C",
   "PROC. ALTO FALANTE": "#C2410C",
-  "PROCESSO PTH": "#F97316", // Inclui DIP
-  "PROCESSO PA": "#EF4444"   // Inclui Genéricos e SUBS
+  "PROCESSO PTH": "#F97316", 
+  "DIP PTH": "#4e2507",
+  "PROCESSO PA": "#EF4444"  
 };
 
 const COLORS_CAT: Record<string, string> = {

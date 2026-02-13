@@ -73,13 +73,12 @@ function matchResponsabilidade(itemResp: string, filtros: string[]): boolean {
     return filtros.some(filtro => {
         const f = norm(filtro);
         
-        // Grupo: AGRUPAMENTO DE PROCESSOS
-        if (f === "AGRUPAMENTO DE PROCESSOS") {
+        // Suporta ambos os padrões de nomeclatura para segurança
+        if (f === "AGRUPAMENTO DE PROCESSOS" || f === "TODOS OS PROCESSOS") {
             return resp.startsWith("PROC") || resp.includes("PROCESSO") || resp.includes("PTH") || resp.includes("LCM");
         }
         
-        // Grupo: AGRUPAMENTO DE FORNECEDORES
-        if (f === "AGRUPAMENTO DE FORNECEDORES") {
+        if (f === "AGRUPAMENTO DE FORNECEDORES" || f === "TODOS OS FORNECEDORES") {
             return resp.includes("FORN") || resp === "F" || resp === "FL";
         }
 
@@ -103,7 +102,7 @@ export async function GET(request: NextRequest) {
 
     const filterCategoria = getMultiFilter("categoria");
     const filterModelo = getMultiFilter("modelo");
-    const filterResponsabilidade = getMultiFilter("responsabilidade"); // ✅ Pega o filtro (ex: ["AGRUPAMENTO DE PROCESSOS"])
+    const filterResponsabilidade = getMultiFilter("responsabilidade"); 
     
     // 1. PEGA E NORMALIZA O FILTRO DE TURNO DA URL
     let filterTurnoRaw = getMultiFilter("turno");
@@ -130,7 +129,8 @@ export async function GET(request: NextRequest) {
     });
 
     // ✅ --- FUNÇÃO DE FILTRO CENTRALIZADA E CORRIGIDA ---
-    const applyFilters = (data: any[], isDefect: boolean, applyTime: boolean, isStrictDay: boolean = true) => {
+    // Adicionado parâmetro 'ignorePeriodDetails' para permitir carregar o ano todo para a tendência
+    const applyFilters = (data: any[], isDefect: boolean, applyTime: boolean, isStrictDay: boolean = true, ignorePeriodDetails: boolean = false) => {
         return data.filter(row => {
             const r = row as any;
             
@@ -162,15 +162,14 @@ export async function GET(request: NextRequest) {
             }
             
             // 4. Responsabilidade (Só para defeitos)
-            // ✅ CORREÇÃO: Usa o helper matchResponsabilidade para entender os grupos
             if (isDefect && filterResponsabilidade && resp) {
                  if (!matchResponsabilidade(resp, filterResponsabilidade)) return false;
             }
 
             // --- FILTROS DE TEMPO ---
             
-            // 5. Dia Exato (Prioridade Máxima para KPIs)
-            if (isStrictDay && filterDia) {
+            // 5. Dia Exato (Prioridade Máxima para KPIs, mas ignorado se quisermos o histórico completo)
+            if (isStrictDay && filterDia && !ignorePeriodDetails) {
                 const isoRow = extractDateIso(dataRow);
                 if (isoRow !== filterDia) return false;
             }
@@ -181,12 +180,19 @@ export async function GET(request: NextRequest) {
                     const anoObj = dataObj.getFullYear();
                     const mesObj = dataObj.getMonth() + 1;
                     
+                    // Ano é sempre obrigatório para manter o contexto do dashboard
                     if (filterAno && anoObj !== filterAno) return false;
-                    if (filterMes && mesObj !== filterMes && !filterSemana) return false;
                     
-                    if (filterSemana) {
-                        const semObj = getWeekNumber(dataObj);
-                        if (semObj !== filterSemana) return false;
+                    // ✅ CORREÇÃO: Se ignorePeriodDetails for true, trazemos o ano todo.
+                    // Isso permite que o gráfico de tendência calcule "Mês Atual vs Mês Anterior"
+                    // mesmo que o filtro esteja travado no Mês Atual.
+                    if (!ignorePeriodDetails) {
+                        if (filterMes && mesObj !== filterMes && !filterSemana) return false;
+                        
+                        if (filterSemana) {
+                            const semObj = getWeekNumber(dataObj);
+                            if (semObj !== filterSemana) return false;
+                        }
                     }
                 } else {
                     if (filterAno || filterMes || filterSemana) return false;
@@ -200,12 +206,14 @@ export async function GET(request: NextRequest) {
     // --- APLICAÇÃO ---
 
     // 1. Dados Recortados (KPIs, Ranking e Detalhes) 
-    const productionCut = applyFilters(productionRaw, false, true, true);
-    const defectsCut = applyFilters(defectsRaw, true, true, true);
+    // isStrictDay = true, ignorePeriodDetails = false (Respeita estritamente o mês/semana selecionado)
+    const productionCut = applyFilters(productionRaw, false, true, true, false);
+    const defectsCut = applyFilters(defectsRaw, true, true, true, false);
 
     // 2. Dados Históricos (Gráficos e Tendência) 
-    const productionFull = applyFilters(productionRaw, false, true, false);
-    const defectsFull = applyFilters(defectsRaw, true, true, false);
+    // isStrictDay = false, ✅ ignorePeriodDetails = true (Traz o ano todo para montar a linha do tempo)
+    const productionFull = applyFilters(productionRaw, false, true, false, true);
+    const defectsFull = applyFilters(defectsRaw, true, true, false, true);
 
     /* ======================================================
         MOTORES DE CÁLCULO

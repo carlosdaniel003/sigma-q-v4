@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProductionData } from "../../context/ProductionContext";
 import { useSigmaValidation } from "../../context/SigmaValidationProvider";
 
@@ -60,7 +60,7 @@ export function useValidacao() {
   const sigma = useSigmaValidation();
 
   /* ============================================================
-     ESTADO DE UI
+      ESTADO DE UI
   ============================================================ */
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<
@@ -69,14 +69,14 @@ export function useValidacao() {
   const [showTop, setShowTop] = useState(10);
 
   /* ============================================================
-     BASE REAL DE PRODUÇÃO (LINHAS)
+      BASE REAL DE PRODUÇÃO (LINHAS)
   ============================================================ */
   const baseProducao = useMemo(() => {
     return Array.isArray(productionData) ? productionData : [];
   }, [productionData]);
 
   /* ============================================================
-     METADADOS DE VALIDAÇÃO (VINDOS DO SIGMA)
+      METADADOS DE VALIDAÇÃO (VINDOS DO SIGMA)
   ============================================================ */
   const overall = productionMeta?.totals ?? {};
   const categories = productionMeta?.perCategory ?? [];
@@ -85,7 +85,7 @@ export function useValidacao() {
     productionMeta?.diagnostico ?? null;
 
   /* ============================================================
-     KPIs
+      KPIs
   ============================================================ */
   const categoriasSaudaveis = useMemo(
     () =>
@@ -123,7 +123,25 @@ export function useValidacao() {
   }, [overall]);
 
   /* ============================================================
-     FILTROS DE VISUALIZAÇÃO
+      🚨 ALERTA GLOBAL PARA A SIDEBAR PRINCIPAL
+      Controla a animação de pulsação "neon" no menu global
+  ============================================================ */
+  useEffect(() => {
+    // Só prossegue se os metadados já tiverem sido carregados
+    if (productionMeta && !productionLoading) {
+      if (itensAfetados > 0 || divergenciaGlobal > 0) {
+        // Salva a flag indicando que o erro é especificamente na Produção
+        localStorage.setItem("sigma_validation_alert_producao", "true");
+        window.dispatchEvent(new Event("sigma_alert_changed"));
+      } else {
+        localStorage.removeItem("sigma_validation_alert_producao");
+        window.dispatchEvent(new Event("sigma_alert_changed"));
+      }
+    }
+  }, [itensAfetados, divergenciaGlobal, productionMeta, productionLoading]);
+
+  /* ============================================================
+      FILTROS DE VISUALIZAÇÃO
   ============================================================ */
   const currentProblems = useMemo(() => {
     if (!selectedCategory) return topProblems.slice(0, showTop);
@@ -161,12 +179,12 @@ export function useValidacao() {
   }, [diagnostico, selectedCategory]);
 
   /* ============================================================
-     STATUS FINAL UNIFICADO
+      STATUS FINAL UNIFICADO
   ============================================================ */
   const loading = sigma.loading || productionLoading;
 
   /* ============================================================
-     RETORNO
+      RETORNO
   ============================================================ */
   return {
     loading,

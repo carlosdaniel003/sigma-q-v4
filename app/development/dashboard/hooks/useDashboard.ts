@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useDashboardFilters } from "../store/dashboardFilters";
 
 /* ======================================================
@@ -93,7 +93,7 @@ export interface CategoriaMensalItem {
   [categoria: string]: number | string;
 }
 
-interface DashboardData {
+export interface DashboardData {
   meta: {
     totalProduction: number;
     totalDefects: number;
@@ -121,13 +121,16 @@ export function useDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // ✅ DATA DA ÚLTIMA ATUALIZAÇÃO
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const { appliedFilters } = useDashboardFilters();
 
-  useEffect(() => {
-    async function load() {
+  // ✅ TRANSFORMEI O LOAD EM UM CALLBACK PARA PERMITIR REFRESH MANUAL
+  const fetchData = useCallback(async (isSilent: boolean = false) => {
       try {
-        setLoading(true);
+        if (!isSilent) setLoading(true);
         setError(null);
 
         const params = new URLSearchParams();
@@ -161,11 +164,12 @@ export function useDashboard() {
           params.set("turno", appliedFilters.turno);
         }
         
-        // ✅ Suporta "AGRUPAMENTO DE PROCESSOS" e "AGRUPAMENTO DE FORNECEDORES" automaticamente
-        // O Adapter no backend interceptará essas strings e fará o agrupamento.
         if (appliedFilters.responsabilidade && appliedFilters.responsabilidade !== "Todos") {
           params.set("responsabilidade", appliedFilters.responsabilidade);
         }
+
+        // Adiciona timestamp para evitar cache do browser
+        params.set("t", Date.now().toString());
 
         // 3. REQUISIÇÃO AO BACKEND
         const res = await fetch(`/api/dashboard/summary?${params.toString()}`);
@@ -177,16 +181,26 @@ export function useDashboard() {
 
         const json: DashboardData = await res.json();
         setData(json);
+        setLastUpdated(new Date()); // ✅ Atualiza timestamp
       } catch (err: any) {
         console.error("❌ Hook useDashboard Error:", err);
-        setError(err?.message ?? "Erro desconhecido");
+        if (!isSilent) setError(err?.message ?? "Erro desconhecido");
       } finally {
-        setLoading(false);
+        if (!isSilent) setLoading(false);
       }
-    }
-
-    load();
   }, [appliedFilters]);
 
-  return { data, loading, error };
+  // Carrega ao montar ou mudar filtros
+  useEffect(() => {
+    fetchData(false);
+  }, [fetchData]);
+
+  return { 
+      data, 
+      loading, 
+      error, 
+      lastUpdated, // ✅ Exposto para exibir "Atualizado às..."
+      refresh: () => fetchData(false), // ✅ Permite botão de refresh manual
+      silentUpdate: () => fetchData(true) // ✅ Permite atualização sem loading (polling)
+  };
 }

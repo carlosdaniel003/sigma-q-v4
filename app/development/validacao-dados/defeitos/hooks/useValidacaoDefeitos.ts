@@ -71,14 +71,34 @@ export default function useValidacaoDefeitos() {
   }, [stats]);
 
   /* -----------------------------------------
-      KPIs — 100% BACKEND
+      KPIs — AGORA BASEADOS EM VOLUME FÍSICO
    ----------------------------------------- */
   const total = stats?.totalItems ?? 0;
   const totalDefeitos = stats?.totalDefeitos ?? 0;
-  const notIdentified = stats?.notIdentified ?? 0;
+  const notIdentified = stats?.notIdentified ?? 0; // Agora o Backend manda 27!
   const aiOverall = stats?.percentIdentified ?? 0;
   const perBase = stats?.perBase ?? {};
   const breakdown = stats?.notIdentifiedBreakdown ?? {};
+
+  /* -----------------------------------------
+      🚨 ALERTA GLOBAL PARA A SIDEBAR PRINCIPAL
+      Controla a animação de pulsação "neon" no menu global
+   ----------------------------------------- */
+  useEffect(() => {
+    // Garante que só avise a sidebar quando os dados realmente existirem
+    if (stats) {
+      if (aiOverall < 100) {
+        // Se houver qualquer erro, levanta a bandeira de alerta no navegador
+        localStorage.setItem("sigma_validation_alert", "true");
+        // Avisa a MainSidebar em tempo real para começar a piscar
+        window.dispatchEvent(new Event("sigma_alert_changed")); 
+      } else {
+        // Se estiver perfeito (100%), apaga a bandeira e para de piscar
+        localStorage.removeItem("sigma_validation_alert");
+        window.dispatchEvent(new Event("sigma_alert_changed"));
+      }
+    }
+  }, [aiOverall, stats]);
 
   /* -----------------------------------------
       🔑 FILTRO POR CATEGORIA (SIDEBAR)
@@ -92,9 +112,6 @@ export default function useValidacaoDefeitos() {
     if (fonte === "todas") return diag;
 
     // 2. Filtro Inteligente por Categoria
-    // CORREÇÃO CRÍTICA: A API devolve a categoria do produto (TV, CM) na propriedade 'fonte'.
-    // A propriedade 'categoria' contém o TIPO do erro (ex: 'falhas', 'modelos').
-    // Portanto, devemos comparar a seleção da sidebar apenas com 'd.fonte'.
     return diag.filter((d: any) => {
         // Normaliza o item que veio da API (Pega a Categoria do Produto)
         const itemProductCat = String(d.fonte || d.CATEGORIA || "").toUpperCase().trim();
