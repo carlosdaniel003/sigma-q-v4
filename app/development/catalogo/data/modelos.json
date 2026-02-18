@@ -3311,17 +3311,17 @@
   },
   {
     "CÓDIGO":"80034-02",
-    "MODELO":"MO01-21-W 220V",
+    "MODELO":"MO-01-21-W 220V",
     "CATEGORIA":"MWO"
   },
   {
     "CÓDIGO":"80036-02",
-    "MODELO":"MO02-34-W 220V",
+    "MODELO":"MO-02-34-W 220V",
     "CATEGORIA":"MWO"
   },
   {
     "CÓDIGO":"80035-02",
-    "MODELO":"MO02-34-B 220V",
+    "MODELO":"MO-02-34-B 220V",
     "CATEGORIA":"MWO"
   },
   {
@@ -3522,6 +3522,11 @@
   {
     "CÓDIGO":"PL0224-0092-01",
     "MODELO":"PCI DISPLAY CM-550-L - IM",
+    "CATEGORIA":"CM"
+  },
+  {
+    "CÓDIGO":"7041-01",
+    "MODELO":"CAIXA AMPLIFICADA CM-300-N BIV.",
     "CATEGORIA":"CM"
   }
 ]

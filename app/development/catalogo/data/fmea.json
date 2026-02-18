@@ -1,930 +1,814 @@
 [
   {
     "CÓDIGO":"AP2",
-    "DESCRICAO":"HI-POT\/RIGIDEZ\/WI",
+    "DESCRIÇÃO":"HI-POT\/RIGIDEZ\/WI",
     "SEVERIDADE":5,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":75
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VM1",
-    "DESCRICAO":"VAZAMENTO NA CAVIDADE",
+    "DESCRIÇÃO":"VAZAMENTO NA CAVIDADE",
     "SEVERIDADE":5,
-    "OCORRENCIA":3,
-    "DETECCAO":5,
-    "NPR":75
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VZG",
-    "DESCRICAO":"VAZAMENTO DE GÁS",
+    "DESCRIÇÃO":"VAZAMENTO DE GÁS",
     "SEVERIDADE":5,
-    "OCORRENCIA":3,
-    "DETECCAO":5,
-    "NPR":75
+    "DETECÇÃO":5,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A1",
-    "DESCRICAO":"SEM ÁUDIO GERAL",
+    "DESCRIÇÃO":"SEM ÁUDIO GERAL",
     "SEVERIDADE":5,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":60
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A13",
-    "DESCRICAO":"ÁUDIO BAIXO",
+    "DESCRIÇÃO":"ÁUDIO BAIXO",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":4,
-    "NPR":60
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"AP1",
-    "DESCRICAO":"LIGA\/DESLIGA AUTOMATICAMENTE",
+    "DESCRIÇÃO":"LIGA\/DESLIGA AUTOMATICAMENTE",
     "SEVERIDADE":4,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":60
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"BAT2",
-    "DESCRICAO":"APARELHO NÃO CARREGA",
+    "DESCRIÇÃO":"APARELHO NÃO CARREGA",
     "SEVERIDADE":5,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":60
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"CONT",
-    "DESCRICAO":"CONTAMINAÇÃO",
+    "DESCRIÇÃO":"CONTAMINAÇÃO",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":4,
-    "NPR":60
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"MURA",
-    "DESCRICAO":"MANCHA ESCURA NA TELA",
+    "DESCRIÇÃO":"MANCHA ESCURA NA TELA",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":4,
-    "NPR":60
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P1",
-    "DESCRICAO":"QUEBRADO\/DANIFICADO\/BATIDO",
+    "DESCRIÇÃO":"QUEBRADO\/DANIFICADO\/BATIDO",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":4,
-    "NPR":60
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"V1",
-    "DESCRICAO":"SEM IMAGEM\/SEM BRILHO",
+    "DESCRIÇÃO":"SEM IMAGEM\/SEM BRILHO",
     "SEVERIDADE":5,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":60
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"V5",
-    "DESCRICAO":"INTERFERÊNCIA NA IMAGEM",
+    "DESCRIÇÃO":"INTERFERÊNCIA NA IMAGEM",
     "SEVERIDADE":5,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":60
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VAR",
-    "DESCRICAO":"VAZAMENTO DE AR",
+    "DESCRIÇÃO":"VAZAMENTO DE AR",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":4,
-    "NPR":60
+    "DETECÇÃO":5,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD8",
-    "DESCRICAO":"FALTANDO DÍGITO NO DISPLAY",
+    "DESCRIÇÃO":"FALTANDO DÍGITO NO DISPLAY",
     "SEVERIDADE":2,
-    "OCORRENCIA":5,
-    "DETECCAO":5,
-    "NPR":50
+    "DETECÇÃO":5,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"N1",
-    "DESCRICAO":"APARELHO NÃO LIGA",
+    "DESCRIÇÃO":"APARELHO NÃO LIGA",
     "SEVERIDADE":5,
-    "OCORRENCIA":5,
-    "DETECCAO":2,
-    "NPR":50
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T1",
-    "DESCRICAO":"TECLAS NÃO ATUAM",
+    "DESCRIÇÃO":"TECLAS NÃO ATUAM",
     "SEVERIDADE":5,
-    "OCORRENCIA":5,
-    "DETECCAO":2,
-    "NPR":50
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VM2",
-    "DESCRICAO":"VAZAMENTO NA PORTA",
+    "DESCRIÇÃO":"VAZAMENTO NA PORTA",
     "SEVERIDADE":5,
-    "OCORRENCIA":2,
-    "DETECCAO":5,
-    "NPR":50
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A10",
-    "DESCRICAO":"SEM ÁUDIO NO ALTO-FALANTE",
+    "DESCRIÇÃO":"SEM ÁUDIO NO ALTO-FALANTE",
     "SEVERIDADE":4,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":48
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A4",
-    "DESCRICAO":"SEM ÁUDIO NO MIC\/FONE\/AUX",
+    "DESCRIÇÃO":"SEM ÁUDIO NO MIC\/FONE\/AUX",
     "SEVERIDADE":4,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":48
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD11",
-    "DESCRICAO":"FLASH LIGHT FALTANDO COR",
+    "DESCRIÇÃO":"FLASH LIGHT FALTANDO COR",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":4,
-    "NPR":48
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A6",
-    "DESCRICAO":"RUÍDO NO ÁUDIO",
+    "DESCRIÇÃO":"RUÍDO NO ÁUDIO",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":45
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A7",
-    "DESCRICAO":"VIBRAÇÃO NO ÁUDIO",
+    "DESCRIÇÃO":"VIBRAÇÃO NO ÁUDIO",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":45
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A9",
-    "DESCRICAO":"SEM ÁUDIO NO TWEETER",
+    "DESCRIÇÃO":"SEM ÁUDIO NO TWEETER",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":45
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD9",
-    "DESCRICAO":"EXCESSO DE DÍGITOS",
+    "DESCRIÇÃO":"EXCESSO DE DÍGITOS",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":45
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"N6",
-    "DESCRICAO":"CENTELHANDO\/RUÍDO",
+    "DESCRIÇÃO":"CENTELHANDO\/RUÍDO",
     "SEVERIDADE":5,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":45
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P3",
-    "DESCRICAO":"MANCHA",
+    "DESCRIÇÃO":"MANCHA",
     "SEVERIDADE":2,
-    "OCORRENCIA":5,
-    "DETECCAO":4,
-    "NPR":40
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"USB1",
-    "DESCRICAO":"APARELHO NÃO LÊ PEN DRIVE",
+    "DESCRIÇÃO":"APARELHO NÃO LÊ PEN DRIVE",
     "SEVERIDADE":4,
-    "OCORRENCIA":5,
-    "DETECCAO":2,
-    "NPR":40
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A2",
-    "DESCRICAO":"SEM ÁUDIO NO CANAL ESQUERDO\/FONE",
+    "DESCRIÇÃO":"SEM ÁUDIO NO CANAL ESQUERDO\/FONE",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A3",
-    "DESCRICAO":"SEM ÁUDIO NO CANAL DIREITO\/FONE",
+    "DESCRIÇÃO":"SEM ÁUDIO NO CANAL DIREITO\/FONE",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LV",
-    "DESCRICAO":"LINHA VERTICAL",
+    "DESCRIÇÃO":"LINHA VERTICAL",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P5",
-    "DESCRICAO":"EMPENADO\/AMASSADO",
+    "DESCRIÇÃO":"EMPENADO\/AMASSADO",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":4,
-    "NPR":36
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P6",
-    "DESCRICAO":"MAL MONTADO",
+    "DESCRIÇÃO":"MAL MONTADO",
     "SEVERIDADE":3,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P9",
-    "DESCRICAO":"FALTANDO",
+    "DESCRIÇÃO":"FALTANDO",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":4,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T2",
-    "DESCRICAO":"TECLA DESLOCADA\/DANIFICADA",
+    "DESCRIÇÃO":"TECLA DESLOCADA\/DANIFICADA",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":4,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T3",
-    "DESCRICAO":"FUNÇÃO INVERTIDA",
+    "DESCRIÇÃO":"FUNÇÃO INVERTIDA",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"V3",
-    "DESCRICAO":"SEM VÍDEO NO HDMI",
+    "DESCRIÇÃO":"SEM VÍDEO NO HDMI",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VZL",
-    "DESCRICAO":"VAZAMENTO DE LUZ",
+    "DESCRIÇÃO":"VAZAMENTO DE LUZ",
     "SEVERIDADE":3,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":36
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A12",
-    "DESCRICAO":"VOLUME MÍNIMO NÃO ATUA",
+    "DESCRIÇÃO":"VOLUME MÍNIMO NÃO ATUA",
     "SEVERIDADE":4,
-    "OCORRENCIA":4,
-    "DETECCAO":2,
-    "NPR":32
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P11",
-    "DESCRICAO":"FORA DO ESPECIFICADO",
+    "DESCRIÇÃO":"FORA DO ESPECIFICADO",
     "SEVERIDADE":2,
-    "OCORRENCIA":4,
-    "DETECCAO":4,
-    "NPR":32
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VT1",
-    "DESCRICAO":"VENTILADOR NÃO GIRA",
+    "DESCRIÇÃO":"VENTILADOR NÃO GIRA",
     "SEVERIDADE":4,
-    "OCORRENCIA":4,
-    "DETECCAO":2,
-    "NPR":32
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD1",
-    "DESCRICAO":"LED NÃO ACENDE",
+    "DESCRIÇÃO":"LED NÃO ACENDE",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":2,
-    "NPR":30
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD10",
-    "DESCRICAO":"FLASH LIGHT NÃO LIGA",
+    "DESCRIÇÃO":"FLASH LIGHT NÃO LIGA",
     "SEVERIDADE":3,
-    "OCORRENCIA":5,
-    "DETECCAO":2,
-    "NPR":30
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD15",
-    "DESCRICAO":"DISPLAY NÃO ACENDE",
+    "DESCRIÇÃO":"DISPLAY NÃO ACENDE",
     "SEVERIDADE":5,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":30
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"N2",
-    "DESCRICAO":"APARELHO NÃO DESLIGA",
+    "DESCRIÇÃO":"APARELHO NÃO DESLIGA",
     "SEVERIDADE":5,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":30
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"N4",
-    "DESCRICAO":"SOFTWARE DESATUALIZADO",
+    "DESCRIÇÃO":"SOFTWARE DESATUALIZADO",
     "SEVERIDADE":2,
-    "OCORRENCIA":5,
-    "DETECCAO":3,
-    "NPR":30
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"PBR",
-    "DESCRICAO":"PONTO BRILHANTE",
+    "DESCRIÇÃO":"PONTO BRILHANTE",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":27
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"VT2",
-    "DESCRICAO":"RUÍDO NO VENTILADOR",
+    "DESCRIÇÃO":"RUÍDO NO VENTILADOR",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":27
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"WI-FI",
-    "DESCRICAO":"SEM SINAL DE WI-FI",
+    "DESCRIÇÃO":"SEM SINAL DE WI-FI",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":27
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"BAT1",
-    "DESCRICAO":"BATERIA\/PILHA NÃO ATUA",
+    "DESCRIÇÃO":"BATERIA\/PILHA NÃO ATUA",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"BAT3",
-    "DESCRICAO":"BATERIA AUX. NÃO ATUA",
+    "DESCRIÇÃO":"BATERIA AUX. NÃO ATUA",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"CAP",
-    "DESCRICAO":"CALÇO\/QUADRO APARECENDO",
+    "DESCRIÇÃO":"CALÇO\/QUADRO APARECENDO",
     "SEVERIDADE":2,
-    "OCORRENCIA":4,
-    "DETECCAO":3,
-    "NPR":24
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"D1",
-    "DESCRICAO":"NÃO LÊ DVD\/CD\/JOGOS",
+    "DESCRIÇÃO":"NÃO LÊ DVD\/CD\/JOGOS",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"HP1",
-    "DESCRICAO":"ENTRADA DA GUI\/AUX NÃO FUNCIONA",
+    "DESCRIÇÃO":"ENTRADA DA GUI\/AUX NÃO FUNCIONA",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD5",
-    "DESCRICAO":"LED\/DISPLAY PISCANDO",
+    "DESCRIÇÃO":"LED\/DISPLAY PISCANDO",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":4,
-    "NPR":24
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"NC",
-    "DESCRICAO":"NÃO COMUNICA",
+    "DESCRIÇÃO":"NÃO COMUNICA",
     "SEVERIDADE":4,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":24
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P13",
-    "DESCRICAO":"APARELHO COM CORPO ESTRANHO",
+    "DESCRIÇÃO":"APARELHO COM CORPO ESTRANHO",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":4,
-    "NPR":24
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"POL",
-    "DESCRICAO":"POLARITE",
+    "DESCRIÇÃO":"POLARITE",
     "SEVERIDADE":4,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":24
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"PT1",
-    "DESCRICAO":"PRATO NÃO GIRA",
+    "DESCRIÇÃO":"PRATO NÃO GIRA",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"Q2",
-    "DESCRICAO":"NÃO AQUECE",
+    "DESCRIÇÃO":"NÃO AQUECE",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"RD",
-    "DESCRICAO":"RÁDIO NÃO FUNCIONA\/SINTONIZA",
+    "DESCRIÇÃO":"RÁDIO NÃO FUNCIONA\/SINTONIZA",
     "SEVERIDADE":4,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":24
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"V2",
-    "DESCRICAO":"SEM VÍDEO NO AV",
+    "DESCRIÇÃO":"SEM VÍDEO NO AV",
     "SEVERIDADE":4,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":24
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"CR1",
-    "DESCRICAO":"CONTROLE NÃO ATUA",
+    "DESCRIÇÃO":"CONTROLE NÃO ATUA",
     "SEVERIDADE":5,
-    "OCORRENCIA":2,
-    "DETECCAO":2,
-    "NPR":20
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"N3",
-    "DESCRICAO":"NÃO GRAVA\/ATUALIZA",
+    "DESCRIÇÃO":"NÃO GRAVA\/ATUALIZA",
     "SEVERIDADE":5,
-    "OCORRENCIA":2,
-    "DETECCAO":2,
-    "NPR":20
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"BT2",
-    "DESCRICAO":"RUÍDO NO BLUETOOTH",
+    "DESCRIÇÃO":"RUÍDO NO BLUETOOTH",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"HP5",
-    "DESCRICAO":"REPETIÇÕES DE ECO",
+    "DESCRIÇÃO":"REPETIÇÕES DE ECO",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"L1",
-    "DESCRICAO":"LÂMPADA NÃO APAGA",
+    "DESCRIÇÃO":"LÂMPADA NÃO APAGA",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"L2",
-    "DESCRICAO":"LÂMPADA NÃO ACENDE",
+    "DESCRIÇÃO":"LÂMPADA NÃO ACENDE",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":18
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"L3",
-    "DESCRICAO":"LÂMPADA FRACA\/FORTE",
+    "DESCRIÇÃO":"LÂMPADA FRACA\/FORTE",
     "SEVERIDADE":2,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"OP",
-    "DESCRICAO":"O-CELL COM PELÍCULA",
+    "DESCRIÇÃO":"O-CELL COM PELÍCULA",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P12",
-    "DESCRICAO":"PELÍCULA NO O-CELL",
+    "DESCRIÇÃO":"PELÍCULA NO O-CELL",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P14",
-    "DESCRICAO":"ESPANADO",
+    "DESCRIÇÃO":"ESPANADO",
     "SEVERIDADE":2,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"RC2",
-    "DESCRICAO":"RCA NÃO ATUA",
+    "DESCRIÇÃO":"RCA NÃO ATUA",
     "SEVERIDADE":3,
-    "OCORRENCIA":3,
-    "DETECCAO":2,
-    "NPR":18
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"V6",
-    "DESCRICAO":"SEM VÍDEO NO RF\/ANTENA",
+    "DESCRIÇÃO":"SEM VÍDEO NO RF\/ANTENA",
     "SEVERIDADE":3,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":18
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"HP6",
-    "DESCRICAO":"AGUDO\/GRAVE NÃO ATUA",
+    "DESCRIÇÃO":"AGUDO\/GRAVE NÃO ATUA",
     "SEVERIDADE":4,
-    "OCORRENCIA":2,
-    "DETECCAO":2,
-    "NPR":16
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P10",
-    "DESCRICAO":"DESLOCADO",
+    "DESCRIÇÃO":"DESLOCADO",
     "SEVERIDADE":2,
-    "OCORRENCIA":2,
-    "DETECCAO":4,
-    "NPR":16
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P4",
-    "DESCRICAO":"COM REBARBA",
+    "DESCRIÇÃO":"COM REBARBA",
     "SEVERIDADE":1,
-    "OCORRENCIA":4,
-    "DETECCAO":4,
-    "NPR":16
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"RC1",
-    "DESCRICAO":"RCA FORA DO ESPECIFICADO",
+    "DESCRIÇÃO":"RCA FORA DO ESPECIFICADO",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":4,
-    "NPR":16
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T6",
-    "DESCRICAO":"VOLUME MÁXIMO NÃO ATUA",
+    "DESCRIÇÃO":"VOLUME MÁXIMO NÃO ATUA",
     "SEVERIDADE":4,
-    "OCORRENCIA":2,
-    "DETECCAO":2,
-    "NPR":16
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"N5",
-    "DESCRICAO":"SOFTWARE TRAVANDO",
+    "DESCRIÇÃO":"SOFTWARE TRAVANDO",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":15
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"Q1",
-    "DESCRICAO":"SUPERAQUECIMENTO",
+    "DESCRIÇÃO":"SUPERAQUECIMENTO",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":15
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"ST4",
-    "DESCRICAO":"TENSÕES VARIANDO",
+    "DESCRIÇÃO":"TENSÕES VARIANDO",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":15
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"D2",
-    "DESCRICAO":"CD SAI GIRANDO",
+    "DESCRIÇÃO":"CD SAI GIRANDO",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD3",
-    "DESCRICAO":"LED\/FLASH LIGHT COM LUZ FRACA",
+    "DESCRIÇÃO":"LED\/FLASH LIGHT COM LUZ FRACA",
     "SEVERIDADE":2,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD6",
-    "DESCRICAO":"LED COM COR DIFERENTE",
+    "DESCRIÇÃO":"LED COM COR DIFERENTE",
     "SEVERIDADE":2,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LH",
-    "DESCRICAO":"LINHA HORIZONTAL",
+    "DESCRIÇÃO":"LINHA HORIZONTAL",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P2",
-    "DESCRICAO":"RISCADO",
+    "DESCRIÇÃO":"RISCADO",
     "SEVERIDADE":1,
-    "OCORRENCIA":3,
-    "DETECCAO":4,
-    "NPR":12
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"PM1",
-    "DESCRICAO":"POTÊNCIA MÁXIMA",
+    "DESCRIÇÃO":"POTÊNCIA MÁXIMA",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"PT2",
-    "DESCRICAO":"PRATO TRAVADO",
+    "DESCRIÇÃO":"PRATO TRAVADO",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"ST2",
-    "DESCRICAO":"TENSÃO BAIXA",
+    "DESCRIÇÃO":"TENSÃO BAIXA",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T4",
-    "DESCRICAO":"TECLA DURA",
+    "DESCRIÇÃO":"TECLA DURA",
     "SEVERIDADE":2,
-    "OCORRENCIA":2,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T5",
-    "DESCRICAO":"VOLUME DIMINUI AUTOMATICAMENTE",
+    "DESCRIÇÃO":"VOLUME DIMINUI AUTOMATICAMENTE",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":12
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"BT1",
-    "DESCRICAO":"BLUETOOTH NÃO FUNCIONA",
+    "DESCRIÇÃO":"BLUETOOTH NÃO FUNCIONA",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":10
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"GB",
-    "DESCRICAO":"TERRA ABERTO",
+    "DESCRIÇÃO":"TERRA ABERTO",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":10
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"ST1",
-    "DESCRICAO":"SEM TENSÃO",
+    "DESCRIÇÃO":"SEM TENSÃO",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":10
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"ST5",
-    "DESCRICAO":"PLACA EM CURTO",
+    "DESCRIÇÃO":"PLACA EM CURTO",
     "SEVERIDADE":5,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":10
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A11",
-    "DESCRICAO":"VIBRAÇÃO NO ÁUDIO SWEEP",
+    "DESCRIÇÃO":"VIBRAÇÃO NO ÁUDIO SWEEP",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A15",
-    "DESCRICAO":"RUIDO NA HÉLICE",
+    "DESCRIÇÃO":"RUIDO NA HÉLICE",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A5",
-    "DESCRICAO":"RUÍDO NO ÁUDIO DO MIC\/FONE\/AUX",
+    "DESCRIÇÃO":"RUÍDO NO ÁUDIO DO MIC\/FONE\/AUX",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"A8",
-    "DESCRICAO":"MAU CONTATO NO MIC\/FONE\/AUX",
+    "DESCRIÇÃO":"MAU CONTATO NO MIC\/FONE\/AUX",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"ALT",
-    "DESCRICAO":"ALETA NÃO ABRE\/FECHA",
+    "DESCRIÇÃO":"ALETA NÃO ABRE\/FECHA",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"GV1",
-    "DESCRICAO":"GRAVAÇÃO FALHA DE PROCESSO",
+    "DESCRIÇÃO":"GRAVAÇÃO FALHA DE PROCESSO",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"HP2",
-    "DESCRICAO":"SAÍDA DUPLA DE ÁUDIO",
+    "DESCRIÇÃO":"SAÍDA DUPLA DE ÁUDIO",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"HP3",
-    "DESCRICAO":"ÁUDIO OSCILANDO",
+    "DESCRIÇÃO":"ÁUDIO OSCILANDO",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"HP7",
-    "DESCRICAO":"POP NOISE",
+    "DESCRIÇÃO":"POP NOISE",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"L4",
-    "DESCRICAO":"LÂMPADA PISCANDO",
+    "DESCRIÇÃO":"LÂMPADA PISCANDO",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD4",
-    "DESCRICAO":"LED\/FLASH LIGHT COM LUZ FORTE",
+    "DESCRIÇÃO":"LED\/FLASH LIGHT COM LUZ FORTE",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD7",
-    "DESCRICAO":"LED COM LUZ INVERTIDA",
+    "DESCRIÇÃO":"LED COM LUZ INVERTIDA",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P8",
-    "DESCRICAO":"FALHA DE INJEÇÃO\/SERIGRAFIA",
+    "DESCRIÇÃO":"FALHA DE INJEÇÃO\/SERIGRAFIA",
     "SEVERIDADE":1,
-    "OCORRENCIA":3,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"PAP",
-    "DESCRICAO":"PONTO APAGADO",
+    "DESCRIÇÃO":"PONTO APAGADO",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"USB2",
-    "DESCRICAO":"MAU CONTATO NA LEITURA DO PEN DRIVE",
+    "DESCRIÇÃO":"MAU CONTATO NA LEITURA DO PEN DRIVE",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"WB",
-    "DESCRICAO":"WHITE BALANCE",
+    "DESCRIÇÃO":"WHITE BALANCE",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":9
+    "DETECÇÃO":1,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"T7",
-    "DESCRICAO":"TECLA CAPACITIVA (TOUCH) NÃO ATUA",
+    "DESCRIÇÃO":"TECLA CAPACITIVA (TOUCH) NÃO ATUA",
     "SEVERIDADE":4,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":8
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"BZ",
-    "DESCRICAO":"BUZZER NÃO ATUA",
+    "DESCRIÇÃO":"BUZZER NÃO ATUA",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":6
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"LD2",
-    "DESCRICAO":"LED NÃO APAGA",
+    "DESCRIÇÃO":"LED NÃO APAGA",
     "SEVERIDADE":2,
-    "OCORRENCIA":1,
-    "DETECCAO":3,
-    "NPR":6
+    "DETECÇÃO":3,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"REC",
-    "DESCRICAO":"FUNÇÃO REC NÃO GRAVA",
+    "DESCRIÇÃO":"FUNÇÃO REC NÃO GRAVA",
     "SEVERIDADE":3,
-    "OCORRENCIA":1,
-    "DETECCAO":2,
-    "NPR":6
+    "DETECÇÃO":2,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   },
   {
     "CÓDIGO":"P7",
-    "DESCRICAO":"ABERTURA\/GAP",
+    "DESCRIÇÃO":"ABERTURA\/GAP",
     "SEVERIDADE":1,
-    "OCORRENCIA":1,
-    "DETECCAO":4,
-    "NPR":4
+    "DETECÇÃO":4,
+    "OCORRÊNCIA E NPR DINÂMICOS":null
   }
 ]

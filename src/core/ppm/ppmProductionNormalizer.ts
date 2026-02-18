@@ -46,8 +46,6 @@ function buildGroupKey(row: ProductionInputRow): string {
   // 🕵️‍♂️ LOG DIAGNÓSTICO MANTIDO PARA VALIDAÇÃO
   if (modelo.includes("MICRO") || modelo.includes("MO-01")) {
     // eslint-disable-next-line no-console
-    console.log(`🏭 [PROD FIX] "${modelo}" -> Turno Original: "${row.TURNO}" -> Final: "${turno}"`);
-    console.log(`   - Chave Final: "${categoria}::${modelo}::${turno}"`);
   }
   
   return `${categoria}::${modelo}::${turno}`;

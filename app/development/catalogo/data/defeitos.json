@@ -33,11 +33,11 @@
   },
   {
     "CÓDIGO DA FALHA":"A9",
-    "DESCRIÇÃO DA FALHA":"Sem audio no Tweteer"
+    "DESCRIÇÃO DA FALHA":"Sem áudio no Tweteer"
   },
   {
     "CÓDIGO DA FALHA":"A10",
-    "DESCRIÇÃO DA FALHA":"Sem audio no alto falante"
+    "DESCRIÇÃO DA FALHA":"Sem áudio no alto falante"
   },
   {
     "CÓDIGO DA FALHA":"A11",
@@ -45,11 +45,11 @@
   },
   {
     "CÓDIGO DA FALHA":"A12",
-    "DESCRIÇÃO DA FALHA":"Volume minimo não atua"
+    "DESCRIÇÃO DA FALHA":"Volume mínimo não atua"
   },
   {
     "CÓDIGO DA FALHA":"A13",
-    "DESCRIÇÃO DA FALHA":"Audio Baixo"
+    "DESCRIÇÃO DA FALHA":"Áudio Baixo"
   },
   {
     "CÓDIGO DA FALHA":"A14",
@@ -133,7 +133,7 @@
   },
   {
     "CÓDIGO DA FALHA":"G4",
-    "DESCRIÇÃO DA FALHA":"Loader com ruidos"
+    "DESCRIÇÃO DA FALHA":"Loader com ruídos"
   },
   {
     "CÓDIGO DA FALHA":"GB",
@@ -149,7 +149,7 @@
   },
   {
     "CÓDIGO DA FALHA":"HP3",
-    "DESCRIÇÃO DA FALHA":"Audio Oscilando"
+    "DESCRIÇÃO DA FALHA":"Áudio Oscilando"
   },
   {
     "CÓDIGO DA FALHA":"HP4",
@@ -157,7 +157,7 @@
   },
   {
     "CÓDIGO DA FALHA":"HP5",
-    "DESCRIÇÃO DA FALHA":"Repertições de ECO"
+    "DESCRIÇÃO DA FALHA":"Repetições de ECO"
   },
   {
     "CÓDIGO DA FALHA":"HP6",
@@ -229,7 +229,7 @@
   },
   {
     "CÓDIGO DA FALHA":"LD9",
-    "DESCRIÇÃO DA FALHA":"Excesso de Digitos"
+    "DESCRIÇÃO DA FALHA":"Excesso de Dígitos"
   },
   {
     "CÓDIGO DA FALHA":"LD10",
@@ -437,7 +437,7 @@
   },
   {
     "CÓDIGO DA FALHA":"T6",
-    "DESCRIÇÃO DA FALHA":"Volume maximo não atua"
+    "DESCRIÇÃO DA FALHA":"Volume máximo não atua"
   },
   {
     "CÓDIGO DA FALHA":"T7",
@@ -533,11 +533,11 @@
   },
   {
     "CÓDIGO DA FALHA":"PM1",
-    "DESCRIÇÃO DA FALHA":"Potencia Maxima"
+    "DESCRIÇÃO DA FALHA":"Potencia Máxima"
   },
   {
     "CÓDIGO DA FALHA":"PM2",
-    "DESCRIÇÃO DA FALHA":"Potencia Minima"
+    "DESCRIÇÃO DA FALHA":"Potencia Mínima"
   },
   {
     "CÓDIGO DA FALHA":"CTT",
@@ -569,7 +569,7 @@
   },
   {
     "CÓDIGO DA FALHA":"BP1",
-    "DESCRIÇÃO DA FALHA":"Buzer não Atua"
+    "DESCRIÇÃO DA FALHA":"Buzzer não Atua"
   },
   {
     "CÓDIGO DA FALHA":"FF",
@@ -589,10 +589,10 @@
   },
   {
     "CÓDIGO DA FALHA":"ALT",
-    "DESCRIÇÃO DA FALHA":"ALETA NÃO ABRE\/FECHA"
+    "DESCRIÇÃO DA FALHA":"Aleta não abre\/fecha"
   },
   {
     "CÓDIGO DA FALHA":"A15",
-    "DESCRIÇÃO DA FALHA":"RUIDO NA HÉLICE"
+    "DESCRIÇÃO DA FALHA":"Ruído na Hélice"
   }
 ]

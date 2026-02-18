@@ -1,5 +1,5 @@
 import { DefeitoRaw } from "./loadDefeitos";
-import { DefeitoSQL } from "./types/SigmaSqlTypes"; 
+// import { DefeitoSQL } from "./types/SigmaSqlTypes"; 
 import {
   CAUSA_TRANSLATION,
   DEFEITO_TRANSLATION,
@@ -11,64 +11,53 @@ import {
 const API_URL = "http://10.110.100.227/qualitycontrol/SIGMA/teste_integracao/uploads/sigma_api.php";
 
 // ======================================================
-// 🔒 CACHE GLOBAL (COMPARTILHADO)
+// 🔒 CACHE GLOBAL
 // ======================================================
 let CACHE_MEMORIA: DefeitoRaw[] | null = null;
 let ULTIMA_BUSCA = 0;
-const TEMPO_CACHE_MS = 1000 * 60 * 5; // 5 Minutos de Cache
+const TEMPO_CACHE_MS = 1000 * 60 * 5; 
 
 // ======================================================
-// 🧠 HELPER: NORMALIZAÇÃO CANÔNICA (LIMPEZA TOTAL)
+// 🧠 HELPER: NORMALIZAÇÃO CANÔNICA
 // ======================================================
 function normalizeResponsibilityName(raw: string, codMot: string = ""): string {
     const v = (raw || "").trim().toUpperCase();
     const cod = codMot.trim().toUpperCase();
 
-    // ✅ 1. REGRA EXCLUSIVA: DIP PTH (cod_mot = "DP" ou contém "DIP")
-    // Note que não colocamos a palavra "PROCESSO" no início. 
-    // Isso garante que ele pule fora do "AGRUPAMENTO DE PROCESSOS" nas filtragens.
+    // ❌ REMOVIDO: Não forçamos mais o nome "OCORRÊNCIA" aqui.
+    // Queremos saber de onde veio (Processo, Fornecedor, etc).
+    // if (CODIGOS_OCORRENCIA.includes(cod)) { return "OCORRÊNCIA"; }
+
+    // ✅ 1. REGRA EXCLUSIVA: DIP PTH
     if (cod === "DP" || v.includes("DIP") || v === "DP") {
         return "DIP PTH";
     }
 
     if (!v) return "N/A";
 
-    // 2. FORNECEDORES (Unifica tudo em 2 categorias)
+    // 2. FORNECEDORES
     if (v === "F" || v.includes("IMPORTADO") || v.includes("IMP")) return "FORNECEDOR IMPORTADO";
     if (v === "FL" || (v.includes("LOCAL") && (v.includes("FORN") || v.includes("FORNECEDOR")))) return "FORNECEDOR LOCAL";
 
-    // 3. PROCESSOS (Mapeamento Rígido para sua Lista Oficial)
-    
-    // PTH Normal (Separado do DIP)
+    // 3. PROCESSOS (Mapeamento Rígido)
     if (v.includes("PTH")) return "PROCESSO PTH";
-    
-    // Injeção
     if (v.includes("INJE") || v.includes("INJEÇÃO")) return "PROCESSO INJEÇÃO";
-    
-    // LCM
     if (v.includes("LCM")) return "PROCESSO LCM";
-    
-    // MA (Montagem Automática/Manual)
     if (v === "PROCESSO MA" || v.includes(" MA ")) return "PROCESSO MA"; 
-    
-    // Alto Falante
     if (v.includes("ALTO FALANTE") || v.includes("ALTO-FALANTE")) return "PROC. ALTO FALANTE";
-
-    // Engenharia/Projeto/JIG
     if (v.includes("ENG") || v.includes("PROJETO") || v.includes("JIG")) return "ENGENHARIA/PROJETO";
 
-    // 4. FALLBACKS E LIMPEZA
-    // Se for "PROCESSO", "P", "PROCESSO SUBS" ou qualquer outro processo não mapeado acima, cai em PA
+    // 4. FALLBACKS
     if (v.startsWith("PROC") || v === "P") {
         return "PROCESSO PA";
     }
     
-    // Se não for nada disso (ex: "LOGÍSTICA"), mantém como está
+    // Se for ocorrência e não caiu em nada acima, pode manter o nome original ou agrupar
     return v;
 }
 
 // ======================================================
-// 🧠 LÓGICA DE GRUPOS INTELIGENTES (FILTROS)
+// 🧠 LÓGICA DE GRUPOS INTELIGENTES
 // ======================================================
 function matchResponsabilidade(itemValue: string, filtro: string): boolean {
     if (!filtro || filtro === "Todos") return true;
@@ -76,36 +65,27 @@ function matchResponsabilidade(itemValue: string, filtro: string): boolean {
     const val = itemValue.toUpperCase().trim();
     const filter = filtro.toUpperCase().trim();
 
-    // 1. Lógica para "AGRUPAMENTO DE PROCESSOS"
-    // Como "DIP PTH" não começa com "PROC", ele não será pego por essa regra!
     if (filter === "AGRUPAMENTO DE PROCESSOS") {
         return val.startsWith("PROC"); 
     }
 
-    // 2. Lógica para "AGRUPAMENTO DE FORNECEDORES"
     if (filter === "AGRUPAMENTO DE FORNECEDORES") {
         return val.startsWith("FORN"); 
     }
 
-    // 3. Filtro Específico
     return val === filter;
 }
 
 // ======================================================
-// FUNÇÃO INTERNA: CARREGA E NORMALIZA TUDO (COM CACHE)
+// FUNÇÃO INTERNA: CARREGA E NORMALIZA TUDO
 // ======================================================
 async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
     const agora = Date.now();
     if (CACHE_MEMORIA && (agora - ULTIMA_BUSCA < TEMPO_CACHE_MS)) {
-        // eslint-disable-next-line no-console
-        console.log("⚡ [Adapter] Usando Cache de Memória (Sem ir ao PHP)");
         return CACHE_MEMORIA;
     }
 
     try {
-        // eslint-disable-next-line no-console
-        console.log("🌐 [Adapter] Buscando dados novos no servidor PHP...");
-        
         const response = await fetch(API_URL);
 
         if (!response.ok) {
@@ -119,16 +99,11 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             return [];
         }
 
-        // eslint-disable-next-line no-console
-        console.log(`📡 [Adapter] Total recebido da API: ${dadosSQL.length} registros.`);
-
-        // Filtro Básico (PA)
         const dadosPA = dadosSQL.filter((item) => {
             const area = String(item.area || "").trim().toUpperCase();
             return area === "PA" || area === "PRODUTO ACABADO";
         });
 
-        // Tradução e Mapeamento (Capturando todas as colunas do SQL para o detalhamento)
         const dadosTraduzidos = dadosPA.map((sqlItem) => {
             const dataString = `${sqlItem.data_criacao}T12:00:00`;
             const dataObj = new Date(dataString);
@@ -147,7 +122,7 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             const codigoResp = String(sqlItem.cod_mot || "").trim().toUpperCase();
             let respTraduzida = RESPONSABILIDADE_TRANSLATION[codigoResp] || codigoResp;
             
-            // ✅ Aplicação da normalização na fonte, passando a variável codigoResp (cod_mot)
+            // ✅ Normalização (Agora preserva o nome do processo mesmo se for ocorrência)
             respTraduzida = normalizeResponsibilityName(respTraduzida, codigoResp);
 
             const codigoTurno = String(sqlItem.turno || "").trim().toUpperCase();
@@ -165,7 +140,6 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
                 CATEGORIA: sqlItem.categoria, 
                 LINHA: sqlItem.linha,
                 
-                // Dados para o Drawer de Detalhes
                 HORA: sqlItem.hora_criacao || "--:--",
                 TÉCNICO: sqlItem.usuario || "N/A",
                 OBSERVACAO: sqlItem.obs || "",
@@ -184,7 +158,6 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             };
         });
 
-        // Atualiza Cache
         CACHE_MEMORIA = dadosTraduzidos;
         ULTIMA_BUSCA = Date.now();
 
@@ -197,18 +170,19 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
     }
 }
 
-// ======================================================
-// 1️⃣ BUSCAR DEFEITOS (PARA KPI/PPM) - SEM OCORRÊNCIAS
-// ======================================================
-export async function fetchDefeitosFromSQL(filtroResponsabilidade?: string): Promise<DefeitoRaw[]> {
+export async function fetchDefeitosFromSQL(
+    filtroResponsabilidade?: string, 
+    includeOcorrencias: boolean = false
+): Promise<DefeitoRaw[]> {
+    
     const todos = await _loadAllFromSQL();
     
     return todos.filter(item => {
-        // 1. Remove Ocorrências (Regra Padrão baseada no Código do Fornecedor/Motivo)
-        const codMot = String(item["CÓDIGO DO FORNECEDOR"] || "").trim().toUpperCase();
-        if (CODIGOS_OCORRENCIA.includes(codMot)) return false;
+        if (!includeOcorrencias) {
+            const codMot = String(item["CÓDIGO DO FORNECEDOR"] || "").trim().toUpperCase();
+            if (CODIGOS_OCORRENCIA.includes(codMot)) return false; 
+        }
 
-        // 2. Aplica Filtro Inteligente de Responsabilidade (Se houver)
         if (filtroResponsabilidade && filtroResponsabilidade !== "Todos") {
             return matchResponsabilidade(item.RESPONSABILIDADE, filtroResponsabilidade);
         }
@@ -217,18 +191,13 @@ export async function fetchDefeitosFromSQL(filtroResponsabilidade?: string): Pro
     });
 }
 
-// ======================================================
-// 2️⃣ BUSCAR OCORRÊNCIAS (PARA DETALHAMENTO)
-// ======================================================
 export async function fetchOcorrenciasFromSQL(filtroResponsabilidade?: string): Promise<DefeitoRaw[]> {
     const todos = await _loadAllFromSQL();
     
     return todos.filter(item => {
-        // 1. Apenas Ocorrências
         const codMot = String(item["CÓDIGO DO FORNECEDOR"] || "").trim().toUpperCase();
         if (!CODIGOS_OCORRENCIA.includes(codMot)) return false;
 
-        // 2. Aplica Filtro Inteligente
         if (filtroResponsabilidade && filtroResponsabilidade !== "Todos") {
             return matchResponsabilidade(item.RESPONSABILIDADE, filtroResponsabilidade);
         }

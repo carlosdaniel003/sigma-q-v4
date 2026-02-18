@@ -28,21 +28,22 @@ interface DefectDetailsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;      
-  loading: boolean;
-  rows: DefectDetailRow[];
+  loading?: boolean; // Tornamos opcional para facilitar
+  rows?: DefectDetailRow[]; // Tornamos opcional para evitar erro se vier undefined
 }
 
 export default function DefectDetailsDrawer({
   isOpen,
   onClose,
   title,
-  loading,
-  rows
+  loading = false,
+  rows = [] // ✅ PROTEÇÃO: Se vier undefined, assume array vazio
 }: DefectDetailsDrawerProps) {
   
   if (!isOpen) return null;
 
   // ✅ CÁLCULO DA QUANTIDADE TOTAL REAL DE PEÇAS
+  // Agora seguro porque rows sempre será um array
   const totalPecas = rows.reduce((acc, row) => acc + (row.quantidade || 1), 0);
 
   return (
@@ -178,32 +179,32 @@ export default function DefectDetailsDrawer({
                     )}
                   </div>
 
-                  {/* ✅ BLOCO MODELO E POSIÇÃO (Agora separados em grid) */}
+                  {/* BLOCO MODELO E POSIÇÃO */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                     <div style={{ background: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: 8 }}>
+                      <div style={{ background: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.65rem", color: "#64748b", textTransform: "uppercase", marginBottom: 4 }}>
                           <Box size={12} color="#94a3b8" /> Modelo / Produto
                         </div>
                         <div style={{ fontSize: "0.85rem", color: "#cbd5e1", fontWeight: 500 }}>{row.modelo}</div>
-                     </div>
-                     <div style={{ background: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: 8 }}>
+                      </div>
+                      <div style={{ background: "rgba(0,0,0,0.15)", padding: "10px", borderRadius: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.65rem", color: "#64748b", textTransform: "uppercase", marginBottom: 4 }}>
                           <MapPin size={12} color="#94a3b8" /> Posição Mecânica
                         </div>
                         <div style={{ fontSize: "0.85rem", color: "#cbd5e1", fontWeight: 500 }}>{row.posicao}</div>
-                     </div>
+                      </div>
                   </div>
 
                   {/* MOTIVO E CAUSA */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                     <div style={{ background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: 8 }}>
+                      <div style={{ background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: 8 }}>
                         <div style={{ fontSize: "0.65rem", color: "#64748b", textTransform: "uppercase", marginBottom: 4 }}>Responsabilidade (Cód: {row.motivoCod})</div>
                         <div style={{ fontSize: "0.85rem", color: "#e2e8f0", fontWeight: 500 }}>{row.motivoDesc}</div>
-                     </div>
-                     <div style={{ background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: 8 }}>
+                      </div>
+                      <div style={{ background: "rgba(0,0,0,0.2)", padding: "10px", borderRadius: 8 }}>
                         <div style={{ fontSize: "0.65rem", color: "#64748b", textTransform: "uppercase", marginBottom: 4 }}>Causa (Análise)</div>
                         <div style={{ fontSize: "0.85rem", color: "#e2e8f0", fontWeight: 500 }}>{row.causa || "Não informada"}</div>
-                     </div>
+                      </div>
                   </div>
 
                   {/* SINTOMA E COMPONENTE */}

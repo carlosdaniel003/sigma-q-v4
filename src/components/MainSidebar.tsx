@@ -5,6 +5,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { isGuestUser } from "@/core/session/userSession";
+// ✅ Importamos o novo monitor global
+import { useGlobalValidationMonitor } from "@/hooks/useGlobalValidationMonitor";
 
 import {
   BookOpenIcon,
@@ -28,6 +30,9 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
   const [guest, setGuest] = useState(true);
   const [openValidacao, setOpenValidacao] = useState(false);
   
+  // ✅ ATIVA O MONITORAMENTO SILENCIOSO ASSIM QUE A SIDEBAR CARREGA
+  useGlobalValidationMonitor();
+
   // ✅ ESTADOS DE ALERTA: Monitoramento individual das 3 bases
   const [alerts, setAlerts] = useState({
     defeitos: false,
@@ -42,7 +47,7 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
     setGuest(isGuestUser());
     setMounted(true);
 
-    // Função para checar os alertas no LocalStorage
+    // Função para ler o estado atual do LocalStorage
     const checkAlerts = () => {
       setAlerts({
         defeitos: localStorage.getItem("sigma_validation_alert") === "true",
@@ -51,11 +56,19 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
       });
     };
 
+    // 1. Checa imediatamente ao montar
     checkAlerts();
 
-    // Escuta o evento customizado disparado pelos hooks de validação
+    // 2. Escuta o evento disparado pelo Hook Global e pelas páginas de validação
     window.addEventListener("sigma_alert_changed", checkAlerts);
-    return () => window.removeEventListener("sigma_alert_changed", checkAlerts);
+    
+    // 3. Reforço: Checa quando a janela ganha foco (ex: usuário voltou de outra aba)
+    window.addEventListener("focus", checkAlerts);
+
+    return () => {
+        window.removeEventListener("sigma_alert_changed", checkAlerts);
+        window.removeEventListener("focus", checkAlerts);
+    };
   }, []);
 
   useEffect(() => {

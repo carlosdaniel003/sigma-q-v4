@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { TurnoStats } from "../hooks/useDashboard";
+import React, { useMemo, useState } from "react";
+import { TurnoStats, DetailRow } from "../hooks/useDashboard";
+// ✅ Importação do Drawer
+import DefectDetailsDrawer, { DefectDetailRow } from "../../diagnostico/components/DefectDetailsDrawer";
 
 interface Props {
   data: TurnoStats[];
@@ -10,30 +12,71 @@ interface Props {
 
 // ✅ Metas Oficiais por Categoria
 const METAS_POR_CATEGORIA: Record<string, number> = {
-  "ARCON": 3600,   // 0,360%
-  "BBS": 7820,     // 0,782%
-  "CM": 5870,      // 0,587%
-  "MWO": 1730,     // 0,173%
-  "TM": 11680,     // 1,168%
-  "TV": 6870,      // 0,687%
-  "TW": 11680,     // 1,168%
-  "GERAL": 5200    // 0,52%
+  "ARCON": 3600,   
+  "BBS": 7820,     
+  "CM": 5870,      
+  "MWO": 1730,     
+  "TM": 11680,     
+  "TV": 6870,      
+  "TW": 11680,     
+  "GERAL": 5200    
 };
 
-/**
- * Função para definir a cor do PPM baseada na meta da categoria
- */
-function getPpmColor(ppmValue: number, categoria?: string) {
+function getPpmColor(ppmValue: number, categoria?: string, isOcorrencia?: boolean) {
+  if (isOcorrencia) return "#60A5FA"; 
+
   const cat = String(categoria || "").toUpperCase().trim();
   const meta = METAS_POR_CATEGORIA[cat] ?? METAS_POR_CATEGORIA["GERAL"];
-
-  // Se o PPM for maior que a meta, fica em Vermelho. Caso contrário, Verde.
   return ppmValue > meta ? "#EF4444" : "#22C55E";
 }
 
+// ✅ Função auxiliar para formatar data (compatível com string SQL ou Date)
+function formatDate(val: any): string {
+    if (!val) return "-";
+    try {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? String(val) : d.toLocaleDateString("pt-BR");
+    } catch {
+        return String(val);
+    }
+}
+
 export default function TabelaDetalhamento({ data, filterLabel }: Props) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  // ✅ Estado tipado corretamente para o Drawer
+  const [mappedRows, setMappedRows] = useState<DefectDetailRow[]>([]);
+  const [selectedTitle, setSelectedTitle] = useState("");
   
   if (!data || data.length === 0) return null;
+
+  // ✅ Handler: Mapeia dados brutos para o formato do Drawer
+  const handleRowClick = (row: DetailRow) => {
+    if (row.originalRows && row.originalRows.length > 0) {
+        
+        // Mapeamento Chave: SQL -> Drawer Props
+        const formattedRows: DefectDetailRow[] = row.originalRows.map((item: any) => ({
+            id: item.ID || Math.random(),
+            data: formatDate(item.DATA),
+            hora: item.HORA || "-",
+            tecnico: item.TÉCNICO || item.TECNICO || "N/A",
+            modelo: item.MODELO,
+            posicao: item["REFERÊNCIA/POSIÇÃO MECÂNICA"] || item.REFERENCIA || item.POSICAO_MECANICA || "-",
+            motivoCod: item["CÓDIGO DO FORNECEDOR"] || item.CODIGO_MOTIVO || item.cod_mot || "-",
+            motivoDesc: item.RESPONSABILIDADE || "-",
+            observacao: item.OBSERVACAO || "",
+            componente: item["PEÇA/PLACA"] || item.COMPONENTE || "-",
+            sintoma: item["DESCRIÇÃO DA FALHA"] || item.DEFEITO || "-",
+            // ✅ CORREÇÃO AQUI: Mapeia o campo ANALISE corretamente
+            causa: item.ANALISE || item.CAUSA || item["ANÁLISE"] || "Não informada",
+            linha: item.LINHA || "-",
+            quantidade: Number(item.QUANTIDADE || 1)
+        }));
+
+        setMappedRows(formattedRows);
+        setSelectedTitle(`${row.isOcorrencia ? "OCORRÊNCIA" : "DEFEITO"}: ${row.falha} - ${row.modelo}`);
+        setDrawerOpen(true);
+    }
+  };
 
   const formatTitleDate = (label: string) => {
       if (label.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -54,28 +97,40 @@ export default function TabelaDetalhamento({ data, filterLabel }: Props) {
   }, [data]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 32, marginTop: 24 }}>
-      {sortedData.map((turnoData) => (
-        <TurnoTable 
-            key={turnoData.turno} 
-            stats={turnoData} 
-            label={formatTitleDate(filterLabel)} 
+    <>
+        <div style={{ display: "flex", flexDirection: "column", gap: 32, marginTop: 24 }}>
+        {sortedData.map((turnoData) => (
+            <TurnoTable 
+                key={turnoData.turno} 
+                stats={turnoData} 
+                label={formatTitleDate(filterLabel)}
+                onRowClick={handleRowClick} 
+            />
+        ))}
+        </div>
+
+        {/* ✅ Componente do Drawer corrigido */}
+        <DefectDetailsDrawer
+            isOpen={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+            rows={mappedRows} // ✅ Agora passa 'rows' com os dados formatados
+            title={selectedTitle}
+            loading={false}
         />
-      ))}
-    </div>
+    </>
   );
 }
 
-function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
+function TurnoTable({ stats, label, onRowClick }: { stats: TurnoStats; label: string; onRowClick: (r: DetailRow) => void }) {
   return (
     <div style={containerStyle}>
       <div style={headerStyle}>
         <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#fff", fontWeight: 700 }}>
-          TOP 3 POR RESPONSABILIDADE ({label}) - {stats.turno}
+          DETALHAMENTO OPERACIONAL ({label}) - {stats.turno}
         </h3>
         <div style={{ fontSize: "0.9rem", color: "#cbd5e1" }}>
           Produção: <strong>{stats.producao.toLocaleString("pt-BR")}</strong> | 
-          Total Defeitos: <strong style={{ color: "#EF4444" }}>{stats.totalDefeitos}</strong>
+          Defeitos: <strong style={{ color: "#EF4444" }}>{stats.totalDefeitos}</strong>
         </div>
       </div>
 
@@ -83,6 +138,7 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem", color: "#e2e8f0" }}>
           <thead>
             <tr style={{ background: "rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              <th style={thStyle}>TIPO</th>
               <th style={thStyle}>COD</th>
               <th style={thStyle}>MODELO</th>
               <th style={thStyle}>DESCRIÇÃO DA FALHA</th>
@@ -96,15 +152,15 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
           <tbody>
             {stats.groups.length === 0 ? (
                 <tr>
-                    <td colSpan={8} style={{ padding: 20, textAlign: "center", color: "#64748b" }}>
-                        Nenhum defeito registrado neste turno para o período selecionado.
+                    <td colSpan={9} style={{ padding: 20, textAlign: "center", color: "#64748b" }}>
+                        Nenhum registro encontrado neste turno para o período selecionado.
                     </td>
                 </tr>
             ) : (
                 stats.groups.map((group) => (
                     <React.Fragment key={group.responsibility}>
                         <tr style={{ background: "rgba(255,255,255,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                            <td colSpan={8} style={{ 
+                            <td colSpan={9} style={{ 
                                 padding: "8px 16px", 
                                 fontWeight: "bold", 
                                 color: "#60A5FA", 
@@ -118,7 +174,32 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                         </tr>
                         
                         {group.top3.map((row, idx) => (
-                            <tr key={`${group.responsibility}-${idx}`} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)" }}>
+                            <tr 
+                                key={`${group.responsibility}-${idx}`} 
+                                onClick={() => onRowClick(row)} 
+                                style={{ 
+                                    borderBottom: "1px solid rgba(255,255,255,0.05)", 
+                                    background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)",
+                                    cursor: "pointer", 
+                                    transition: "background 0.2s ease"
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                                onMouseLeave={(e) => e.currentTarget.style.background = idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.02)"}
+                            >
+                                <td style={tdStyle}>
+                                  <span style={{
+                                    padding: "2px 6px",
+                                    borderRadius: "4px",
+                                    fontSize: "0.65rem",
+                                    fontWeight: 800,
+                                    background: row.isOcorrencia ? "rgba(59, 130, 246, 0.15)" : "rgba(239, 68, 68, 0.15)",
+                                    color: row.isOcorrencia ? "#60A5FA" : "#EF4444",
+                                    border: `1px solid ${row.isOcorrencia ? "rgba(59, 130, 246, 0.3)" : "rgba(239, 68, 68, 0.3)"}`
+                                  }}>
+                                    {row.isOcorrencia ? "OCOR" : "DEF"}
+                                  </span>
+                                </td>
+
                                 <td style={tdStyle}>{row.cod}</td>
                                 <td style={{ ...tdStyle, color: "#93C5FD", fontWeight: 600 }}>{row.modelo}</td>
                                 <td style={tdStyle}>{row.falha}</td>
@@ -129,10 +210,9 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
                                 
                                 <td style={{ 
                                     ...tdStyleCenter, 
-                                    color: getPpmColor(row.ppm, (row as any).categoria), 
+                                    color: getPpmColor(row.ppm, (row as any).categoria, row.isOcorrencia), 
                                     fontWeight: "bold"
                                 }}>
-                                    {/* ✅ PPM Formatado com duas casas decimais */}
                                     {row.ppm.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>
                             </tr>
@@ -147,7 +227,6 @@ function TurnoTable({ stats, label }: { stats: TurnoStats; label: string }) {
   );
 }
 
-// Estilos permanentes
 const containerStyle: React.CSSProperties = {
   background: "rgba(15, 23, 42, 0.6)",
   border: "1px solid rgba(255,255,255,0.1)",

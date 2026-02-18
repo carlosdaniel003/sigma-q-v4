@@ -14,7 +14,7 @@ export function usePpmValidation() {
 
   /* ============================================================
      DADOS DERIVADOS (SE NECESSÁRIO)
-  ============================================================ */
+   ============================================================ */
 
   const meta = data?.meta ?? null;
   const globalDiagnostics = data?.globalDiagnostics ?? [];
@@ -23,45 +23,51 @@ export function usePpmValidation() {
 
   /* ============================================================
      STATUS UNIFICADO
-  ============================================================ */
+   ============================================================ */
 
   const isLoading = sigma.loading || loading;
 
   /* ============================================================
-      🚨 ALERTA GLOBAL PARA A SIDEBAR PRINCIPAL
-      Controla a animação de pulsação "neon" no menu global
-  ============================================================ */
+     🚨 ALERTA GLOBAL PARA A SIDEBAR PRINCIPAL
+     Controla a animação de pulsação "neon" no menu global
+   ============================================================ */
   useEffect(() => {
     // Só dispara se os dados já carregaram para não dar "falso positivo"
     if (data && !isLoading) {
-      let hasIssues = false;
+      let hasCriticalIssues = false;
       
-      // Contorno para o TypeScript: tratamos a variável como 'any' localmente 
-      // para acessar com segurança seja ela um Array ou um Objeto.
       const diag = globalDiagnostics as any;
 
       if (Array.isArray(diag)) {
-        // Se for array, checa se tem itens
-        hasIssues = diag.length > 0;
+        // ✅ CORREÇÃO: Não basta ter itens (length > 0).
+        // Tem que ter itens com status CRÍTICO ou ERRO.
+        // Ignora "warning" (amarelo) e "info" (azul).
+        hasCriticalIssues = diag.some(
+            (d: any) => d.status === "error" || d.status === "critical"
+        );
       } else if (diag && typeof diag === "object") {
-        // Se for objeto, checamos os contadores de inconsistências clássicas do PPM
+        // Fallback para estrutura antiga (se houver)
+        // Só considera erro se realmente impedir o cálculo
         const err1 = Number(diag.defectsWithoutProduction || 0);
         const err2 = Number(diag.productionWithoutDefect || 0);
         
-        hasIssues = err1 > 0 || err2 > 0;
+        // Ajuste fino: Se a produção sem defeito for apenas um aviso, não alertar na sidebar
+        // Aqui assumimos que se tem erro numérico, é crítico.
+        hasCriticalIssues = err1 > 0; 
       }
 
-      if (hasIssues) {
+      if (hasCriticalIssues) {
         // Acende a flag específica do PPM
         localStorage.setItem("sigma_validation_alert_ppm", "true");
-        window.dispatchEvent(new Event("sigma_alert_changed"));
       } else {
-        // Apaga a flag se estiver tudo perfeito
-        localStorage.removeItem("sigma_validation_alert_ppm");
-        window.dispatchEvent(new Event("sigma_alert_changed"));
+        // ✅ Apaga a flag se só tiver Warnings ou estiver perfeito
+        localStorage.setItem("sigma_validation_alert_ppm", "false"); 
       }
+      
+      // Notifica a Sidebar para atualizar a cor imediatamente
+      window.dispatchEvent(new Event("sigma_alert_changed"));
     }
-  }, [globalDiagnostics, data, isLoading]); // Removido o .length das dependências
+  }, [globalDiagnostics, data, isLoading]);
 
   return {
     data,

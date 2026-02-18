@@ -8,6 +8,8 @@ export function useCatalogo() {
   const [todosDefeitos, setTodosDefeitos] = useState([]);
   const [todosFMEA, setTodosFMEA] = useState([]);
   const [todasExcessoes, setTodasExcessoes] = useState([]);
+  // ✅ NOVO ESTADO: Agrupamentos
+  const [todosAgrupamentos, setTodosAgrupamentos] = useState([]);
 
   const [buscaGlobal, setBuscaGlobal] = useState("");
   const [catalogo, setCatalogo] = useState("");
@@ -23,13 +25,15 @@ export function useCatalogo() {
         .catch(() => []);
 
     async function carregarTudo() {
-      const [m, c, r, d, fmea, exc] = await Promise.all([
+      // ✅ Adicionado fetch para /api/catalogo/agrupamento
+      const [m, c, r, d, fmea, exc, agr] = await Promise.all([
         fetchSafe("/api/catalogo/modelos"),
         fetchSafe("/api/catalogo/causas"),
         fetchSafe("/api/catalogo/responsabilidades"),
         fetchSafe("/api/catalogo/defeitos"),
         fetchSafe("/api/catalogo/fmea"),
         fetchSafe("/api/catalogo/excecoes"),
+        fetchSafe("/api/catalogo/agrupamento"), 
       ]);
 
       setTodosModelos(m);
@@ -38,6 +42,7 @@ export function useCatalogo() {
       setTodosDefeitos(d);
       setTodosFMEA(fmea);   
       setTodasExcessoes(exc);
+      setTodosAgrupamentos(agr); // ✅ Salva no estado
     }
 
     carregarTudo();
@@ -57,6 +62,7 @@ export function useCatalogo() {
       defeitos: todosDefeitos,
       fmea: todosFMEA,       
       excecoes: todasExcessoes,
+      agrupamentos: todosAgrupamentos, // ✅ Adicionado ao mapa de navegação
     };
 
     setDados(bases[tipo] || []);
@@ -79,6 +85,7 @@ export function useCatalogo() {
     defeitos: filtrar(todosDefeitos),
     fmea: filtrar(todosFMEA),   
     excecoes: filtrar(todasExcessoes),
+    agrupamentos: filtrar(todosAgrupamentos), // ✅ Adicionado à busca global
   };
 
   const temBusca = buscaGlobal.trim().length > 0;

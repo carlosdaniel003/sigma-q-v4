@@ -17,6 +17,9 @@ export interface DetailRow {
   modelo: string;
   qtd: number;
   ppm: number;
+  categoria?: string;     // ✅ Suporte para meta de PPM por categoria
+  isOcorrencia?: boolean; // ✅ Identificador de tipo (Defeito vs Ocorrência)
+  originalRows?: any[];   // ✅ Dados brutos para o Drill-down (Drawer)
 }
 
 export interface ResponsibilityGroup {

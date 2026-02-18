@@ -1,58 +1,57 @@
 [
   {
     "CÓDIGO":"AC",
+    "DESCRIÇÃO":"Acúmulo",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
     "CÓDIGO":"AN",
+    "DESCRIÇÃO":"Em Análise",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
     "CÓDIGO":"OC",
+    "DESCRIÇÃO":"Ocorrência",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
     "CÓDIGO":"RT",
+    "DESCRIÇÃO":"Retrabalho",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
-    "CÓDIGO":"INTROD.MOD",
+    "CÓDIGO":"INT MOD",
+    "DESCRIÇÃO":"Introdução de Modelo",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
-    "CÓDIGO":"Revisão",
+    "CÓDIGO":"VER",
+    "DESCRIÇÃO":"Revisão",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
-    "CÓDIGO":"Falsa Falha",
+    "CÓDIGO":"FF",
+    "DESCRIÇÃO":"Falha Falsa",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
-    "CÓDIGO":"Alto Fal. Retr.",
-    "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
-  },
-  {
-    "CÓDIGO":"Retor.Campo",
-    "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
-  },
-  {
-    "CÓDIGO":"Armazenamento",
+    "CÓDIGO":"AF RET",
+    "DESCRIÇÃO":"Alto Falante Retrabalho",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
     "CÓDIGO":"RC",
+    "DESCRIÇÃO":"Retorno de Campo",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
-    "CÓDIGO":"Não Mostrar no índice",
+    "CÓDIGO":"A",
+    "DESCRIÇÃO":"Armazenamento",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   },
   {
-    "CÓDIGO":"Retorn.Vendas",
-    "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
-  },
-  {
-    "CÓDIGO":"Retorn.Técn Clente",
+    "CÓDIGO":"RV",
+    "DESCRIÇÃO":"Retorno de Vendas",
     "DESCRIÇÃO DO MATERIAL":"Não Mostrar no índice"
   }
 ]

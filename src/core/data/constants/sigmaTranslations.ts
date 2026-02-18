@@ -191,6 +191,7 @@ export const CAUSA_TRANSLATION: Record<string, string> = {
   "TMSS": "TERMINAL SEM SOLDA",
   "TMTT": "TERMINAL TORTO",
   "TOMB": "TOMBSTONE",
+  "SCOR": "SOFTWARE CORROMPIDO",
   "TRAV": "TRAVADO(A)",
   "TRDS": "TRILHA DESPLACADA",
   "TRIN": "TRINCADO(A)",
@@ -377,7 +378,18 @@ export const RESPONSABILIDADE_TRANSLATION: Record<string, string> = {
   "DP": "DIP PTH",
   "T": "PROCESSO PTH",
   "P": "PROCESSO PA",
-  "PS": "PROCESSO SUBS"
+  "PS": "PROCESSO SUBS",
+  "AC": "ACÚMULO",
+  "AN": "EM ANÁLISE",
+  "OC": "OCORRÊNCIA",
+  "RT": "RETRABALHO",
+  "INT MOD": "INTRODUÇÃO DE MODELO",
+  "VER": "REVISÃO",
+  "FF": "FALSA FALHA",
+  "AF RET": "RETRABALHO ALTO FALANTE",
+  "RC": "RETRABALHO DE CAMPO",
+  "A": "ARMAZENAMENTO",
+  "RV": "RETORNO DE VENDAS"
 };
 
 // ======================================================

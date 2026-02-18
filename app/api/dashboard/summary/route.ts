@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-
-// Loader de Produção (Garante que vem do normalizer que le o Excel 2026)
 import { loadProductionRaw } from "@/core/ppm/ppmProductionNormalizer";
-// Loader de Defeitos (Vem do SQL)
 import { loadDefeitos } from "@/core/data/loadDefeitos";
 
 import { runPpmEngine } from "@/core/ppm/ppmEngine";
@@ -13,24 +10,23 @@ import { calculateTrendHierarchy } from "@/core/dashboard/dashboardTrendEngine";
 import { calculateCausesRanking } from "@/core/dashboard/dashboardCausesEngine";
 import { calculateDetailsRanking } from "@/core/dashboard/dashboardDetailsEngine";
 
-/* ======================================================
-   UTILS
-====================================================== */
+// ✅ LISTA REAL DE CÓDIGOS DE OCORRÊNCIA (Baseada no seu sigmaTranslations.ts)
+const CODIGOS_OCORRENCIA_CHECK = [
+  "A", "RC", "AF RET", "FF", "VER", "INT MOD", 
+  "RT", "OC", "AN", "AC"
+];
+
 function norm(val: any) {
   return String(val ?? "").trim().toUpperCase();
 }
 
-// 🔄 NORMALIZADOR DE TURNO ROBUSTO
 function normalizeTurno(val: any): string {
     if (!val) return "";
     const v = norm(val);
-    
-    // Mapeamentos comuns
     if (v === "C" || v === "COMERCIAL" || v === "ADM") return "COMERCIAL";
     if (v === "BC" || v === "2" || v === "2º" || v.includes("2º TURNO") || v.includes("2 TURNO")) return "2º TURNO";
     if (v === "A" || v === "1" || v === "1º" || v.includes("1º TURNO") || v.includes("1 TURNO")) return "1º TURNO";
     if (v === "3" || v === "3º" || v.includes("3º TURNO")) return "3º TURNO";
-    
     return v; 
 }
 
@@ -41,12 +37,10 @@ function parseDate(val: any): Date | null {
         return new Date(Math.round((val - 25569) * 86400 * 1000) + (12 * 3600 * 1000));
     }
     if (typeof val === 'string') {
-        // Tenta DD/MM/YYYY
         const matchBr = val.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
         if (matchBr) {
              return new Date(parseInt(matchBr[3]), parseInt(matchBr[2])-1, parseInt(matchBr[1]), 12, 0, 0);
         }
-        // Tenta ISO
         const d = new Date(val);
         if (!isNaN(d.getTime())) return d;
     }
@@ -65,33 +59,43 @@ function getWeekNumber(d: Date): number {
     return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1)/7);
 }
 
-// ✅ HELPER: Verifica se uma responsabilidade bate com o filtro (incluindo grupos virtuais)
 function matchResponsabilidade(itemResp: string, filtros: string[]): boolean {
     if (!itemResp) return false;
     const resp = norm(itemResp);
-
     return filtros.some(filtro => {
         const f = norm(filtro);
-        
-        // Suporta ambos os padrões de nomeclatura para segurança
         if (f === "AGRUPAMENTO DE PROCESSOS" || f === "TODOS OS PROCESSOS") {
             return resp.startsWith("PROC") || resp.includes("PROCESSO") || resp.includes("PTH") || resp.includes("LCM");
         }
-        
         if (f === "AGRUPAMENTO DE FORNECEDORES" || f === "TODOS OS FORNECEDORES") {
             return resp.includes("FORN") || resp === "F" || resp === "FL";
         }
-
-        // Filtro Exato
         return resp === f;
     });
+}
+
+// ✅ HELPER: Identifica se é Ocorrência usando a lista correta
+function checkIsOcorrencia(row: any): boolean {
+    // Verifica diferentes campos onde o código pode estar
+    const cod1 = norm(row["CÓDIGO DO FORNECEDOR"] || "");
+    const cod2 = norm(row.CODIGO_MOTIVO || "");
+    const cod3 = norm(row.cod_mot || "");
+    
+    // Verifica se algum dos códigos bate com a lista de ocorrências
+    if (CODIGOS_OCORRENCIA_CHECK.some(c => c === cod1 || c === cod2 || c === cod3)) {
+        return true;
+    }
+    
+    // Fallback: Nome (caso legado)
+    const resp = norm(row.RESPONSABILIDADE || row.Responsabilidade || "");
+    if (resp.includes("OCORRENCIA") || resp.includes("OCORRÊNCIA")) return true;
+
+    return false;
 }
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    
-    // --- HELPER PARA PEGAR ARRAY DE FILTROS ---
     const getMultiFilter = (key: string) => {
         const allValues = searchParams.getAll(key);
         if (!allValues || allValues.length === 0) return null;
@@ -103,8 +107,6 @@ export async function GET(request: NextRequest) {
     const filterCategoria = getMultiFilter("categoria");
     const filterModelo = getMultiFilter("modelo");
     const filterResponsabilidade = getMultiFilter("responsabilidade"); 
-    
-    // 1. PEGA E NORMALIZA O FILTRO DE TURNO DA URL
     let filterTurnoRaw = getMultiFilter("turno");
     let filterTurno: string[] | null = null;
     if (filterTurnoRaw) {
@@ -116,79 +118,68 @@ export async function GET(request: NextRequest) {
     const filterAno = searchParams.get("ano") ? parseInt(searchParams.get("ano")!) : null;
     const filterSemana = searchParams.get("semana") ? parseInt(searchParams.get("semana")!) : null;
 
-    // --- CARREGAMENTO DE DADOS ---
     let productionRaw = loadProductionRaw(); 
-    let defectsRaw = await loadDefeitos(); 
+    let defectsRaw = await loadDefeitos(true); // Carrega tudo
 
-    // --- SANITIZAÇÃO DE DEFEITOS ---
+    console.log("========================================");
+    console.log("🔍 [API DEBUG]");
+    console.log(`📊 Total: ${defectsRaw.length}`);
+    console.log(`⚠️ Ocorrências (Check Real): ${defectsRaw.filter(d => checkIsOcorrencia(d)).length}`);
+    console.log("========================================");
+
+    // --- SANITIZAÇÃO ---
     defectsRaw = defectsRaw.filter((row: any) => {
         const cat = norm(row.CATEGORIA || row.Categoria);
         const mod = row.MODELO || row.Modelo; 
+        const isOcor = checkIsOcorrencia(row);
+
+        // Se for ocorrência, passa sempre
+        if (isOcor) return true;
+        // Se for defeito, precisa de categoria/modelo
         if (!cat || !mod) return false;
         return true;
     });
 
-    // ✅ --- FUNÇÃO DE FILTRO CENTRALIZADA E CORRIGIDA ---
-    // Adicionado parâmetro 'ignorePeriodDetails' para permitir carregar o ano todo para a tendência
     const applyFilters = (data: any[], isDefect: boolean, applyTime: boolean, isStrictDay: boolean = true, ignorePeriodDetails: boolean = false) => {
         return data.filter(row => {
             const r = row as any;
-            
-            // Extração de Dados
             const cat = norm(r.CATEGORIA || r.Categoria);
             const mod = norm(r.MODELO || r.Modelo);
-            
-            // Tratamento de Turno na Linha (Row)
             const rawTurno = r.TURNO || r.Turno || r.turno; 
             const turno = rawTurno ? normalizeTurno(rawTurno) : null;
-
             const resp = isDefect ? norm(r.RESPONSABILIDADE || r.Responsabilidade) : null;
-            
             const dataRow = r.DATA || r.Data || r.data || r.date;
             const dataObj = parseDate(dataRow);
+            const isOcor = isDefect && checkIsOcorrencia(r);
 
-            // --- APLICAÇÃO DOS FILTROS ---
-
-            // 1. Categoria
-            if (filterCategoria && !filterCategoria.includes(cat)) return false;
-            
-            // 2. Modelo
-            if (filterModelo && !filterModelo.includes(mod)) return false;
-            
-            // 3. TURNO
+            if (filterCategoria) {
+                if (cat) { if (!filterCategoria.includes(cat)) return false; } 
+                else if (!isOcor) { return false; }
+            }
+            if (filterModelo) {
+                if (mod) { if (!filterModelo.includes(mod)) return false; } 
+                else if (!isOcor) { return false; }
+            }
             if (filterTurno) {
                  if (!turno) return false; 
                  if (!filterTurno.includes(turno)) return false; 
             }
-            
-            // 4. Responsabilidade (Só para defeitos)
             if (isDefect && filterResponsabilidade && resp) {
+                 // Agora que ocorrência tem nome de processo, ela passa aqui se o filtro for "AGRUPAMENTO DE PROCESSOS"
+                 // Mas tudo bem, pois ela será segregada visualmente na tabela
                  if (!matchResponsabilidade(resp, filterResponsabilidade)) return false;
             }
-
-            // --- FILTROS DE TEMPO ---
-            
-            // 5. Dia Exato (Prioridade Máxima para KPIs, mas ignorado se quisermos o histórico completo)
             if (isStrictDay && filterDia && !ignorePeriodDetails) {
                 const isoRow = extractDateIso(dataRow);
                 if (isoRow !== filterDia) return false;
             }
-
-            // 6. Período (Mês/Semana/Ano)
             if (applyTime) {
                 if (dataObj) {
                     const anoObj = dataObj.getFullYear();
                     const mesObj = dataObj.getMonth() + 1;
-                    
-                    // Ano é sempre obrigatório para manter o contexto do dashboard
                     if (filterAno && anoObj !== filterAno) return false;
-                    
-                    // ✅ CORREÇÃO: Se ignorePeriodDetails for true, trazemos o ano todo.
-                    // Isso permite que o gráfico de tendência calcule "Mês Atual vs Mês Anterior"
-                    // mesmo que o filtro esteja travado no Mês Atual.
                     if (!ignorePeriodDetails) {
                         if (filterMes && mesObj !== filterMes && !filterSemana) return false;
-                        
                         if (filterSemana) {
                             const semObj = getWeekNumber(dataObj);
                             if (semObj !== filterSemana) return false;
@@ -198,39 +189,47 @@ export async function GET(request: NextRequest) {
                     if (filterAno || filterMes || filterSemana) return false;
                 }
             }
-
             return true;
         });
     };
 
-    // --- APLICAÇÃO ---
-
-    // 1. Dados Recortados (KPIs, Ranking e Detalhes) 
-    // isStrictDay = true, ignorePeriodDetails = false (Respeita estritamente o mês/semana selecionado)
     const productionCut = applyFilters(productionRaw, false, true, true, false);
-    const defectsCut = applyFilters(defectsRaw, true, true, true, false);
-
-    // 2. Dados Históricos (Gráficos e Tendência) 
-    // isStrictDay = false, ✅ ignorePeriodDetails = true (Traz o ano todo para montar a linha do tempo)
+    const defectsCut = applyFilters(defectsRaw, true, true, true, false); 
+    
     const productionFull = applyFilters(productionRaw, false, true, false, true);
     const defectsFull = applyFilters(defectsRaw, true, true, false, true);
 
-    /* ======================================================
-        MOTORES DE CÁLCULO
-    ====================================================== */
-    
-    // KPIs principais
-    const ppmResult = runPpmEngine(productionCut, defectsCut);
-    const { meta, byCategory, allRows } = ppmResult;
-    
-    const topCauses = calculateCausesRanking(productionCut, defectsCut);
-    const details = calculateDetailsRanking(productionCut, defectsCut);
+    // ✅ SEPARAÇÃO CRÍTICA (CORRIGIDO PARA USAR CÓDIGOS REAIS): 
+    const defectsOnly = defectsCut.filter(d => !checkIsOcorrencia(d));
+    const defectsFullOnly = defectsFull.filter(d => !checkIsOcorrencia(d));
 
-    // Tendências
-    const ppmMonthlyTrend = calculatePpmMonthlyTrend(productionFull, defectsFull);
-    const responsabilidadeMensal = calculateResponsabilidadeMensal(productionFull, defectsFull);
-    const categoriaMensal = calculateCategoriaMensal(productionFull, defectsFull);
-    const trendData = calculateTrendHierarchy(productionFull, defectsFull);
+    // MOTORES DE CÁLCULO
+    const ppmResult = runPpmEngine(productionCut, defectsOnly);
+    const { meta, byCategory, allRows } = ppmResult;
+    const topCauses = calculateCausesRanking(productionCut, defectsOnly);
+    
+    // TABELA: Manda tudo
+    const detailsRaw = calculateDetailsRanking(productionCut, defectsCut);
+
+    // ✅ PÓS-PROCESSAMENTO DETALHES:
+    const details = detailsRaw.map(turno => ({
+        ...turno,
+        groups: turno.groups.map(grp => ({
+            ...grp,
+            top3: grp.top3.map(row => ({
+                ...row,
+                isOcorrencia: checkIsOcorrencia({ 
+                    "CÓDIGO DO FORNECEDOR": row.cod,
+                    RESPONSABILIDADE: row.responsabilidade
+                })
+            }))
+        }))
+    }));
+
+    const ppmMonthlyTrend = calculatePpmMonthlyTrend(productionFull, defectsFullOnly);
+    const responsabilidadeMensal = calculateResponsabilidadeMensal(productionFull, defectsFullOnly);
+    const categoriaMensal = calculateCategoriaMensal(productionFull, defectsFullOnly);
+    const trendData = calculateTrendHierarchy(productionFull, defectsFullOnly);
 
     return NextResponse.json({
       meta: {
