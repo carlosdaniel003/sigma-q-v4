@@ -1,4 +1,5 @@
 // app/api/diagnostico/detalhes/route.ts
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { loadDefeitos } from "@/core/data/loadDefeitos";
 import { loadOcorrencias } from "@/core/data/loadOcorrencias";

@@ -42,9 +42,18 @@ export async function loadDefeitos(includeOcorrencias: boolean = false): Promise
     const dadosSQL = await fetchDefeitosFromSQL(undefined, includeOcorrencias);
 
     if (dadosSQL && dadosSQL.length > 0) {
+      
+      // ✅ HIGIENIZAÇÃO DE DADOS (Sanitization)
+      // Filtra estornos/cancelamentos lógicos onde a quantidade foi zerada ou negativada no banco
+      const dadosLimpos = dadosSQL.filter(item => {
+        const qtd = Number(item.QUANTIDADE) || 0;
+        return qtd > 0;
+      });
+
       // eslint-disable-next-line no-console
-      console.log(`📡 [LoadDefeitos] SQL Conectado (${dadosSQL.length} registros - Ocorrências: ${includeOcorrencias ? 'ON' : 'OFF'})`);
-      return dadosSQL;
+      console.log(`📡 [LoadDefeitos] SQL Conectado (Bruto: ${dadosSQL.length} | Limpos: ${dadosLimpos.length} - Ocorrências: ${includeOcorrencias ? 'ON' : 'OFF'})`);
+      
+      return dadosLimpos;
     } else {
       console.warn("⚠️ [LoadDefeitos] SQL retornou lista vazia.");
       return [];

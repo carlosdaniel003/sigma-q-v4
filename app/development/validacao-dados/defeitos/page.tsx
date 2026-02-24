@@ -3,8 +3,8 @@
 
 import React from "react";
 import "./defeitos-premium.css";
-// Import do ícone SVG
-import { CheckCircle } from "lucide-react";
+// Import dos ícones SVG
+import { CheckCircle, FileSpreadsheet } from "lucide-react";
 
 // Hook
 import useValidacaoDefeitos from "./hooks/useValidacaoDefeitos";
@@ -17,6 +17,9 @@ import DiagnosticoInteligente from "./components/DiagnosticoInteligente";
 // ✅ DiagnosticoAvancado no lugar de PerformancePorBase
 import DiagnosticoAvancado from "./components/DiagnosticoAvancado";
 import AuditoriaNaoClassificados from "./components/AuditoriaNaoClassificados"; 
+
+// ✅ Import da função de exportação para Excel
+import { baixarComoExcel } from "./components/exportToExcel";
 
 export default function DefeitosPage({
   embedded = false,
@@ -42,7 +45,7 @@ export default function DefeitosPage({
   } = useValidacaoDefeitos();
 
   /* ======================================================
-      REGRAS DE VISUALIZAÇÃO
+     REGRAS DE VISUALIZAÇÃO
    ====================================================== */
 
   const showKPIs = fonte === "todas";
@@ -69,17 +72,47 @@ export default function DefeitosPage({
 
       {/* CONTEÚDO PRINCIPAL */}
       <main className="defeitos-main">
-        {/* HEADER */}
-        <header className="defeitos-header">
-          <h2 className="defeitos-title">
-            Validação de Defeitos 
-            <span style={{ fontSize: '0.6em', opacity: 0.6, marginLeft: '10px', fontWeight: 'normal' }}>
-              SQL 2026
-            </span>
-          </h2>
-          <div className="defeitos-subtitle">
-            Motor de Validação & Enriquecimento de Dados
+        
+        {/* HEADER MODIFICADO COM BOTÃO DE EXPORTAR */}
+        <header className="defeitos-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <h2 className="defeitos-title">
+              Validação de Defeitos 
+              <span style={{ fontSize: '0.6em', opacity: 0.6, marginLeft: '10px', fontWeight: 'normal' }}>
+                SQL 2026
+              </span>
+            </h2>
+            <div className="defeitos-subtitle">
+              Motor de Validação & Enriquecimento de Dados
+            </div>
           </div>
+
+          {/* ✅ BOTÃO EXPORTAR EXCEL */}
+          {/* ✅ BOTÃO EXPORTAR EXCEL */}
+          <button 
+            onClick={() => baixarComoExcel(`SIGMA_Dados_Brutos_SQL2026`)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "8px 16px",
+              background: "rgba(16, 185, 129, 0.15)", // Fundo verde translúcido
+              color: "#34d399", // Texto verde claro
+              border: "1px solid rgba(16, 185, 129, 0.3)",
+              borderRadius: "8px",
+              cursor: "pointer",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              transition: "all 0.2s ease",
+              marginTop: "4px"
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.background = "rgba(16, 185, 129, 0.25)")}
+            onMouseOut={(e) => (e.currentTarget.style.background = "rgba(16, 185, 129, 0.15)")}
+            title="Baixar dados em .xlsx direto do SQL"
+          >
+            <FileSpreadsheet size={18} />
+            Exportar Excel Bruto
+          </button>
         </header>
 
         {/* =========================

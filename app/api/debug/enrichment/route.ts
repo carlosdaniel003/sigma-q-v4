@@ -1,4 +1,5 @@
 // app/api/debug/enrichment/route.ts
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { loadDefeitosAll } from "@/core/defeitos/defeitosLoader";
 import { enrichDefeito } from "@/core/defeitos/defeitosEnrichment";

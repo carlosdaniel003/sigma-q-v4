@@ -1,4 +1,5 @@
 // app/api/validacao/auditoria-defeitos/route.ts
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { loadDefeitos } from "@/core/data/loadDefeitos";
 import { auditarNaoClassificados } from "@/core/data/loadAgrupamento";

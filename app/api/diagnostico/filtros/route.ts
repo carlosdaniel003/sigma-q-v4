@@ -1,8 +1,10 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextResponse } from "next/server";
 // ✅ Passamos a buscar diretamente do dataAdapter que centraliza as regras de tradução
 import { fetchDefeitosFromSQL } from "@/core/data/dataAdapter";
 import { norm } from "@/core/diagnostico/diagnosticoUtils";
-import { parseDateSafe } from "@/core/ppm/ppmDateUtils";
 
 /* ======================================================
    UTIL — SEMANA ISO + MÊS
@@ -32,7 +34,7 @@ function getSemanaAno(date: Date) {
 ====================================================== */
 export async function GET(req: Request) {
   try {
-    // ✅ Utilizando o Motor Principal que possui a tradução (DIP PTH) e não o Raw File.
+    // ✅ Utilizando o Motor Principal
     const defeitos = await fetchDefeitosFromSQL();
 
     // Sets para garantir unicidade
@@ -47,8 +49,12 @@ export async function GET(req: Request) {
 
     // Varrendo os defeitos e populando os Selects
     defeitos.forEach((r) => {
-      const date = parseDateSafe(r.DATA);
-      if (!date) return;
+      // ✅ CORREÇÃO: O Adapter SQL já devolve uma Date válida ou String ISO.
+      // Substituímos o parseDateSafe do Excel por uma conversão nativa robusta.
+      const date = new Date(r.DATA);
+      
+      // Se por algum motivo for uma data inválida, ignora
+      if (!date || isNaN(date.getTime())) return;
 
       const { semana, ano, mes } = getSemanaAno(date);
 

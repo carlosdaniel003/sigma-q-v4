@@ -137,7 +137,7 @@ export default function DefectDetailsDrawer({
                   Registros: <strong style={{ color: "#94a3b8" }}>{rows.length}</strong>
                 </span>
                 <span style={{ color: "#475569" }}>
-                  Total de Peças: <strong style={{ color: "#f59e0b", fontSize: "0.85rem" }}>{totalPecas}</strong>
+                  Total de Defeitos: <strong style={{ color: "#f59e0b", fontSize: "0.85rem" }}>{totalPecas}</strong>
                 </span>
               </div>
 

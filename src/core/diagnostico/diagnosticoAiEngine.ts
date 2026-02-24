@@ -15,9 +15,22 @@ import {
   fmtPpm
 } from "./pilares";
 
-// Extensão do tipo de retorno para incluir os pilares
+// Extensão do tipo de retorno para incluir os pilares e a nova estrutura
+export type ResumoEstruturado = {
+  contexto: string;
+  tendenciaInfo: {
+    tipo: "melhora" | "piora" | "estavel" | "indefinido";
+    texto: string;
+    valorPpm: string;
+    percentual: string;
+  } | null;
+  acaoRecomendada: string | null;
+  licaoAprendida?: string | null; // ✅ NOVO CAMPO
+};
+
 type DiagnosticoIaOutput = DiagnosticoIaTexto & {
   pilares: DiagnosticoPilares;
+  resumoEstruturado?: ResumoEstruturado; 
 };
 
 export function gerarDiagnosticoAutomatico(
@@ -32,29 +45,21 @@ export function gerarDiagnosticoAutomatico(
     mudancaBrusca 
   } = input;
 
-  // 👉 DEBUG ADICIONADO AQUI: Permite verificar quais dados o motor está recebendo do banco/backend
-  // eslint-disable-next-line no-console
-  console.log("🔍 [DEBUG SPIKE] Dados de mudancaBrusca que chegaram na IA:", mudancaBrusca);
-
-  // 1. Gera o Texto de Resumo
   const resumoData = gerarTextoResumo(input);
 
-  // 👉 INJEÇÃO DE DADOS: Adicionamos a produção atual para o pilar de Spike (Gatekeeper de Volume)
   const mudancaBruscaEnriquecida = mudancaBrusca ? {
     ...mudancaBrusca,
     producaoAtual: ppmContext?.producaoAtual || 0
   } : null;
 
-  // 2. Calcula cada Pilar Separadamente chamando os módulos isolados
   const pilares: DiagnosticoPilares = {
-    spike: calcularPilarSpike(mudancaBruscaEnriquecida), // ✅ Usamos o objeto enriquecido aqui
+    spike: calcularPilarSpike(mudancaBruscaEnriquecida), 
     melhoria: calcularPilarMelhoria(mudancaBrusca),
     reincidencia: calcularPilarReincidencia(reincidencia, periodoAtual),
     rebote: calcularPilarRebote(analiseSustentacao),
     topOfensor: calcularPilarTopOfensor(periodoAtual, ppmContext)
   };
 
-  // 3. Monta lista legada de insights (para compatibilidade)
   const insightsLegados = [
     pilares.spike,
     pilares.reincidencia,
@@ -71,25 +76,29 @@ export function gerarDiagnosticoAutomatico(
 }
 
 /* ======================================================
-   GERADOR DE TEXTO (RESTAURADO COM LÓGICA COMPLETA)
+   GERADOR DE TEXTO ESTRUTURADO
    ====================================================== */
-function gerarTextoResumo(input: DiagnosticoAiInput) {
+function gerarTextoResumo(input: any) {
   const { periodoAtual, ppmContext } = input;
-  const resumoLines: string[] = [];
   const indicadores: string[] = [];
 
-  // 1. Check de Segurança
+  const estrutura: ResumoEstruturado = {
+    contexto: "",
+    tendenciaInfo: null,
+    acaoRecomendada: null
+  };
+
   if (ppmContext.producaoAtual === 0) {
     return {
       titulo: "Sem Produção Registrada",
       resumoGeral: `Não identificamos apontamentos de produção para o período (Semana ${periodoAtual.semanaInicio} a ${periodoAtual.semanaFim}). Selecione outro período.`,
+      resumoEstruturado: estrutura,
       tendencia: "indefinido" as const,
       variacaoPercentual: 0,
       indicadoresChave: []
     };
   }
 
-  // 2. Lógica de Tendência
   let variacaoPpmPercent = 0;
   let diferencaPpmAbsoluta = 0;
   let tendencia: "melhora" | "piora" | "estavel" | "indefinido" = "indefinido";
@@ -107,14 +116,10 @@ function gerarTextoResumo(input: DiagnosticoAiInput) {
     diferencaPpmAbsoluta = ppmContext.atual;
   }
 
-  // 3. Montagem do Texto - Parágrafo 1: Contexto
-  resumoLines.push(
-    `No período analisado (semanas **${periodoAtual.semanaInicio} a ${periodoAtual.semanaFim}**), ` +
-      `o agrupamento **${periodoAtual.principalCausa.nome}** foi o principal ofensor, ` +
-      `concentrando **${fmt(periodoAtual.principalCausa.ocorrencias)}** ocorrências.`
-  );
+  // 1. Contexto
+  estrutura.contexto = `No período analisado (semanas **${periodoAtual.semanaInicio} a ${periodoAtual.semanaFim}**), o agrupamento **${periodoAtual.principalCausa.nome}** foi o principal ofensor, concentrando **${fmt(periodoAtual.principalCausa.ocorrencias)}** ocorrências.`;
 
-  // 4. Montagem do Texto - Parágrafo 2: Análise de Tendência
+  // 2. Tendência
   if (tendencia !== "indefinido") {
     const sinal = diferencaPpmAbsoluta > 0 ? "+" : "";
     const txtPercent = `${sinal}${variacaoPpmPercent.toFixed(1)}%`;
@@ -122,36 +127,59 @@ function gerarTextoResumo(input: DiagnosticoAiInput) {
     const ppmAtualStr = fmtPpm(ppmContext.atual);
     const ppmAntStr = fmtPpm(ppmContext.anterior);
 
+    let textoTendencia = "";
     if (tendencia === "melhora") {
-      resumoLines.push(
-        `**Cenário Positivo:** Redução de **${txtAbsoluto} PPM** (${txtPercent}) comparado ao período anterior ` +
-        `(${ppmAntStr} ➝ ${ppmAtualStr}). As ações de contenção demonstram efetividade.`
-      );
+      textoTendencia = `**Cenário Positivo:** Redução de **${txtAbsoluto} PPM** (${txtPercent}) comparado ao período anterior (${ppmAntStr} ➝ ${ppmAtualStr}). As ações de contenção demonstram efetividade.`;
     } else if (tendencia === "piora") {
-      resumoLines.push(
-        `**Atenção (Degradação):** O processo oscilou negativamente, com aumento de **${txtAbsoluto} PPM** (${txtPercent}) ` +
-        `(${ppmAntStr} ➝ ${ppmAtualStr}). Verifique as mudanças recentes no 4M.`
-      );
+      textoTendencia = `**Atenção (Degradação):** O processo oscilou negativamente, com aumento de **${txtAbsoluto} PPM** (${txtPercent}) (${ppmAntStr} ➝ ${ppmAtualStr}). Verifique as mudanças recentes no 4M.`;
     } else {
-      resumoLines.push(
-        `**Estabilidade:** O PPM variou apenas **${txtAbsoluto} PPM** (${txtPercent}), mantendo-se no patamar de ${ppmAtualStr}. ` +
-        `O processo está estável, mas exige novas ações para melhoria de nível.`
-      );
+      textoTendencia = `**Estabilidade:** O PPM variou apenas **${txtAbsoluto} PPM** (${txtPercent}), mantendo-se no patamar de ${ppmAtualStr}. O processo está estável, mas exige novas ações para melhoria de nível.`;
     }
+
+    estrutura.tendenciaInfo = {
+      tipo: tendencia,
+      texto: textoTendencia,
+      valorPpm: txtAbsoluto,
+      percentual: txtPercent
+    };
   }
 
-  // 5. Montagem do Texto - Parágrafo 3: Defeito Específico (Ishikawa)
+  // 3. Ação Recomendada
   if (periodoAtual.principalDefeito.nome) {
-    resumoLines.push(
-      `O defeito específico **${periodoAtual.principalDefeito.nome}** liderou os registros. ` +
-      `Foque o Ishikawa prioritariamente neste item.`
-    );
+    estrutura.acaoRecomendada = `O defeito específico **${periodoAtual.principalDefeito.nome}** liderou os registros. Foque o Ishikawa prioritariamente neste item.`;
   }
 
-  // 6. Indicadores
+  // ✅ 4. Histórico de Lições Aprendidas (Formatação Segura)
+  if (input.licaoAprendida) {
+    const p = input.licaoAprendida;
+    
+    // Constrói a frase dinamicamente para não mostrar espaços vazios caso a célula do Excel esteja em branco
+    let textoLicao = `**Histórico (2025):** Este problema já foi tratado na categoria **${p.categoria}**. A análise apontou para **${p.analise}**`;
+    
+    if (p.descMotivo) {
+        textoLicao += ` devido a "**${p.descMotivo}**"`;
+    }
+    textoLicao += ".";
+
+    if (p.causaRaiz) {
+        textoLicao += ` A Causa Raiz mapeada na época foi **${p.causaRaiz}**.`;
+    }
+
+    if (p.acao) {
+        textoLicao += ` Ação de contenção recomendada: **${p.acao}**`;
+    }
+
+    if (p.responsavel) {
+        textoLicao += ` (Área/Resp. Histórico: **${p.responsavel}**).`;
+    } else if (p.acao) {
+        textoLicao += "."; // Põe o ponto final se tiver ação mas não tiver responsável
+    }
+
+    estrutura.licaoAprendida = textoLicao;
+  }
+
   indicadores.push(`PPM: ${fmtPpm(ppmContext.atual)}`);
   
-  // Título Dinâmico
   const titulos = {
       melhora: "Evolução Positiva de Qualidade",
       piora: "Alerta de Degradação",
@@ -159,9 +187,12 @@ function gerarTextoResumo(input: DiagnosticoAiInput) {
       indefinido: "Diagnóstico Inicial"
   };
 
+  const blocos = [estrutura.contexto, estrutura.tendenciaInfo?.texto, estrutura.acaoRecomendada, estrutura.licaoAprendida].filter(Boolean);
+
   return {
     titulo: titulos[tendencia] || "Diagnóstico do SIGMA-Q AI",
-    resumoGeral: resumoLines.join("\n\n"),
+    resumoGeral: blocos.join("\n\n"), // Mantém compatibilidade
+    resumoEstruturado: estrutura,     
     tendencia,
     variacaoPercentual: variacaoPpmPercent,
     indicadoresChave: indicadores

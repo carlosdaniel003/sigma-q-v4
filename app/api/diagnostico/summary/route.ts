@@ -1,4 +1,7 @@
 // app/api/diagnostico/summary/route.ts
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextResponse } from "next/server";
 
 import { loadDefeitos } from "@/core/data/loadDefeitos";
@@ -6,6 +9,7 @@ import { loadAgrupamento } from "@/core/data/loadAgrupamento";
 import { loadFmea, FmeaRow } from "@/core/data/loadFmea"; 
 import { loadOcorrencias } from "@/core/data/loadOcorrencias";
 import { loadProducao, ProducaoRaw } from "@/core/data/loadProducao"; 
+import { loadPlanosAcao } from "@/core/data/loadPlanosAcao"; // ✅ Importando nosso novo leitor
 
 import {
   filtrarDefeitosDiagnostico,
@@ -427,16 +431,14 @@ function montarLabelsSustentacao(
     let valorT1 = valorAtual - 1;
     let valorT2 = valorAtual - 2;
 
-    // Ajuste de virada de ano para T-1
     if (tipo === "mes") {
         if (valorT1 < 1) valorT1 = 12;
     } else {
         if (valorT1 < 1) valorT1 = 52;
     }
 
-    // Ajuste de virada de ano para T-2
     if (tipo === "mes") {
-        if (valorT2 < 1) valorT2 = 12 + valorT2; // Se 0 -> 12, se -1 -> 11
+        if (valorT2 < 1) valorT2 = 12 + valorT2; 
     } else {
         if (valorT2 < 1) valorT2 = 52 + valorT2;
     }
@@ -454,16 +456,12 @@ function montarLabelsSustentacao(
     }
 }
 
-// ✅ LÓGICA DE FILTRO INTELIGENTE PARA DIAGNÓSTICO
-// Garante que o motor de filtragem entenda os grupos virtuais
 function matchResponsabilidade(itemValue: string, filtro: string): boolean {
     if (!filtro || filtro === "Todos") return true;
 
     const val = norm(itemValue);
     const filter = norm(filtro);
 
-    // 1. Grupo Virtual: AGRUPAMENTO DE PROCESSOS
-    // ✅ CORREÇÃO: Removido val.includes("DIP") para que o DIP PTH seja independente
     if (filter === "AGRUPAMENTO DE PROCESSOS") {
         return (
             val.startsWith("PROC") || 
@@ -473,28 +471,20 @@ function matchResponsabilidade(itemValue: string, filtro: string): boolean {
         ); 
     }
 
-    // 2. Grupo Virtual: AGRUPAMENTO DE FORNECEDORES
     if (filter === "AGRUPAMENTO DE FORNECEDORES") {
         return val.includes("FORNECEDOR") || val.includes("FORN"); 
     }
 
-    // 3. Filtro Exato
     return val === filter;
 }
 
-/* ======================================================
-   ✅ NOVA FUNÇÃO: DESCOBRIR RESPONSABILIDADE PREDOMINANTE
-   Acha o verdadeiro "Dono" do defeito contando as ocorrências
-====================================================== */
 function descobrirResponsabilidadePredominante(dados: DefeitoFiltrado[], nomeDefeito: string): string {
     if (!nomeDefeito) return "Indefinida";
 
     const contagem = new Map<string, number>();
     
-    // Filtra apenas os registros que pertencem a esse defeito específico
     const falhasDoDefeito = dados.filter(d => norm(d.DESCRICAO_FALHA) === norm(nomeDefeito));
     
-    // Conta as responsabilidades
     falhasDoDefeito.forEach(d => {
         const resp = d.RESPONSABILIDADE || "Desconhecida";
         contagem.set(resp, (contagem.get(resp) || 0) + d.QUANTIDADE);
@@ -502,7 +492,6 @@ function descobrirResponsabilidadePredominante(dados: DefeitoFiltrado[], nomeDef
 
     if (contagem.size === 0) return "Desconhecida";
 
-    // Pega a responsabilidade que mais apareceu
     let topResp = "Desconhecida";
     let maxQtd = -1;
 
@@ -586,8 +575,26 @@ export async function GET(req: Request) {
     const nomeDefeitoFoco = agregacaoAtual.principalDefeito.nome;
     const ppmDefeitoT = calcularPpmUnico(dadosAtual, totalProducaoAtual, nomeDefeitoFoco);
     
-    // ✅ Calcula a responsabilidade real do top ofensor
     const responsabilidadeReal = descobrirResponsabilidadePredominante(dadosAtual, nomeDefeitoFoco);
+
+    // ✅ ======================================================
+    // 🧠 MATCH DE LIÇÕES APRENDIDAS (EXCEL 2025)
+    // ======================================================
+    const planosAcao = loadPlanosAcao();
+    let licaoMatch = null;
+    
+    // Pega uma amostra do defeito principal para extrair Categoria e Código originais
+    const amostrasTopDefeito = dadosAtual.filter(d => norm(d.ANALISE) === norm(nomeDefeitoFoco));
+    
+    if (amostrasTopDefeito.length > 0) {
+        // Trazemos o cast pra 'any' pois os nomes exatos originais da planilha podem variar
+        const amostra = amostrasTopDefeito[0] as any;
+        const codFoco = String(amostra["CÓDIGO DA FALHA"] || amostra.CODIGO_FALHA || "").trim().toUpperCase();
+        const catFoco = String(amostra.CATEGORIA || "").trim().toUpperCase();
+
+        // Faz o cruzamento das duas colunas chaves!
+        licaoMatch = planosAcao.find(p => p.codDefeito === codFoco && p.categoria === catFoco);
+    }
 
     const maiorSpike = detectarMaiorSpike(dadosAtual, totalProducaoAtual, dadosAnterior, totalProducaoAnterior);
     const padraoCurvaV = detectarCurvaVGlobal(dadosAtual, totalProducaoAtual, dadosAnterior, totalProducaoAnterior, dadosAnt2, totalProducaoAnt2);
@@ -600,15 +607,17 @@ export async function GET(req: Request) {
 
     const semanaInicioDisplay = tipo === 'semana' ? ranges.anterior.semanas[0].semana : ranges.atual.semanas[0].semana;
 
-    const diagnosticoIa = gerarDiagnosticoAutomatico({
+    // 🔥 SOLUÇÃO AQUI: Convertemos o input para 'any' para ignorar o bloqueio de tipagem
+    // do arquivo original diagnosticoTypes.ts, já que adicionamos o licaoAprendida dinamicamente.
+    const inputParaIa: any = {
       periodoAtual: {
         semanaInicio: semanaInicioDisplay, 
         semanaFim: ranges.atual.semanas[1].semana,
         principalCausa: agregacaoAtual.principalCausa,
-        // ✅ Injeta a responsabilidade real aqui
         principalDefeito: { ...agregacaoAtual.principalDefeito, responsabilidade: responsabilidadeReal }, 
         defeitoCritico: agregacaoAtual.defeitoCritico,
       },
+      licaoAprendida: licaoMatch, 
       ppmContext: {
           atual: ppmAtual,
           anterior: ppmAnterior,
@@ -649,7 +658,9 @@ export async function GET(req: Request) {
             qtdFinal: a.qtdFinal || 0
         }))
       },
-    });
+    };
+
+    const diagnosticoIa = gerarDiagnosticoAutomatico(inputParaIa);
 
     const statusGeral = calcularStatusGeral(agregacaoAtual.defeitoCritico.npr);
 

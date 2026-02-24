@@ -15,7 +15,9 @@ const API_URL = "http://10.110.100.227/qualitycontrol/SIGMA/teste_integracao/upl
 // ======================================================
 let CACHE_MEMORIA: DefeitoRaw[] | null = null;
 let ULTIMA_BUSCA = 0;
-const TEMPO_CACHE_MS = 1000 * 60 * 5; 
+
+// ✅ MUDANÇA 1: Tempo de cache zerado. O sistema sempre vai ler o banco em tempo real.
+const TEMPO_CACHE_MS = 0; 
 
 // ======================================================
 // 🧠 HELPER: NORMALIZAÇÃO CANÔNICA
@@ -23,10 +25,6 @@ const TEMPO_CACHE_MS = 1000 * 60 * 5;
 function normalizeResponsibilityName(raw: string, codMot: string = ""): string {
     const v = (raw || "").trim().toUpperCase();
     const cod = codMot.trim().toUpperCase();
-
-    // ❌ REMOVIDO: Não forçamos mais o nome "OCORRÊNCIA" aqui.
-    // Queremos saber de onde veio (Processo, Fornecedor, etc).
-    // if (CODIGOS_OCORRENCIA.includes(cod)) { return "OCORRÊNCIA"; }
 
     // ✅ 1. REGRA EXCLUSIVA: DIP PTH
     if (cod === "DP" || v.includes("DIP") || v === "DP") {
@@ -52,7 +50,6 @@ function normalizeResponsibilityName(raw: string, codMot: string = ""): string {
         return "PROCESSO PA";
     }
     
-    // Se for ocorrência e não caiu em nada acima, pode manter o nome original ou agrupar
     return v;
 }
 
@@ -86,7 +83,15 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
     }
 
     try {
-        const response = await fetch(API_URL);
+        const urlComBuster = `${API_URL}?t=${agora}`;
+        const response = await fetch(urlComBuster, { 
+            cache: "no-store",
+            next: { revalidate: 0 }, 
+            headers: {
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache"
+            }
+        });
 
         if (!response.ok) {
             throw new Error(`Erro na API PHP: ${response.status} ${response.statusText}`);
@@ -99,12 +104,17 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             return [];
         }
 
+        // ✅ FILTRO DE STATUS: Pega apenas os ativos (status == "1") e da área PA
         const dadosPA = dadosSQL.filter((item) => {
             const area = String(item.area || "").trim().toUpperCase();
-            return area === "PA" || area === "PRODUTO ACABADO";
+            const isPA = area === "PA" || area === "PRODUTO ACABADO";
+            const isAtivo = String(item.status || "").trim() === "1"; // Garante que só passa se for status 1
+            
+            return isPA && isAtivo;
         });
 
-        const dadosTraduzidos = dadosPA.map((sqlItem) => {
+        // Primeiro mapeamos os dados
+        const dadosMapeados = dadosPA.map((sqlItem) => {
             const dataString = `${sqlItem.data_criacao}T12:00:00`;
             const dataObj = new Date(dataString);
             const mes = dataObj.toLocaleString("pt-BR", { month: "long" }).toUpperCase();
@@ -122,11 +132,20 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
             const codigoResp = String(sqlItem.cod_mot || "").trim().toUpperCase();
             let respTraduzida = RESPONSABILIDADE_TRANSLATION[codigoResp] || codigoResp;
             
-            // ✅ Normalização (Agora preserva o nome do processo mesmo se for ocorrência)
             respTraduzida = normalizeResponsibilityName(respTraduzida, codigoResp);
 
             const codigoTurno = String(sqlItem.turno || "").trim().toUpperCase();
             const turnoTraduzido = TURNO_TRANSLATION[codigoTurno] || codigoTurno;
+
+            // ✅ A CORREÇÃO MÁGICA AQUI
+            let rawQtd = sqlItem.qtd_df;
+            let qtdReal = 1; // Assume 1 por padrão se vier vazio
+
+            // Só converte para número se o usuário realmente digitou algo (como "0" ou "2")
+            if (rawQtd !== null && rawQtd !== undefined && String(rawQtd).trim() !== "") {
+                qtdReal = Number(rawQtd);
+                if (isNaN(qtdReal)) qtdReal = 1; // Prevenção de segurança extra
+            }
 
             return {
                 ID: sqlItem.id,
@@ -151,17 +170,22 @@ async function _loadAllFromSQL(): Promise<DefeitoRaw[]> {
                 "PEÇA/PLACA": sqlItem.desc_componente,
                 "REFERÊNCIA/POSIÇÃO MECÂNICA": sqlItem.referencia,
                 ANALISE: causaTraduzida, 
-                QUANTIDADE: Number(sqlItem.qtd_df) || 1,
+                
+                QUANTIDADE: qtdReal, // Envia a quantidade resolvida
+                
                 "CÓDIGO DO FORNECEDOR": sqlItem.cod_mot,
                 "CLASSIFICAÇÃO DO FORNECEDOR": "N/A",
                 RESPONSABILIDADE: respTraduzida
             };
         });
 
-        CACHE_MEMORIA = dadosTraduzidos;
+        // ✅ HIGIENIZAÇÃO: Remove apenas o que foi DE FATO estornado (explicitamente 0)
+        const dadosLimpos = dadosMapeados.filter(item => item.QUANTIDADE > 0);
+
+        CACHE_MEMORIA = dadosLimpos;
         ULTIMA_BUSCA = Date.now();
 
-        return dadosTraduzidos;
+        return dadosLimpos;
 
     } catch (error) {
         console.error("🔥 Erro fatal no Adapter SQL:", error);

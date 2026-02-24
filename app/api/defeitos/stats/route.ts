@@ -1,4 +1,5 @@
 // app/api/defeitos/stats/route.ts
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getDefeitosCache } from "@/core/defeitos/defeitosCache";
 import { auditarNaoClassificados } from "@/core/data/loadAgrupamento"; 

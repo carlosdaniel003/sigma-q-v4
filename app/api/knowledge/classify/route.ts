@@ -1,4 +1,5 @@
 /* Legado Use Preferencialmente: C:\Users\cdaniel\Documents\sigma-q-v3\v3\app\api\knowledge\defects\v1\route.ts*/
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { loadCatalogo } from "@/core/catalogo/catalogoLoader";
 import { enrichDefeito } from "@/core/defeitos/defeitosEnrichment";

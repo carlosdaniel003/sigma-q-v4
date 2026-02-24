@@ -1,4 +1,5 @@
 // app/api/defeitos/status/route.ts
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { loadCatalogo } from "@/core/catalogo/catalogoLoader";
 import { loadDefeitosAll } from "@/core/defeitos/defeitosLoader";
