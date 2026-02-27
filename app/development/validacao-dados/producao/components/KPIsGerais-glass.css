@@ -1,0 +1,156 @@
+/* ===================================================== */
+/* KPIs GERAIS PRODUÇÃO — GLASS IPHONE ANIMADO (Padrão Defeitos) */
+/* ===================================================== */
+
+/* ============================= */
+/* GRID */
+/* ============================= */
+
+.kpi-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-bottom: 28px;
+  width: 100%;
+  animation: fadeUpProdKPI 0.8s ease forwards;
+}
+
+@keyframes fadeUpProdKPI {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================= */
+/* GLASS CARD BASE */
+/* ============================= */
+
+.kpi-card {
+  position: relative;
+  padding: 26px;
+  border-radius: 22px;
+  overflow: hidden;
+
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Highlight animado estilo Apple */
+.kpi-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.9s;
+}
+
+.kpi-card:hover::before {
+  left: 150%;
+}
+
+/* Hover premium */
+.kpi-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px rgba(255, 255, 255, 0.04);
+}
+
+/* ============================= */
+/* HEADER E ÍCONE */
+/* ============================= */
+
+.kpi-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kpi-icon {
+  padding: 12px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.03); /* Fundo muito subtil para o ícone */
+}
+
+.kpi-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+/* ============================= */
+/* VALORES E TEXTO */
+/* ============================= */
+
+.kpi-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-top: 18px;
+  color: #f8fafc;
+}
+
+.kpi-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* ============================= */
+/* STATUS VARIANTS (Para cores de texto forçadas) */
+/* ============================= */
+
+/* Verde */
+.text-success-kpi {
+  color: #4ade80 !important;
+}
+
+/* Amarelo */
+.text-warn-kpi {
+  color: #facc15 !important;
+}
+
+/* Vermelho */
+.text-danger-kpi {
+  color: #f87171 !important;
+}
+
+/* Azul padrão para os outros ícones */
+.text-brand-kpi {
+  color: #60a5fa !important;
+}

@@ -1,5 +1,8 @@
 "use client";
 
+import { AlertTriangle, CheckCircle } from "lucide-react";
+import "./KpiDefeitoCritico-glass.css"; // ✅ CSS IMPORTADO
+
 export default function KpiDefeitoCritico({
   data,
 }: {
@@ -9,22 +12,10 @@ export default function KpiDefeitoCritico({
     npr: number;
   };
 }) {
-  // ✅ SAFETY CHECK: Impede o erro de leitura de 'npr'
+  // ✅ SAFETY CHECK: Estado vazio
   if (!data) {
     return (
-      <div
-        className="kpi-card"
-        style={{
-          padding: "18px 20px",
-          borderRadius: 16,
-          border: "1px dashed rgba(255,255,255,0.1)",
-          minHeight: 110,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#64748b",
-        }}
-      >
+      <div className="kpi-diag-card empty-state fade-in-kpi">
         Sem dados críticos
       </div>
     );
@@ -36,68 +27,37 @@ export default function KpiDefeitoCritico({
   const nprValue = data.npr || 0;
   
   const nivel =
-    nprValue >= 40 ? "critico" : nprValue >= 25 ? "alerta" : "ok";
+    nprValue >= 40 ? "danger" : nprValue >= 25 ? "warn" : "success";
 
-  const color =
-    nivel === "critico"
-      ? "#ef4444"
-      : nivel === "alerta"
-      ? "#f59e0b"
-      : "#22c55e";
+  const statusClass = `text-${nivel}-diag`;
 
   return (
-    <div
-      className="kpi-card"
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 6,
-        padding: "18px 20px",
-        background:
-          "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
-        border: "1px solid rgba(255,255,255,0.10)",
-        borderLeft: `6px solid ${color}`,
-        borderRadius: 16,
-        minHeight: 110,
-        justifyContent: "center",
-      }}
-    >
-      {/* LABEL */}
-      <span
-        style={{
-          fontSize: 12,
-          letterSpacing: 0.4,
-          textTransform: "uppercase",
-          color: "#94a3b8",
-        }}
-      >
-        Defeito Crítico (NPR)
-      </span>
+    <div className="kpi-diag-card fade-in-kpi">
+      
+      {/* HEADER */}
+      <div className="kpi-diag-header">
+        <div className={`kpi-diag-icon ${statusClass}`}>
+          {nivel === "success" ? (
+            <CheckCircle size={22} strokeWidth={2.5} />
+          ) : (
+            <AlertTriangle size={22} strokeWidth={2.5} />
+          )}
+        </div>
+        <span className="kpi-diag-label">
+          Maior Risco de Qualidade
+        </span>
+      </div>
 
-      {/* DESCRIÇÃO DO DEFEITO */}
-      <strong
-        style={{
-          fontSize: 15,
-          fontWeight: 700,
-          lineHeight: 1.2,
-          color: "#ffffff",
-          wordBreak: "break-word",
-        }}
-      >
+      {/* VALOR DE DESTAQUE: A Descrição do Defeito */}
+      <div className="kpi-diag-value" title={data.descricao || "-"}>
         {data.descricao || "-"}
-      </strong>
+      </div>
 
-      {/* NPR */}
-      <span
-        style={{
-          fontSize: 15,
-          fontWeight: 600,
-          color,
-          opacity: 0.95,
-        }}
-      >
-        NPR {nprValue}
-      </span>
+      {/* SUBTÍTULO: O NPR com cor correspondente à gravidade */}
+      <div className={`kpi-diag-sub ${statusClass}`}>
+        NPR: {nprValue}
+      </div>
+
     </div>
   );
 }

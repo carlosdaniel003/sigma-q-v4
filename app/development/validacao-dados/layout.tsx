@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { RefreshCcw } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import "../tabs.css";
+import "./layout-glass.css";
 
 import {
   SigmaValidationProvider,
@@ -75,16 +76,11 @@ function ValidacaoHeader() {
   }, [lastUpdate]);
 
   return (
-    <div style={{ marginBottom: 6 }}>
+    <div className="glass-header">
       <h1 className="page-title">Validação de Dados</h1>
 
       {lastUpdate && (
-        <span
-          style={{
-            fontSize: "0.8rem",
-            color: "rgba(255,255,255,0.55)",
-          }}
-        >
+        <span className="update-text">
           Atualizado {relativeText} ·{" "}
           {lastUpdate.toLocaleDateString("pt-BR")}{" "}
           {lastUpdate.toLocaleTimeString("pt-BR", {
@@ -124,9 +120,6 @@ function TabsWithReload() {
     pathname === "/development/validacao-dados" ||
     pathname.startsWith("/development/validacao-dados/defeitos");
 
-  /* ======================================================
-     LOAD AUTOMÁTICO POR ABA
-  ====================================================== */
   useEffect(() => {
     if (isDefeitos) loadDefeitos();
     else if (isProducao) loadProducao();
@@ -134,7 +127,7 @@ function TabsWithReload() {
   }, [isDefeitos, isProducao, isPpm, loadDefeitos, loadProducao, loadPpm]);
 
   return (
-    <div className="tabs-topbar tabs-with-action">
+    <div className="tabs-glass">
       <div className="tabs-left">
         <button
           className={`tab-btn ${isDefeitos ? "active" : ""}`}
@@ -165,16 +158,16 @@ function TabsWithReload() {
       </div>
 
       <button
-  className={`reload-btn ${isReloading ? "loading" : ""}`}
-  onClick={async () => {
-    await reload();        // 🔁 reprocessa dados
-    router.refresh();     // 🔥 força refresh REAL da página
-  }}
-  disabled={loading}
-  title="Recarregar validação atual"
->
-  <RefreshCcw size={16} />
-</button>
+        className={`reload-btn ${isReloading ? "loading" : ""}`}
+        onClick={async () => {
+          await reload();
+          router.refresh();
+        }}
+        disabled={loading}
+        title="Recarregar validação atual"
+      >
+        <RefreshCcw size={16} />
+      </button>
     </div>
   );
 }

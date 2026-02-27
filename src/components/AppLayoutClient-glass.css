@@ -1,0 +1,90 @@
+/* ===================================================== */
+/* APP LAYOUT — PREMIUM MESH WALLPAPER (FUNDO)           */
+/* ===================================================== */
+
+/* --- Container Base (O ecrã inteiro) --- */
+.glass-app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: linear-gradient(135deg, rgba(41, 41, 41, 0.06), rgba(255,255,255,0.02));
+  position: relative;
+  overflow: hidden; /* Importante para as luzes de fundo não criarem scroll */
+  color: #f8fafc;
+}
+
+/* ===================================================== */
+/* A MÁGICA: LUZES FLUTUANTES NO FUNDO (MESH GRADIENT)   */
+/* Estas luzes vão brilhar através dos cartões de vidro! */
+/* ===================================================== */
+
+.glass-app-container::before,
+.glass-app-container::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px); /* Muito difuso */
+  -webkit-filter: blur(120px);
+  z-index: 0; /* Fica atrás de tudo */
+  pointer-events: none; /* Não interfere com os cliques */
+  animation: floatAmbientLight 20s ease-in-out infinite alternate;
+}
+
+/* Orbe 1: Azul Brilhante / Púrpura (Canto superior esquerdo) */
+.glass-app-container::before {
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, rgba(139, 92, 246, 0) 70%);
+  top: -200px;
+  left: -200px;
+}
+
+/* Orbe 2: Ciano / Esmeralda (Canto inferior direito) */
+.glass-app-container::after {
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, rgba(16, 185, 129, 0) 70%);
+  bottom: -300px;
+  right: -200px;
+  animation-delay: -10s; /* Move-se de forma assíncrona com o Orbe 1 */
+}
+
+/* Animação suave e hipnótica do fundo */
+@keyframes floatAmbientLight {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, 60px) scale(1.1); }
+  66% { transform: translate(-50px, 30px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* --- Área de Conteúdo Central --- */
+.glass-app-content {
+  position: relative;
+  z-index: 10; /* Fica acima das luzes de fundo */
+  flex: 1;
+  padding: 32px 40px;
+  overflow-y: auto;
+  height: 100vh;
+  scroll-behavior: smooth;
+  
+  /* Transição suave de layout quando a sidebar abre/fecha */
+  transition: padding 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Estilização da Scrollbar (Premium) */
+.glass-app-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.glass-app-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.glass-app-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 100px;
+}
+
+.glass-app-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}

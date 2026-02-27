@@ -5,6 +5,9 @@ import { getUser } from "@/services/userStorage";
 import { useDashboard, TrendItem } from "./hooks/useDashboard";
 import { useDashboardFilters } from "./store/dashboardFilters";
 
+// CSS Global do Layout Glassmorphism (Apenas para os botões de Tab)
+import "./page-dashboard-glass.css";
+
 // Estrutura
 import SidebarDashboard from "./components/SidebarDashboard";
 import DashboardLoading from "./components/DashboardLoading";
@@ -336,7 +339,8 @@ export default function DevelopmentDashboardPage() {
                     {/* GRÁFICOS E TABELAS */}
                     {kpiData.production === 0 ? <DashboardMessage tipo="sem_producao" /> : kpiData.defects === 0 ? <DashboardMessage tipo="sucesso" /> : (
                         <>
-                            <div style={{ display: "flex", gap: 8 }}>
+                            {/* ✅ ÚNICA MODIFICAÇÃO: AQUI ESTÃO AS CLASSES DO CSS GLASSMORPHISM */}
+                            <div className="dashboard-tabs-wrapper">
                                 <TabButton label="Responsabilidade" active={viewMode === "responsabilidade"} onClick={() => setViewMode("responsabilidade")} />
                                 <TabButton label="Categoria" active={viewMode === "categoria"} onClick={() => setViewMode("categoria")} />
                                 <TabButton label="Modelo" active={viewMode === "modelo"} onClick={() => setViewMode("modelo")} />
@@ -374,20 +378,12 @@ export default function DevelopmentDashboardPage() {
   );
 }
 
+// ✅ ÚNICA MODIFICAÇÃO: Usando a classe `dashboard-tab-btn`
 function TabButton({ label, active, onClick }: { label: string; active: boolean; onClick: () => void; }) {
   return (
     <button
+      className={`dashboard-tab-btn ${active ? "is-active" : ""}`}
       onClick={onClick}
-      style={{
-        padding: "8px 16px",
-        borderRadius: 8,
-        border: "none",
-        background: active ? "#3B82F6" : "rgba(255,255,255,0.04)",
-        color: active ? "#fff" : "#94a3b8",
-        fontWeight: active ? 600 : 500,
-        cursor: "pointer",
-        transition: "all 0.2s"
-      }}
     >
       {label}
     </button>

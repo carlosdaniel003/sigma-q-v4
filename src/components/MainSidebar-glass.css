@@ -1,0 +1,308 @@
+/* ===================================================== */
+/* MAIN SIDEBAR — IPHONE GLASSMORPHISM (ISOLATED) */
+/* ===================================================== */
+
+/* --- Container da Sidebar --- */
+.glass-sidebar-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 50;
+
+  /* Glass Real */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px; /* Ajustado para horizontal */
+  overflow: hidden; 
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  isolation: isolate;
+  animation: fadeUpDash 0.5s ease forwards;
+  
+  /* Expansão fluída Apple-like */
+  transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  overflow: hidden;
+  
+}
+
+/* --- Cabeçalho e Logo --- */
+.glass-sidebar-header {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centraliza horizontal */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0; /* 🔥 Remove deslocamento lateral */
+}
+
+.glass-sidebar-logo {
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: linear-gradient(to right, #ffffff, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+  text-align: center; /* 🔥 Garante alinhamento interno */
+}
+
+/* --- Secção de Navegação (Links) --- */
+.glass-nav-section {
+  flex: 1;
+  padding: 24px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+/* Esconde a barra de rolagem mas mantém funcionalidade */
+.glass-nav-section::-webkit-scrollbar { width: 0; }
+
+.glass-nav-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  color: #94a3b8;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-nav-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition: color 0.3s ease;
+}
+
+.glass-nav-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+/* Interações Hover e Active */
+.glass-nav-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  transform: translateX(4px);
+}
+
+.glass-nav-card.glass-is-active,
+.glass-nav-card.glass-is-active-parent {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(37, 99, 235, 0.05));
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #ffffff;
+  box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+.glass-nav-card.glass-is-active .glass-nav-icon,
+.glass-nav-card.glass-is-active-parent .glass-nav-icon {
+  color: #60a5fa;
+}
+
+.glass-chevron-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-chevron-icon.glass-rotate {
+  transform: rotate(180deg);
+}
+
+/* --- Submenus (Pills de Vidro) --- */
+.glass-submenu-pills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 38px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  animation: glassSlideDown 0.3s ease forwards;
+}
+
+.glass-nav-pill {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.glass-nav-pill:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+.glass-nav-pill.glass-is-active {
+  color: #60a5fa;
+  font-weight: 700;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.glass-nav-dot {
+  margin-right: 8px;
+  opacity: 0.5;
+  transition: all 0.2s;
+}
+.glass-nav-pill.glass-is-active .glass-nav-dot {
+  color: #60a5fa;
+  opacity: 1;
+}
+
+/* --- Alertas de Validação (Neon Vermelho) --- */
+@keyframes glassPulseAlert {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); border-color: rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 0 15px 2px rgba(239, 68, 68, 0.6); border-color: rgba(239, 68, 68, 0.8); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.3); border-color: rgba(239, 68, 68, 0.4); }
+}
+
+.glass-pulse-alert {
+  animation: glassPulseAlert 2.5s infinite;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.05)) !important;
+  color: #fca5a5 !important;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.glass-pulse-alert .glass-nav-icon {
+  color: #ef4444 !important;
+}
+
+.glass-pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 0 10px #ef4444;
+  animation: glassPulseAlert 2.5s infinite;
+  flex-shrink: 0;
+}
+
+/* --- Rodapé (Logout) --- */
+.glass-sidebar-footer {
+  padding: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.glass-logout-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.glass-logout-card:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+.glass-logout-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.glass-logout-card:hover .glass-logout-icon-wrapper {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.glass-logout-initial {
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+@keyframes glassSlideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ======================================= */
+/* TEXT ANIMATION — PREMIUM SIDEBAR */
+/* ======================================= */
+
+.glass-nav-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  flex: 1;
+
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-sidebar-wrapper.collapsed .glass-nav-text {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+.glass-sidebar-logo {
+  font-size: 1.2rem;
+  font-weight: 800;
+  background: linear-gradient(to right, #ffffff, #ffffff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: 1px;
+
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease;
+}
+
+.glass-sidebar-wrapper.collapsed .glass-sidebar-logo {
+  transform: scale(0.9);
+  opacity: 0.85;
+}
+
+.glass-nav-icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.3s ease;
+}
+
+.glass-sidebar-wrapper.collapsed .glass-nav-icon {
+  transform: scale(1.05);
+}

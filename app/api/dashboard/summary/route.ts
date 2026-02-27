@@ -1,5 +1,10 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from "next/server";
-import { loadProductionRaw } from "@/core/ppm/ppmProductionNormalizer";
+
+// ✅ Atualizado para puxar a nossa nova Fonte Única de Verdade (SQL)
+import { loadProducao } from "@/core/data/loadProducao"; 
 import { loadDefeitos } from "@/core/data/loadDefeitos";
 
 import { runPpmEngine } from "@/core/ppm/ppmEngine";
@@ -118,12 +123,14 @@ export async function GET(request: NextRequest) {
     const filterAno = searchParams.get("ano") ? parseInt(searchParams.get("ano")!) : null;
     const filterSemana = searchParams.get("semana") ? parseInt(searchParams.get("semana")!) : null;
 
-    let productionRaw = loadProductionRaw(); 
+    // ✅ CHAMA A NOVA FUNÇÃO DE PRODUÇÃO (SQL) ASSINCRONAMENTE
+    let productionRaw = await loadProducao(); 
     let defectsRaw = await loadDefeitos(true); // Carrega tudo
 
     console.log("========================================");
     console.log("🔍 [API DEBUG]");
-    console.log(`📊 Total: ${defectsRaw.length}`);
+    console.log(`📊 Total Defeitos: ${defectsRaw.length}`);
+    console.log(`🏭 Total Produção: ${productionRaw.length}`);
     console.log(`⚠️ Ocorrências (Check Real): ${defectsRaw.filter(d => checkIsOcorrencia(d)).length}`);
     console.log("========================================");
 

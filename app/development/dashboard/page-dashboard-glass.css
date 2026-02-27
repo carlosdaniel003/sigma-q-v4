@@ -1,0 +1,113 @@
+/* ===================================================== */
+/* DASHBOARD PAGE — LAYOUT & GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Layout Base --- */
+.dashboard-page-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr; /* 320px exatos para encaixar na nova Sidebar */
+  gap: 24px;
+  color: #fff;
+  min-height: 100vh;
+  align-items: start;
+  padding-bottom: 40px;
+}
+
+/* Área principal de conteúdo (à direita da sidebar) */
+.dashboard-content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 20px;
+}
+
+/* --- Estados de Mensagem (Erro e Vazio) --- */
+.dashboard-msg-error {
+  padding: 20px 24px;
+  border-radius: 16px;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(10px);
+  animation: fadeUpDash 0.5s ease;
+}
+
+.dashboard-msg-empty {
+  padding: 40px;
+  border-radius: 20px;
+  text-align: center;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  animation: fadeUpDash 0.5s ease;
+}
+
+/* --- Grelhas de Layout Interno --- */
+.dashboard-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  animation: fadeUpDash 0.6s ease forwards;
+}
+
+.dashboard-charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  animation: fadeUpDash 0.8s ease forwards;
+}
+
+/* --- Menu de Tabs (Pílulas de Vidro) --- */
+.dashboard-tabs-wrapper {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  animation: fadeUpDash 0.7s ease forwards;
+}
+
+.dashboard-tab-btn {
+  padding: 10px 20px;
+  border-radius: 100px; /* Formato pílula arredondado */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+}
+
+.dashboard-tab-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  transform: translateY(-2px);
+}
+
+.dashboard-tab-btn.is-active {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.4);
+  box-shadow: 
+    0 8px 20px rgba(59, 130, 246, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* --- Animação Genérica --- */
+@keyframes fadeUpDash {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Responsividade --- */
+@media (max-width: 1400px) {
+  .dashboard-kpi-row { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-page-layout { grid-template-columns: 1fr; }
+  .dashboard-charts-row { grid-template-columns: 1fr; }
+}

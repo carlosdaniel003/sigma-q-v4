@@ -11,17 +11,17 @@ import {
   PackageX,
 } from "lucide-react";
 
+import "./KPIsGerais-glass.css"; // ✅ NOVO CSS GLASS
+
 type KPIsGeraisProps = {
   overall: any;
   categories: any[];
 
-  categoriasSaudaveis: number;   // 100%
-  categoriasAtencao: number;     // >=60% e <100%
-  categoriasCriticas: number;    // <60%
+  categoriasSaudaveis: number;
+  categoriasAtencao: number;
+  categoriasCriticas: number;
 
   modelosSemDefeitos: number;
-  
-  // ✅ ATUALIZAÇÃO: Renomeado para refletir que são apenas os CRÍTICOS (Grupo A)
   defeitosSemProducaoCriticos: number; 
 };
 
@@ -35,7 +35,6 @@ export default function KPIsGerais({
   defeitosSemProducaoCriticos = 0,
 }: KPIsGeraisProps) {
   
-  // Extração segura de valores
   const matchRateIA = overall?.matchRateByRows ?? 0;
   const matchRateVol = overall?.matchRateByVolume ?? 0;
   const totalVol = overall?.totalVolume ?? 0;
@@ -43,112 +42,86 @@ export default function KPIsGerais({
   return (
     <div
       className="kpi-wrapper"
-      style={{ display: "flex", flexDirection: "column", gap: 16 }}
+      style={{ display: "flex", flexDirection: "column", gap: 24 }}
     >
-      {/* ======================================================
-          LINHA 1 — IA (QUALIDADE)
-      ======================================================= */}
-      <div
-        className="kpi-row"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 16,
-        }}
-      >
+      {/* LINHA 1 */}
+      <div className="kpi-row kpi-grid">
         <KPI
-          icon={<Brain size={20} />}
-          title="Precisão da IA (Match Geral)"
+          icon={<Brain size={24} />}
+          title="Precisão da IA (Geral)"
           value={`${matchRateIA.toFixed(2)}%`}
           subtitle="qualidade da identificação"
-          color={matchRateIA >= 90 ? "var(--success)" : "var(--danger)"}
+          colorClass={matchRateIA >= 90 ? "text-success-kpi" : "text-danger-kpi"}
         />
 
         <KPI
-          icon={<Layers size={20} />}
-          title="Confiabilidade por Volume"
+          icon={<Layers size={24} />}
+          title="Confiabilidade por Vol"
           value={`${matchRateVol.toFixed(2)}%`}
-          subtitle="ponderado pelo peso da produção"
-          color={matchRateVol >= 90 ? "var(--success)" : "var(--danger)"}
+          subtitle="ponderado por produção"
+          colorClass={matchRateVol >= 90 ? "text-success-kpi" : "text-danger-kpi"}
         />
       </div>
 
-      {/* ======================================================
-          LINHA 2 — PRODUÇÃO & ERROS ESTRUTURAIS
-      ======================================================= */}
-      <div
-        className="kpi-row"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 16,
-        }}
-      >
+      {/* LINHA 2 */}
+      <div className="kpi-row kpi-grid">
         <KPI
-          icon={<Factory size={20} />}
+          icon={<Factory size={24} />}
           title="Volume Produzido"
           value={totalVol.toLocaleString()}
           subtitle="unidades analisadas"
+          colorClass="text-brand-kpi"
         />
 
         <KPI
-          icon={<CheckCircle size={20} />}
+          icon={<CheckCircle size={24} />}
           title="Modelos Sem Defeitos"
           value={modelosSemDefeitos}
           subtitle="produção sem falhas"
-          color="var(--success)"
+          colorClass="text-success-kpi"
         />
 
-        {/* ✅ ATUALIZADO: Mostra Erros Críticos (Grupo A) */}
         <KPI
-          icon={<PackageX size={20} />}
-          title="Erros de Validação (Críticos)"
+          icon={<PackageX size={24} />}
+          title="Erros (Críticos)"
           value={defeitosSemProducaoCriticos}
           subtitle="defeitos sem produção"
-          color={defeitosSemProducaoCriticos > 0 ? "var(--danger)" : "var(--success)"}
+          colorClass={defeitosSemProducaoCriticos > 0 ? "text-danger-kpi" : "text-success-kpi"}
         />
       </div>
 
-      {/* ======================================================
-          LINHA 3 — CATEGORIAS
-      ======================================================= */}
-      <div
-        className="kpi-row"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 16,
-        }}
-      >
+      {/* LINHA 3 */}
+      <div className="kpi-row kpi-grid">
         <KPI
-          icon={<PackageSearch size={20} />}
-          title="Categorias Identificadas"
+          icon={<PackageSearch size={24} />}
+          title="Cat. Identificadas"
           value={categories.length}
           subtitle="total de categorias"
+          colorClass="text-brand-kpi"
         />
 
         <KPI
-          icon={<CheckCircle size={20} />}
+          icon={<CheckCircle size={24} />}
           title="Categorias Saudáveis"
           value={`${categoriasSaudaveis}/${categories.length}`}
           subtitle="100% de match"
-          color="var(--success)"
+          colorClass="text-success-kpi"
         />
 
         <KPI
-          icon={<AlertTriangle size={20} />}
+          icon={<AlertTriangle size={24} />}
           title="Categorias em Atenção"
           value={categoriasAtencao}
           subtitle="≥ 60% e < 100%"
-          color={categoriasAtencao > 0 ? "var(--warn)" : "var(--success)"}
+          colorClass={categoriasAtencao > 0 ? "text-warn-kpi" : "text-success-kpi"}
         />
 
         <KPI
-          icon={<AlertTriangle size={20} />}
+          icon={<AlertTriangle size={24} />}
           title="Categorias Críticas"
           value={categoriasCriticas}
           subtitle="< 60% de match"
-          color={categoriasCriticas === 0 ? "var(--success)" : "var(--danger)"}
+          colorClass={categoriasCriticas === 0 ? "text-success-kpi" : "text-danger-kpi"}
         />
       </div>
     </div>
@@ -156,39 +129,26 @@ export default function KPIsGerais({
 }
 
 /* ============================================================
-   COMPONENTE DO CARD
+   COMPONENTE DO CARD (REMODELADO PARA O NOVO CSS DEFEITOS-LIKE)
 ============================================================ */
-function KPI({ icon, title, value, subtitle, color }: any) {
+function KPI({ icon, title, value, subtitle, colorClass }: any) {
+  // Se não foi passada uma cor, assume o azul padrão da marca
+  const finalColorClass = colorClass || "text-brand-kpi";
+
   return (
-    <div
-      className="stat-card glass-card"
-      style={{
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          color: "var(--muted)",
-        }}
-      >
-        {icon}
-        <span className="stat-label">{title}</span>
+    <div className="kpi-card">
+      <div className="kpi-header">
+        <div className={`kpi-icon ${finalColorClass}`}>
+          {icon}
+        </div>
+        <span className="kpi-label">{title}</span>
       </div>
 
-      <div
-        className="stat-value"
-        style={{ color: color ?? "var(--text-strong)" }}
-      >
+      <div className={`kpi-value ${finalColorClass}`}>
         {value}
       </div>
 
-      <div className="stat-sub">{subtitle}</div>
+      <div className="kpi-sub">{subtitle}</div>
     </div>
   );
 }

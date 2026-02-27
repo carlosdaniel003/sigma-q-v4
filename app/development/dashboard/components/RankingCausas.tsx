@@ -22,6 +22,8 @@ import {
   AlertCircle 
 } from "lucide-react";
 
+import "./RankingCausas-glass.css"; // ✅ NOVO CSS IMPORTADO
+
 interface Props {
   data: {
     byAnalysis: CauseItem[];
@@ -29,17 +31,13 @@ interface Props {
   };
 }
 
-// ✅ 1 & 2. Renomeação e Reordenação Lógica
-// Agora trabalhamos com "sintoma" (falha) e "causa" (analise)
 type RankingMode = "sintoma" | "causa";
 
 export default function RankingCausas({ data }: Props) {
-  // ✅ Padrão agora é "sintoma" (Falha)
   const [mode, setMode] = useState<RankingMode>("sintoma");
 
   const chartData = useMemo(() => {
     if (!data) return [];
-    // Mapeamento: "causa" busca dados de Análise, "sintoma" busca dados de Falha
     if (mode === "causa") return data.byAnalysis || [];
     if (mode === "sintoma") return data.byFailure || [];
     return [];
@@ -47,11 +45,18 @@ export default function RankingCausas({ data }: Props) {
 
   if (chartData.length === 0) {
     return (
-      <div style={containerStyle}>
-        <div style={headerWrapper}>
+      <div className="ranking-chart-container">
+        <div className="ranking-chart-header">
+            <div className="ranking-title-wrapper">
+              <h2 className="ranking-title">
+                <BarChart2 size={20} color="#60A5FA" />
+                Ranking de Ofensores
+              </h2>
+              <p className="ranking-subtitle">Principais sintomas e causas raiz</p>
+            </div>
             <Tabs mode={mode} setMode={setMode} />
         </div>
-        <div style={emptyState}>Sem dados para esta visão no período.</div>
+        <div className="ranking-empty-state">Sem dados para esta visão no período.</div>
       </div>
     );
   }
@@ -59,31 +64,29 @@ export default function RankingCausas({ data }: Props) {
   const maxVal = Math.max(...chartData.map(d => d.ppm), 1);
 
   return (
-    <div style={containerStyle}>
-      <div style={headerWrapper}>
-        <div style={{ marginBottom: 12 }}>
-          {/* ✅ 3. SVG no Título */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <BarChart2 size={18} color="#60A5FA" />
-            <h2 style={{ fontSize: "1.1rem", color: "#fff", margin: 0 }}>
-              Ranking de Ofensores
-            </h2>
-          </div>
-          <p style={{ fontSize: "0.8rem", color: "#94a3b8", margin: 0, paddingLeft: 26 }}>
-            Principais sintomas e causas raiz
-          </p>
+    <div className="ranking-chart-container">
+      
+      {/* CABEÇALHO */}
+      <div className="ranking-chart-header">
+        <div className="ranking-title-wrapper">
+          <h2 className="ranking-title">
+            <BarChart2 size={20} color="#60A5FA" />
+            Ranking de Ofensores
+          </h2>
+          <p className="ranking-subtitle">Principais sintomas e causas raiz</p>
         </div>
         
         {/* Botões de Seleção de Visão */}
         <Tabs mode={mode} setMode={setMode} />
       </div>
 
-      <div style={{ flex: 1, minHeight: 0 }}>
+      {/* ÁREA DO GRÁFICO */}
+      <div className="ranking-chart-body">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             layout="vertical"
             data={chartData}
-            margin={{ top: 5, right: 65, left: 10, bottom: 5 }} // Aumentei a margem direita para caber " PPM"
+            margin={{ top: 5, right: 65, left: 10, bottom: 5 }} 
             barCategoryGap={6}
           >
             <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
@@ -94,7 +97,7 @@ export default function RankingCausas({ data }: Props) {
               dataKey="name" 
               type="category" 
               width={130} 
-              tick={{ fill: "#cbd5e1", fontSize: 10 }}
+              tick={{ fill: "#cbd5e1", fontSize: 11 }}
               interval={0}
               tickLine={false}
               axisLine={false}
@@ -106,7 +109,7 @@ export default function RankingCausas({ data }: Props) {
               content={<CustomTooltip mode={mode} />}
             />
 
-            <Bar dataKey="ppm" radius={[0, 4, 4, 0]} barSize={18}>
+            <Bar dataKey="ppm" radius={[0, 6, 6, 0]} barSize={18}>
               {chartData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={index < 3 ? "#EF4444" : "#3B82F6"} />
               ))}
@@ -125,8 +128,7 @@ export default function RankingCausas({ data }: Props) {
 
 function Tabs({ mode, setMode }: { mode: RankingMode, setMode: (m: RankingMode) => void }) {
     return (
-        <div style={{ display: "flex", gap: 4, background: "rgba(0,0,0,0.2)", padding: 4, borderRadius: 8 }}>
-            {/* ✅ Ordem Invertida: Sintoma Primeiro */}
+        <div className="ranking-tabs-container">
             <TabBtn active={mode === "sintoma"} label="Sintoma" onClick={() => setMode("sintoma")} />
             <TabBtn active={mode === "causa"} label="Causa" onClick={() => setMode("causa")} />
         </div>
@@ -135,12 +137,12 @@ function Tabs({ mode, setMode }: { mode: RankingMode, setMode: (m: RankingMode) 
 
 function TabBtn({ active, label, onClick }: any) {
     return (
-        <button onClick={onClick} style={{
-            padding: "4px 12px", borderRadius: 6, border: "none", fontSize: 11, fontWeight: 600,
-            cursor: "pointer", transition: "all 0.2s",
-            background: active ? "#3B82F6" : "transparent",
-            color: active ? "#fff" : "#94a3b8"
-        }}>{label}</button>
+        <button 
+          onClick={onClick} 
+          className={`ranking-tab-btn ${active ? "is-active" : ""}`}
+        >
+          {label}
+        </button>
     );
 }
 
@@ -151,49 +153,51 @@ const CustomTooltip = ({ active, payload, mode }: any) => {
 
     return (
         <div style={{ 
-            background: "#0f172a", 
+            background: "rgba(15, 23, 42, 0.85)", 
+            backdropFilter: "blur(20px)",
             border: "1px solid rgba(255,255,255,0.15)", 
-            padding: "12px", 
-            borderRadius: "8px", 
-            fontSize: "11px", 
-            boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)",
-            minWidth: 220
+            padding: "16px", 
+            borderRadius: "16px", 
+            fontSize: "12px", 
+            boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+            minWidth: 240
         }}>
-            <p style={{ fontWeight: "bold", color: "#fff", marginBottom: 8, borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 4 }}>
+            <p style={{ fontWeight: 800, color: "#f8fafc", marginBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 8 }}>
                 {d.name}
             </p>
-            <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ color: "#3B82F6", display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Activity size={12} /> 
-                    {/* ✅ Formatação no Tooltip */}
+
+            <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ color: "#60A5FA", display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Activity size={14} /> 
                     PPM: <strong>{d.ppm.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</strong>
                 </span>
-                <span style={{ color: "#cbd5e1", display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <AlertCircle size={12} /> Qtd: <strong>{d.defects}</strong>
+                <span style={{ color: "#cbd5e1", display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <AlertCircle size={14} /> Qtd: <strong>{d.defects}</strong>
                 </span>
             </div>
             
-            <div style={{ display: "flex", flexDirection: "column", gap: 6, borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: 8 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: 10 }}>
                 {d.topModel && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Trophy size={12} color="#F59E0B" /> 
-                        <span style={{color: "#94a3b8"}}>Modelo:</span> {d.topModel.name} {formatPercent(d.topModel.percent)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Trophy size={14} color="#F59E0B" /> 
+                        <span style={{color: "#94a3b8"}}>Modelo:</span> 
+                        <span style={{color: "#f8fafc", fontWeight: 600}}>{d.topModel.name} {formatPercent(d.topModel.percent)}</span>
                     </div>
                 )}
                 
-                {/* Lógica Inversa: Se estou vendo Causa, mostro qual o Sintoma principal associado */}
                 {mode !== "causa" && d.topAnalysis && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Search size={12} color="#8B5CF6" />
-                        <span style={{color: "#94a3b8"}}>Causa Princ.:</span> {d.topAnalysis.name} {formatPercent(d.topAnalysis.percent)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Search size={14} color="#8B5CF6" />
+                        <span style={{color: "#94a3b8"}}>Causa Princ.:</span> 
+                        <span style={{color: "#f8fafc", fontWeight: 600}}>{d.topAnalysis.name} {formatPercent(d.topAnalysis.percent)}</span>
                     </div>
                 )}
                 
-                {/* Se estou vendo Sintoma, mostro qual a Causa principal associada */}
                 {mode !== "sintoma" && d.topFailure && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <FileWarning size={12} color="#EC4899" />
-                        <span style={{color: "#94a3b8"}}>Sintoma Princ.:</span> {d.topFailure.name} {formatPercent(d.topFailure.percent)}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <FileWarning size={14} color="#EC4899" />
+                        <span style={{color: "#94a3b8"}}>Sintoma Princ.:</span> 
+                        <span style={{color: "#f8fafc", fontWeight: 600}}>{d.topFailure.name} {formatPercent(d.topFailure.percent)}</span>
                     </div>
                 )}
             </div>
@@ -204,40 +208,8 @@ const CustomTooltip = ({ active, payload, mode }: any) => {
 const renderCustomLabel = (props: any) => {
     const { x, y, width, height, value } = props;
     return (
-        <text x={x + width + 5} y={y + height / 2 + 1} fill="#cbd5e1" textAnchor="start" dominantBaseline="middle" style={{ fontSize: 10, fontWeight: "bold" }}>
-            {/* ✅ Formatação na Barra + Texto PPM */}
+        <text x={x + width + 8} y={y + height / 2 + 1} fill="#e2e8f0" textAnchor="start" dominantBaseline="middle" style={{ fontSize: 11, fontWeight: "bold" }}>
             {value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} PPM
         </text>
     );
-};
-
-/* ======================================================
-   ESTILOS
-====================================================== */
-// ✅ CORREÇÃO Z-INDEX: Assegura que o RankingCausas fique "abaixo"
-const containerStyle: React.CSSProperties = { 
-    background: "rgba(255,255,255,0.04)", 
-    border: "1px solid rgba(255,255,255,0.08)", 
-    borderRadius: 16, 
-    padding: 24, 
-    height: 480, 
-    display: "flex", 
-    flexDirection: "column",
-    position: "relative", // Necessário para z-index funcionar
-    zIndex: 1,            // Fica abaixo do gráfico superior
-};
-
-const headerWrapper: React.CSSProperties = { 
-    display: "flex", 
-    justifyContent: "space-between", 
-    alignItems: "flex-start", 
-    marginBottom: 16 
-};
-
-const emptyState: React.CSSProperties = { 
-    flex: 1, 
-    display: "flex", 
-    alignItems: "center", 
-    justifyContent: "center", 
-    color: "#94a3b8" 
 };

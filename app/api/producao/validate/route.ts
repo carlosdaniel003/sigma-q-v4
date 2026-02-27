@@ -5,6 +5,8 @@ import * as XLSX from "xlsx";
 import { getDefeitosCache } from "@/core/defeitos/defeitosCache";
 // 👇 IMPORTANTE: Loader para acessar os arquivos brutos dos catálogos
 import { loadCatalogo } from "@/core/catalogo/catalogoLoader";
+// ✅ IMPORTAÇÃO DO CARREGADOR DE PRODUÇÃO UNIFICADO (SQL)
+import { loadProducao } from "@/core/data/loadProducao";
 
 /** normalize */
 function norm(v: any) {
@@ -155,40 +157,18 @@ function explainMismatch(prod: any, defeitosLista: any[], catalogs: any) {
   };
 }
 
-// ⚠️ FUNÇÃO ATUALIZADA COM FILTRO DE ANO 2026
-async function readSheet(filename = "producao.xlsx") {
+// Lemos arquivos extras locais que ainda existirem (como o semi_acabado)
+async function readSheet(filename: string) {
   const p = path.join(process.cwd(), "public", "productions", filename);
   const buf = await fs.readFile(p);
   const wb = XLSX.read(buf, { type: "buffer" });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  const rawData = XLSX.utils.sheet_to_json(sheet) as Array<any>;
-
-  if (filename === "producao.xlsx") {
-      const filtered = rawData.filter(r => {
-          let d: Date | null = null;
-          if (typeof r["DATA"] === "number") {
-             d = new Date((r["DATA"] - (25567 + 1)) * 86400 * 1000); 
-          } else if (typeof r["DATA"] === "string") {
-             d = new Date(r["DATA"]);
-          } else if (r["DATA"] instanceof Date) {
-             d = r["DATA"];
-          }
-          if (!d || isNaN(d.getTime())) return false;
-          return d.getFullYear() === 2026;
-      });
-      return filtered;
-  }
-  
-  return rawData;
+  return XLSX.utils.sheet_to_json(sheet) as Array<any>;
 }
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const file = url.searchParams.get("file") || "producao.xlsx";
-
     // 0) Carrega Catálogos Brutos (Para o Rastreamento Detalhado)
-    // Isso é crucial para o explainMismatch saber onde procurar
     const rawCatalogs = await loadCatalogo(); 
 
     // 1) Carrega defeitos enriquecidos
@@ -225,21 +205,33 @@ export async function GET(req: Request) {
       if (codigo) indexByCodigo.set(codigo, [...(indexByCodigo.get(codigo) || []), r]);
     }
 
-    // 3) Carrega produção (JÁ FILTRADA POR ANO 2026)
-    const prodRaw = await readSheet(file);
+    // 3) Carrega produção via SQL (Substituindo o antigo Excel)
+    const prodRaw = await loadProducao();
+    
     if (!Array.isArray(prodRaw)) throw new Error("Produção inválida");
 
+    // ✅ CORREÇÃO: Enviando o TURNO e as novas colunas (TIPO_MOV, FABRICA, etc) para a interface web!
     const rows = prodRaw.map((r, idx) => ({
       __row: idx,
       raw: {
-        MODELO: r.MODELO ?? r.MODEL ?? "",
-        CATEGORIA: r.CATEGORIA ?? "",
-        QTY_GERAL: Number(r.QTY_GERAL ?? r.QTY ?? 0),
+        MODELO: r.MODELO,
+        CATEGORIA: r.CATEGORIA,
+        QTY_GERAL: r.QTY_GERAL,
+        TURNO: r.TURNO, 
+        TIPO_MOV: r.TIPO_MOV,
+        FABRICA: r.FABRICA,
+        TIPO_PROD: r.TIPO_PROD,
+        MATNR: r.MATNR,
       },
-      DATA: r.DATA ?? r.Date ?? null,
-      QTY_GERAL: Number(r.QTY_GERAL ?? r.QTY ?? r.QUANTIDADE ?? 0) || 0,
-      MODELO: norm(r.MODELO ?? r.MODEL ?? ""),
-      CATEGORIA: String(r.CATEGORIA ?? r.CATEG ?? r.CATEGORY ?? "").trim()
+      DATA: r.DATA,
+      QTY_GERAL: r.QTY_GERAL,
+      MODELO: norm(r.MODELO),
+      CATEGORIA: String(r.CATEGORIA).trim(),
+      TURNO: r.TURNO, 
+      TIPO_MOV: r.TIPO_MOV,
+      FABRICA: r.FABRICA,
+      TIPO_PROD: r.TIPO_PROD,
+      MATNR: r.MATNR,
     }));
 
     const totalRows = rows.length;
@@ -318,7 +310,6 @@ export async function GET(req: Request) {
         prev.count++;
         if (prev.samples.length < 5) prev.samples.push(r.raw);
         
-        // 🔑 PASSA OS CATÁLOGOS REAIS PARA O EXPLICADOR
         if (prev.explicacoes.length < 1) {
           prev.explicacoes.push(explainMismatch(r, listaDef, rawCatalogs));
         }

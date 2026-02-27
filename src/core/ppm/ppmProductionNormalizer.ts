@@ -1,9 +1,7 @@
-import fs from "fs";
-import path from "path";
-import * as XLSX from "xlsx";
-
+// src/core/ppm/ppmProductionNormalizer.ts
 import { ProductionInputRow } from "./ppmInputTypes";
 import { NormalizedProduction } from "./ppmNormalizedTypes";
+import { loadProducao } from "@/core/data/loadProducao"; // ✅ Fonte Única (SQL)
 
 /* ======================================================
    Utils
@@ -93,50 +91,35 @@ function parseExcelDate(value: any): Date | null {
 }
 
 /* ======================================================
-   🔥 LOAD RAW — PRODUÇÃO
+   🔥 LOAD RAW — PRODUÇÃO (VIA SQL AGORA)
+   Retornamos uma Promise para alinhar com o loadProducao
 ====================================================== */
-export function loadProductionRaw(): ProductionInputRow[] {
-  const filePath = path.join(
-    process.cwd(),
-    "public",
-    "productions",
-    "producao.xlsx"
-  );
-
-  if (!fs.existsSync(filePath)) {
-    throw new Error("Arquivo producao.xlsx não encontrado");
-  }
-
-  const buffer = fs.readFileSync(filePath);
-  const workbook = XLSX.read(buffer, { type: "buffer" });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-
-  const rawRows = XLSX.utils.sheet_to_json<any>(sheet);
+export async function loadProductionRaw(): Promise<ProductionInputRow[]> {
+  
+  // Puxa a produção direto do Loader Universal que já filtra por 2026
+  const rawRows = await loadProducao();
   
   const validRows: ProductionInputRow[] = [];
 
   for (const r of rawRows) {
-      const dataObj = parseExcelDate(r.DATA || r.Data || r.Date);
+      // Como o loadProducao já entrega Date real, garantimos a segurança aqui
+      const dataObj = r.DATA instanceof Date ? r.DATA : parseExcelDate(r.DATA);
       
       if (!dataObj || dataObj.getFullYear() !== 2026) {
           continue; 
       }
 
-      const rawQtd = r.QTY_GERAL ?? r.Qty_Geral ?? r.QUANTIDADE ?? r.Quantidade ?? r.PRODUZIDO ?? r.Produzido ?? 0;
-      // Pegamos o turno bruto aqui para o buildGroupKey normalizar
-      const rawTurno = r.TURNO ?? r.Turno ?? "GERAL";
-
       validRows.push({
           DATA: dataObj,
-          MODELO: norm(r.MODELO || r.Modelo),
-          CATEGORIA: norm(r.CATEGORIA || r.Categoria),
-          TURNO: String(rawTurno).trim(), 
-          QTY_GERAL: Number(rawQtd)
+          MODELO: norm(r.MODELO),
+          CATEGORIA: norm(r.CATEGORIA),
+          TURNO: String(r.TURNO || "GERAL").trim(), 
+          QTY_GERAL: Number(r.QTY_GERAL || 0)
       });
   }
 
   // eslint-disable-next-line no-console
-  console.log(`🧹 [LoadProduction] Filtrado para 2026: ${validRows.length} registros.`);
+  console.log(`🧹 [LoadProduction] Filtrado para 2026 (SQL): ${validRows.length} registros.`);
 
   return validRows;
 }

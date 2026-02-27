@@ -1,0 +1,218 @@
+/* ===================================================== */
+/* TABELA DE DETALHAMENTO — IPHONE GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Container Principal --- */
+.tabela-detalhe-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* Glass Real */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px; /* Ajustado para horizontal */
+  overflow: hidden; 
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  isolation: isolate;
+  animation: fadeUpDash 0.5s ease forwards;
+}
+
+/* Reflexo Vítreo Angular (Apenas no Container Pai) */
+.tabela-detalhe-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tabela-detalhe-container:hover::before {
+  left: 200%;
+}
+
+/* --- Cabeçalho da Tabela --- */
+.tabela-header {
+  position: relative;
+  z-index: 1;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tabela-title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f8fafc;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+.tabela-kpis {
+  font-size: 0.9rem;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tabela-kpis strong {
+  color: #f8fafc;
+}
+.tabela-kpis .text-danger {
+  color: #EF4444;
+}
+
+/* --- Tabela em Si --- */
+.tabela-wrapper {
+  position: relative;
+  z-index: 1;
+  overflow-x: auto;
+}
+
+.tabela-core {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  color: #e2e8f0;
+}
+
+/* Cabeçalhos (th) */
+.tabela-core th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.tabela-core th.center {
+  text-align: center;
+}
+
+/* Linha de Agrupamento (Responsabilidade) */
+.tabela-row-group td {
+  padding: 12px 20px;
+  font-weight: 800;
+  color: #60a5fa;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+  background: rgba(59, 130, 246, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* Linhas de Dados Interativas */
+.tabela-row-data {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Cores zebradas subtis */
+.tabela-row-data:nth-child(even) {
+  background: rgba(255, 255, 255, 0.01);
+}
+
+/* Hover na Linha */
+.tabela-row-data:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  transform: scale(1.002);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tabela-core td {
+  padding: 14px 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.tabela-core td.center {
+  text-align: center;
+}
+
+/* Destaques Específicos */
+.td-modelo {
+  color: #93c5fd;
+  font-weight: 700;
+}
+
+.td-qtd {
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.td-ppm {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+/* --- Badges de Tipo (Ocor / Def) --- */
+.badge-tipo {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.badge-ocorrencia {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-defeito {
+  background: rgba(239, 68, 68, 0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* --- Estado Vazio --- */
+.tabela-empty {
+  padding: 40px;
+  text-align: center;
+  color: #64748b;
+  font-style: italic;
+}
+
+/* --- Animação --- */
+@keyframes slideUpTabela {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}

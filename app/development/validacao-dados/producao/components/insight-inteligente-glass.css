@@ -1,0 +1,208 @@
+/* ===================================================== */
+/* SIGMA-Q — INSIGHT INTELIGENTE GLASS IPHONE PREMIUM */
+/* ===================================================== */
+
+/* ===================================================== */
+/* WRAPPER */
+/* ===================================================== */
+
+.insight-wrapper {
+  position: relative;
+  margin-top: 28px;
+  padding: 36px;
+  border-radius: 28px;
+  overflow: hidden;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.02)
+  );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+  transition: all .45s cubic-bezier(.4,0,.2,1);
+}
+
+/* Reflexo animado */
+.insight-wrapper::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.insight-wrapper:hover::before {
+  left: 150%;
+}
+
+/* ===================================================== */
+/* HEADER */
+/* ===================================================== */
+
+.insight-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.insight-header .icon {
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(250,204,21,0.15);
+  border: 1px solid rgba(250,204,21,0.35);
+  color: #facc15;
+}
+
+.insight-header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.insight-subtitle {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-bottom: 28px;
+  max-width: 900px;
+  line-height: 1.6;
+}
+
+/* ===================================================== */
+/* LISTA */
+/* ===================================================== */
+
+.insight-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 24px;
+}
+
+/* ===================================================== */
+/* CARD */
+/* ===================================================== */
+
+.insight-card {
+  position: relative;
+  padding: 22px;
+  border-radius: 22px;
+  overflow: hidden;
+
+  backdrop-filter: blur(30px);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.02)
+  );
+
+  border: 1px solid rgba(255,255,255,0.10);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 15px 40px rgba(0,0,0,0.4);
+
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+}
+
+.insight-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 28px 65px rgba(0,0,0,0.55);
+}
+
+/* ===================================================== */
+/* CARD HEADER */
+/* ===================================================== */
+
+.insight-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.insight-card-header .model {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.insight-card-header .pct {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  border: 1px solid rgba(248,113,113,0.4);
+  box-shadow: 0 0 15px rgba(248,113,113,0.35);
+}
+
+/* ===================================================== */
+/* QTD */
+/* ===================================================== */
+
+.insight-qty {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+/* ===================================================== */
+/* ROW */
+/* ===================================================== */
+
+.insight-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.insight-row .icon {
+  margin-top: 2px;
+}
+
+.insight-row .cause {
+  color: #38bdf8;
+}
+
+.insight-row .warn {
+  color: #f87171;
+}
+
+.insight-text {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.85);
+  line-height: 1.5;
+}
+
+/* ===================================================== */
+/* RESPONSIVO */
+/* ===================================================== */
+
+@media (max-width: 900px) {
+  .insight-list {
+    grid-template-columns: 1fr;
+  }
+}

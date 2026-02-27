@@ -1,0 +1,176 @@
+/* ===================================================== */
+/* SIGMA-Q — GLOBAL LOADER GLASS IPHONE PREMIUM (CLEAN)  */
+/* ===================================================== */
+
+/* ================= OVERLAY ================= */
+.sigma-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Fundo escuro para destacar o vidro */
+  background-color: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+
+  animation: fadeInOverlay .3s ease-out forwards;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ================= GLASS CARD (CLEAN) ================= */
+.sigma-loader-card {
+  position: relative;
+  padding: 60px 70px;
+  border-radius: 32px;
+  overflow: hidden;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 24px;
+
+  /* Glass exato solicitado */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  background: linear-gradient(
+    135deg, 
+    rgba(255,255,255,0.06), 
+    rgba(255,255,255,0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+  animation: cardEnter .4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* Reflexo Vítreo Suave (Sweep) */
+.sigma-loader-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -120%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(255, 255, 255, 0.08),
+        transparent
+    );
+    transform: skewX(-20deg);
+    animation: shineCard 6s infinite;
+    z-index: 0;
+    pointer-events: none;
+}
+
+@keyframes shineCard {
+    0% { left: -120%; }
+    50% { left: 150%; }
+    100% { left: 150%; }
+}
+
+@keyframes cardEnter {
+  from { transform: scale(.95) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* ================= O ROBÔ (CINZA/MINIMALISTA) ================= */
+.sigma-robot-wrapper {
+    position: relative;
+    z-index: 10;
+    animation: robotBounce 3s infinite ease-in-out;
+}
+
+.sigma-robot-svg {
+    position: relative;
+    z-index: 10;
+}
+
+.robot-eye { animation: robotPulse 2s infinite; }
+.robot-antenna { animation: robotPing 2s infinite; }
+
+@keyframes robotPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes robotBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+@keyframes robotPing {
+    75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* ================= TEXT ANIMATION ================= */
+.sigma-loader-text-wrapper {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+}
+
+.sigma-loader-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sigma-loader-subtitle {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  animation: pulseText 2s ease-in-out infinite;
+}
+
+.sigma-loader-percent {
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-family: monospace;
+    font-weight: 600;
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* ================= PROGRESS BAR (CLEAN) ================= */
+.sigma-progress-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 240px;
+  height: 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+.sigma-progress-bar {
+  position: relative;
+  height: 100%;
+  border-radius: 8px;
+  /* Azul sofisticado e limpo */
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  box-shadow: 0 0 10px rgba(96, 165, 250, 0.4);
+  transition: width 0.4s ease;
+}

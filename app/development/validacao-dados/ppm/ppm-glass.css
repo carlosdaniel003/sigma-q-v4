@@ -1,0 +1,193 @@
+/* ===================================================== */
+/* PPM PAGE — GLASS REFINADO (SEM CONTAINER GIGANTE) */
+/* ===================================================== */
+
+.ppm-layout {
+  display: grid;
+  grid-template-columns: 370px minmax(0, 1fr);
+  gap: 32px;
+  padding: 24px;
+  min-height: 100%;
+}
+
+/* ===================================================== */
+/* MAIN AREA — SOMENTE ESTRUTURA */
+/* ===================================================== */
+
+.ppm-main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+  
+}
+
+/* ===================================================== */
+/* HEADER PREMIUM (SUTIL) */
+/* ===================================================== */
+
+.page-header {
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.page-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    #3b82f6,
+    transparent
+  );
+  opacity: 0.6;
+}
+
+/* ===================================================== */
+/* ANIMAÇÃO DE TRANSIÇÃO */
+/* ===================================================== */
+
+.ppm-fade-slide {
+  animation: ppmFadeSlide 0.45s ease-out;
+}
+
+@keyframes ppmFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================================================== */
+/* ERRO */
+/* ===================================================== */
+
+.ppm-error {
+  padding: 24px;
+  border-radius: 18px;
+
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.3);
+
+  color: #f87171;
+  font-weight: 600;
+}
+
+/* ===================================================== */
+/* RESPONSIVO */
+/* ===================================================== */
+
+@media (max-width: 1200px) {
+  .ppm-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===================================================== */
+/* TITLE CARD — GLASS COM REFLEXO */
+/* ===================================================== */
+
+.ppm-title-card {
+  position: relative;
+  border-radius: 22px;
+  padding: 22px 28px;
+  overflow: hidden;
+
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.03)
+  );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+  transition: all .4s cubic-bezier(.4,0,.2,1);
+}
+
+/* Reflexo animado */
+.ppm-title-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.35),
+    transparent
+  );
+
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.ppm-title-card:hover::before {
+  left: 150%;
+}
+
+.ppm-title-card:hover {
+  transform: translateY(-3px);
+}
+
+/* ===================================================== */
+/* HEADER INTERNO */
+/* ===================================================== */
+
+.ppm-title-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.ppm-title-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.ppm-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: .3px;
+}
+
+.ppm-title-icon {
+  color: #ffffff;
+}
+
+.ppm-title-sub {
+  font-size: 0.85rem;
+  margin-top: 6px;
+  opacity: 0.75;
+  margin-left: 40px;
+}
+
+.ppm-title-meta {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  white-space: nowrap;
+}

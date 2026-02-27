@@ -154,7 +154,7 @@ function gerarTextoResumo(input: any) {
     const p = input.licaoAprendida;
     
     // Constrói a frase dinamicamente para não mostrar espaços vazios caso a célula do Excel esteja em branco
-    let textoLicao = `**Histórico (2025):** Este problema já foi tratado na categoria **${p.categoria}**. A análise apontou para **${p.analise}**`;
+    let textoLicao = `**Histórico:** Este problema já foi tratado na categoria **${p.categoria}**. A análise apontou para **${p.analise}**`;
     
     if (p.descMotivo) {
         textoLicao += ` devido a "**${p.descMotivo}**"`;

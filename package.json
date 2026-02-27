@@ -12,6 +12,7 @@
     "@heroicons/react": "^2.2.0",
     "@libsql/client": "^0.15.15",
     "critters": "^0.0.23",
+    "framer-motion": "^12.34.3",
     "lucide-react": "^0.555.0",
     "mysql2": "^3.16.3",
     "next": "^16.0.8",

@@ -1,0 +1,360 @@
+/* ===================================================== */
+/* DRILL-DOWN PRINCIPAIS CAUSAS — IPHONE GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Container Principal --- */
+.causas-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  
+  /* Glass Real */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 28px;   /* 🔥 ESSENCIAL */
+  overflow: hidden;      /* 🔥 ESSENCIAL */
+
+   box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+  isolation: isolate; /* 🔥 Corrige artefato de blur */
+}
+
+/* Reflexo Vítreo Angular da Caixa Principal */
+.causas-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.causas-container:hover::before {
+  left: 200%;
+}
+
+/* --- Cabeçalho do Bloco --- */
+.causas-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.causas-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
+}
+
+.causas-subtitle {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
+.causas-empty {
+  position: relative;
+  z-index: 1;
+  font-size: 0.95rem;
+  color: #94a3b8;
+  padding: 20px;
+  text-align: center;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ===================================================== */
+/* NÍVEL 1: AGRUPAMENTO (ROOT CARD) */
+/* ===================================================== */
+.lvl1-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.lvl1-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 16px;
+  
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 5px solid transparent;
+  
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.lvl1-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.lvl1-card.is-open {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Cores Rank */
+.lvl1-card.rank-1 { border-left-color: #ef4444; }
+.lvl1-card.rank-2 { border-left-color: #f59e0b; }
+.lvl1-card.rank-3 { border-left-color: #22c55e; }
+
+.lvl1-rank-num { font-weight: 800; font-size: 1.1rem; }
+.lvl1-card.rank-1 .lvl1-rank-num { color: #ef4444; }
+.lvl1-card.rank-2 .lvl1-rank-num { color: #f59e0b; }
+.lvl1-card.rank-3 .lvl1-rank-num { color: #22c55e; }
+
+.lvl1-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.lvl1-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.lvl1-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.lvl1-count {
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+.lvl1-card.is-open .lvl1-count {
+  font-weight: 800;
+}
+
+/* ===================================================== */
+/* NÍVEL 2: ANÁLISE */
+/* ===================================================== */
+.lvl2-wrapper {
+  margin-left: 12px;
+  padding: 8px 0 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: slideDownDrill 0.3s ease-out;
+}
+
+/* Herda a cor do painel pai para a linha guia */
+.lvl1-group-wrapper:nth-child(1) .lvl2-wrapper { border-left: 2px solid rgba(239, 68, 68, 0.3); }
+.lvl1-group-wrapper:nth-child(2) .lvl2-wrapper { border-left: 2px solid rgba(245, 158, 11, 0.3); }
+.lvl1-group-wrapper:nth-child(3) .lvl2-wrapper { border-left: 2px solid rgba(34, 197, 94, 0.3); }
+
+.lvl2-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding-left: 8px;
+  margin-bottom: 4px;
+}
+
+.lvl2-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid transparent;
+}
+
+.lvl2-card.clickable {
+  cursor: pointer;
+}
+
+.lvl2-card.clickable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.lvl2-card.is-open {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.lvl2-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lvl2-name {
+  font-size: 0.9rem;
+  color: #e2e8f0;
+  transition: all 0.2s;
+}
+
+.lvl2-card.is-open .lvl2-name {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.lvl2-count {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* ===================================================== */
+/* NÍVEL 3: MODELO */
+/* ===================================================== */
+.lvl3-wrapper {
+  margin-left: 28px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  padding-left: 14px;
+  border-left: 1px dashed rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: slideDownDrill 0.3s ease-out;
+}
+
+.lvl3-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.lvl3-card.clickable {
+  cursor: pointer;
+}
+
+.lvl3-card.clickable:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.lvl3-card.is-open {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.lvl3-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lvl3-name {
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.lvl3-card.is-open .lvl3-name {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.lvl3-count {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.lvl3-card.is-open .lvl3-count {
+  color: #60a5fa;
+}
+
+/* ===================================================== */
+/* NÍVEL 4: POSIÇÃO (PILLS INTERATIVAS) */
+/* ===================================================== */
+.lvl4-wrapper {
+  margin-top: 6px;
+  margin-left: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  animation: slideDownDrill 0.2s ease-out forwards;
+}
+
+.lvl4-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.lvl4-pill:hover {
+  border-color: #60a5fa;
+  background: rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.lvl4-pill:active {
+  transform: scale(0.95);
+}
+
+.lvl4-pill-name {
+  font-size: 0.75rem;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.lvl4-pill-count {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+/* --- Animações --- */
+@keyframes slideDownDrill {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

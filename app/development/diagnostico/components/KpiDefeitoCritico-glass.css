@@ -1,0 +1,163 @@
+/* ===================================================== */
+/* KPI DEFEITO CRÍTICO — IPHONE GLASSMORPHISM (REFERÊNCIA)*/
+/* ===================================================== */
+
+/* --- GLASS CARD BASE --- */
+.kpi-diag-card {
+  position: relative;
+  padding: 26px;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  backdrop-filter: blur(45px);
+  -webkit-backdrop-filter: blur(45px);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Highlight animado estilo Apple */
+.kpi-diag-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.9s;
+}
+
+.kpi-diag-card:hover::before {
+  left: 150%;
+}
+
+/* Hover premium */
+.kpi-diag-card:hover:not(.empty-state) {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px rgba(255, 255, 255, 0.04);
+}
+
+/* --- HEADER E ÍCONE --- */
+.kpi-diag-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kpi-diag-icon {
+  padding: 12px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.03); 
+  transition: all 0.3s ease;
+}
+
+.kpi-diag-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+/* --- VALUE (AGORA É O TEXTO DO DEFEITO) --- */
+.kpi-diag-value {
+  font-size: 1.3rem; /* Fonte um pouco menor pois é texto e não apenas 2 números */
+  font-weight: 800;
+  line-height: 1.25;
+  margin-top: 18px;
+  color: #f8fafc;
+  word-break: break-word;
+  
+  /* Limita a 2 linhas se for muito gigante */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* --- SUBTITLE (AGORA É O NPR) --- */
+.kpi-diag-sub {
+  font-size: 0.95rem; /* Destaca um pouco o NPR */
+  font-weight: 700;
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- STATUS VARIANTS FORÇADAS (Ícones e Textos) --- */
+
+/* Verde */
+.text-success-diag { color: #4ade80 !important; }
+.kpi-diag-icon.text-success-diag {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: rgba(74, 222, 128, 0.25) !important;
+}
+
+/* Amarelo */
+.text-warn-diag { color: #facc15 !important; }
+.kpi-diag-icon.text-warn-diag {
+  background: rgba(250, 204, 21, 0.12) !important;
+  border-color: rgba(250, 204, 21, 0.25) !important;
+}
+
+/* Vermelho */
+.text-danger-diag { color: #f87171 !important; }
+.kpi-diag-icon.text-danger-diag {
+  background: rgba(248, 113, 113, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.25) !important;
+}
+
+/* --- ESTADO VAZIO --- */
+.kpi-diag-card.empty-state {
+  justify-content: center;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.95rem;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: none;
+  min-height: 140px;
+}
+
+.kpi-diag-card.empty-state::before {
+  display: none;
+}
+
+/* --- Animação de Entrada --- */
+.fade-in-kpi {
+  animation: slideUpKpi 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUpKpi {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}

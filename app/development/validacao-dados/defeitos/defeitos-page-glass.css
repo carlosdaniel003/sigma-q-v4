@@ -1,0 +1,262 @@
+/* ===================================================== */
+/* DEFEITOS PAGE — GLASS IPHONE ANIMADO (SEM FUNDO) */
+/* ===================================================== */
+
+/* ===================================================== */
+/* HEADER PRINCIPAL */
+/* ===================================================== */
+/* ===================================================== */
+/* LAYOUT BASE — CORREÇÃO DE ALINHAMENTO */
+/* ===================================================== */
+
+.defeitos-container {
+  display: grid;
+  grid-template-columns: 370px minmax(0, 1fr);
+  gap: 32px;
+
+  width: 100%;
+  min-height: auto;
+
+  align-items: start;
+}
+
+.defeitos-main {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+
+  width: 100%;
+  min-width: 0; /* ESSENCIAL para evitar overflow */
+}
+@media (max-width: 1200px) {
+  .defeitos-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.defeitos-header {
+  position: relative;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  padding: 30px;
+  border-radius: 28px;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.02)
+    );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 0 40px rgba(255,255,255,0.03);
+
+  overflow: hidden;
+  transition: all .45s cubic-bezier(.4,0,.2,1);
+}
+
+/* Light sweep animado */
+.defeitos-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.defeitos-header:hover::before {
+  left: 150%;
+}
+
+.defeitos-header:hover {
+  transform: translateY(-4px);
+}
+
+/* ===================================================== */
+/* TÍTULO */
+/* ===================================================== */
+
+.defeitos-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+}
+
+.defeitos-sql {
+  font-size: 0.55em;
+  opacity: 0.5;
+  margin-left: 12px;
+  font-weight: 400;
+}
+
+.defeitos-subtitle {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: #94a3b8;
+}
+
+/* ===================================================== */
+/* BOTÃO EXPORTAR */
+/* ===================================================== */
+
+.export-btn {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 12px 20px;
+  border-radius: 18px;
+
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.35);
+
+  color: #34d399;
+  font-weight: 600;
+  font-size: 0.85rem;
+
+  cursor: pointer;
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+
+  overflow: hidden;
+}
+
+/* brilho animado botão */
+.export-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.3),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1s;
+}
+
+.export-btn:hover::before {
+  left: 150%;
+}
+
+.export-btn:hover {
+  transform: translateY(-4px);
+  background: rgba(16,185,129,0.22);
+  box-shadow: 0 0 28px rgba(16,185,129,0.45);
+}
+
+/* ===================================================== */
+/* FRIENDLY BOX (BASE 100%) */
+/* ===================================================== */
+
+.friendly-box {
+  position: relative;
+
+  margin-top: 34px;
+  padding: 60px 50px;
+  border-radius: 32px;
+  text-align: center;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(74,222,128,0.18),
+      rgba(74,222,128,0.05)
+    );
+
+  border: 1px solid rgba(74,222,128,0.35);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.45),
+    0 0 40px rgba(74,222,128,0.25);
+
+  animation: fadeUpGlass .6s cubic-bezier(.4,0,.2,1) forwards;
+  overflow: hidden;
+}
+
+/* brilho interno */
+.friendly-box::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -40%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255,255,255,0.15),
+    transparent 60%
+  );
+  animation: pulseGlow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulseGlow {
+  0%,100% { opacity: .4; }
+  50% { opacity: .8; }
+}
+
+@keyframes fadeUpGlass {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.friendly-icon {
+  color: #4ade80;
+  margin-bottom: 20px;
+}
+
+.friendly-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.friendly-text {
+  margin-top: 14px;
+  font-size: 1rem;
+  color: #e2e8f0;
+}
+
+.friendly-subtext {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #94a3b8;
+}

@@ -1,0 +1,205 @@
+/* ===================================================== */
+/* SIGMA-Q KPIs PPM — PADRÃO LUXO APPLE */
+/* ===================================================== */
+
+/* ============================= */
+/* GRID */
+/* ============================= */
+
+.kpis-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  width: 100%;
+  animation: fadeUpPpmKPI 0.8s ease forwards;
+}
+
+@keyframes fadeUpPpmKPI {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================= */
+/* GLASS CARD BASE */
+/* ============================= */
+
+.stat-card {
+  position: relative;
+  padding: 26px;
+  border-radius: 22px;
+  overflow: hidden;
+
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+
+  background: linear-gradient(
+    135deg,
+    linear-gradient(135deg, 
+    rgba(255,255,255,0.15), 
+    rgba(255,255,255,0.04))
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Highlight animado estilo Apple */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.9s;
+}
+
+.stat-card:hover::before {
+  left: 150%;
+}
+
+.stat-card:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px rgba(255, 255, 255, 0.04);
+}
+
+/* ============================= */
+/* HEADER E ÍCONE */
+/* ============================= */
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stat-icon {
+  padding: 12px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.05); /* Fundo subtil base */
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+/* ============================= */
+/* VALUE */
+/* ============================= */
+
+.stat-value {
+  font-size: 2.4rem;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-top: 18px;
+  color: #f8fafc; /* Branco por padrão */
+}
+
+.stat-sub {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* ============================= */
+/* COLOR VARIANTS FORÇADAS (Para Ícones e Textos) */
+/* ============================= */
+
+/* Verde */
+.text-success-ppm {
+  color: #4ade80 !important;
+}
+.stat-icon.text-success-ppm {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: rgba(74, 222, 128, 0.25) !important;
+}
+
+/* Amarelo */
+.text-warn-ppm {
+  color: #facc15 !important;
+}
+.stat-icon.text-warn-ppm {
+  background: rgba(250, 204, 21, 0.12) !important;
+  border-color: rgba(250, 204, 21, 0.25) !important;
+}
+
+/* Vermelho */
+.text-danger-ppm {
+  color: #f87171 !important;
+}
+.stat-icon.text-danger-ppm {
+  background: rgba(248, 113, 113, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.25) !important;
+}
+
+/* Azul Brand */
+.text-brand-ppm {
+  color: #60a5fa !important;
+}
+.stat-icon.text-brand-ppm {
+  background: rgba(96, 165, 250, 0.12) !important;
+  border-color: rgba(96, 165, 250, 0.25) !important;
+}
+
+/* Ciano/Highlight */
+.text-highlight-ppm {
+  color: #38bdf8 !important;
+}
+.stat-icon.text-highlight-ppm {
+  background: rgba(56, 189, 248, 0.12) !important;
+  border-color: rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Roxo (Ocorrências) */
+.text-purple-ppm {
+  color: #a855f7 !important;
+}
+.stat-icon.text-purple-ppm {
+  background: rgba(168, 85, 247, 0.12) !important;
+  border-color: rgba(168, 85, 247, 0.25) !important;
+}
+
+/* ============================= */
+/* RESPONSIVO */
+/* ============================= */
+
+@media (max-width: 900px) {
+  .kpi-row {
+    grid-template-columns: 1fr;
+  }
+}

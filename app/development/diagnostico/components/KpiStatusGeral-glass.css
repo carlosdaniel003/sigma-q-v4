@@ -1,0 +1,183 @@
+/* ===================================================== */
+/* KPI TENDÊNCIA GERAL — IPHONE GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- GLASS CARD BASE --- */
+.kpi-diag-card {
+  position: relative;
+  padding: 26px;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  backdrop-filter: blur(45px);
+  -webkit-backdrop-filter: blur(45px);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 140px;
+}
+
+/* Highlight animado estilo Apple */
+.kpi-diag-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.9s;
+}
+
+.kpi-diag-card:hover::before {
+  left: 150%;
+}
+
+/* Hover premium */
+.kpi-diag-card:hover:not(.empty-state) {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.55),
+    inset 0 0 40px rgba(255, 255, 255, 0.04);
+}
+
+/* --- HEADER E ÍCONE --- */
+.kpi-diag-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.kpi-diag-icon {
+  padding: 12px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.03); 
+  transition: all 0.3s ease;
+}
+
+.kpi-diag-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #94a3b8;
+}
+
+/* --- STATUS VARIANTS FORÇADAS (Cores) --- */
+
+/* Verde (Melhora / Cenário Positivo) */
+.text-success-diag { color: #4ade80 !important; }
+.kpi-diag-icon.text-success-diag {
+  background: rgba(74, 222, 128, 0.12) !important;
+  border-color: rgba(74, 222, 128, 0.25) !important;
+}
+
+/* Vermelho (Piora / Atenção) */
+.text-danger-diag { color: #f87171 !important; }
+.kpi-diag-icon.text-danger-diag {
+  background: rgba(248, 113, 113, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.25) !important;
+}
+
+/* Azul (Estável) */
+.text-brand-diag { color: #60a5fa !important; }
+.kpi-diag-icon.text-brand-diag {
+  background: rgba(96, 165, 250, 0.12) !important;
+  border-color: rgba(96, 165, 250, 0.25) !important;
+}
+
+/* Cinzento (Indefinido) */
+.text-muted-diag { color: #94a3b8 !important; }
+.kpi-diag-icon.text-muted-diag {
+  background: rgba(148, 163, 184, 0.12) !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+}
+
+/* --- VALUE (TITULO DE STATUS) --- */
+.kpi-diag-value {
+  font-size: 1.3rem; 
+  font-weight: 800;
+  line-height: 1.25;
+  margin-top: 18px;
+}
+
+/* --- SUBTITLE (MENSAGEM SECUNDÁRIA) --- */
+.kpi-diag-sub {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+/* --- VARIAÇÃO PERCENTUAL (O EXTRA DESTE CARD) --- */
+.kpi-diag-percent-wrapper {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kpi-diag-percent {
+  font-size: 1.6rem;
+  font-weight: 300;
+  color: #e2e8f0;
+  letter-spacing: -0.5px;
+}
+
+.kpi-diag-percent-text {
+  font-size: 0.75rem;
+  color: #64748b;
+  max-width: 130px;
+  line-height: 1.3;
+}
+
+/* --- ESTADO VAZIO --- */
+.kpi-diag-card.empty-state {
+  justify-content: center;
+  align-items: center;
+  color: #64748b;
+  font-size: 0.95rem;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: none;
+}
+
+.kpi-diag-card.empty-state::before {
+  display: none;
+}
+
+/* --- Animação de Entrada --- */
+.fade-in-kpi {
+  animation: slideUpKpi 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes slideUpKpi {
+  0% { opacity: 0; transform: translateY(20px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}

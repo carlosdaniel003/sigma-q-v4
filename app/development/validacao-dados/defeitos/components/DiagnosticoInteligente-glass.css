@@ -1,0 +1,251 @@
+/* ===================================================== */
+/* DIAGNÓSTICO INTELIGENTE — IPHONE LIQUID GLASS */
+/* ===================================================== */
+
+.diag-glass-card {
+  position: relative;
+  margin-top: 32px;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.02)
+  );
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+
+  transition: all .45s cubic-bezier(.4,0,.2,1);
+}
+
+.diag-glass-card:hover {
+  transform: translateY(-4px);
+}
+
+.diag-glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.18),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.diag-glass-card:hover::before {
+  left: 150%;
+}
+
+/* ================= HEADER ================= */
+
+.diag-header {
+  padding: 26px; /* igual ao .diag-body */
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.diag-header-top {
+  display: flex;
+  align-items: flex-start; /* 🔥 Alinha tudo pelo topo, não pelo meio */
+  justify-content: flex-start; /* 🔥 Força alinhamento estrito à esquerda */
+  text-align: left; /* 🔥 Força o texto a nascer da esquerda */
+  gap: 16px;
+}
+
+.diag-icon-wrapper {
+  background: rgba(59,130,246,0.15);
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(59,130,246,0.3);
+
+  /* 🔥 Mantém o ícone perfeitamente quadrado e impede que seja esmagado */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0; 
+}
+
+.diag-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: .5px;
+  color: #93c5fd;
+  text-align: left;
+}
+
+.diag-subtitle {
+  margin-top: 6px;
+  font-size: .85rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  max-width: 750px;
+  text-align: left;
+}
+
+/* ================= FILTER PILLS ================= */
+
+.diag-filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.diag-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  cursor: pointer;
+  transition: all .25s ease;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  color: #94a3b8;
+}
+
+.diag-pill:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.08);
+}
+
+.diag-pill.active {
+  background: rgba(59,130,246,0.2);
+  border-color: rgba(59,130,246,0.4);
+  color: #60a5fa;
+}
+
+.diag-pill-count {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: .7rem;
+  font-weight: 800;
+  background: rgba(255,255,255,0.1);
+}
+
+/* ================= BODY ================= */
+
+.diag-body {
+  padding: 26px;
+}
+
+/* EMPTY STATE */
+
+.diag-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 14px;
+  border: 1px dashed rgba(255,255,255,0.08);
+  color: #64748b;
+  text-align: center;
+}
+
+/* ================= GRID ================= */
+
+.diag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+/* ================= CARD ================= */
+
+.diag-item {
+  background: rgba(255,255,255,0.05);
+  border-radius: 18px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: all .25s ease;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.diag-item:hover {
+  transform: translateY(-6px);
+  background: rgba(255,255,255,0.08);
+}
+
+/* ================= HEADER ITEM ================= */
+
+.diag-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.diag-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diag-tag {
+  font-size: .65rem;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.diag-modelo {
+  font-size: .95rem;
+  color: #f8fafc;
+  line-height: 1.3;
+}
+
+.diag-badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: .7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  background: rgba(59,130,246,0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59,130,246,0.3);
+}
+
+/* ================= ISSUES ================= */
+
+.diag-issues {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(0,0,0,0.15);
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.diag-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: .8rem;
+  color: #cbd5e1;
+  line-height: 1.4;
+}

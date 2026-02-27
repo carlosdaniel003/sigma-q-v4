@@ -1,8 +1,39 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BarChart3 } from "lucide-react";
+import "./SidebarCategorias.css"; // Apenas carrega as classes isoladas com 'prod-'
 
+// ============================================================================
+// MICRO-COMPONENTE DA BARRA (Com Proteção)
+// ============================================================================
+function AnimatedProgressBar({ targetPct, color, glow }: { targetPct: number; color: string; glow: string; }) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setWidth(Number.isFinite(targetPct) ? Math.max(0, Math.min(100, targetPct)) : 0);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [targetPct]);
+
+  return (
+    <div className="prod-progress-wrapper">
+      <div
+        className="prod-progress-bar"
+        style={{
+          width: `${width}%`,
+          backgroundColor: color, // Força a cor absoluta da barra
+          boxShadow: glow,        // Força o brilho absoluto da barra
+        }}
+      />
+    </div>
+  );
+}
+
+// ============================================================================
+// COMPONENTE PRINCIPAL
+// ============================================================================
 export default function SidebarCategorias({
   categories,
   selectedCategory,
@@ -13,7 +44,6 @@ export default function SidebarCategorias({
   setSelectedCategory: (v: string | null) => void;
 }) {
 
-  // ✅ CORREÇÃO: Parser robusto para garantir que não quebre com strings "98%"
   const parsePct = (val: any): number => {
     if (typeof val === "number") return val;
     if (typeof val === "string") {
@@ -23,41 +53,40 @@ export default function SidebarCategorias({
     return 0;
   };
 
-  function getColor(pct: number) {
-    // Ajustado para 99.9 para pegar casos de arredondamento
-    if (pct >= 99.9) return "var(--success)";
-    if (pct >= 60) return "var(--warn)";
-    return "var(--danger)";
+  function getPalette(pct: number) {
+    if (pct >= 99.9) return { color: "#4ade80", glow: "0 0 12px rgba(74, 222, 128, 0.5)" };
+    if (pct >= 60) return { color: "#facc15", glow: "0 0 12px rgba(250, 204, 21, 0.5)" };
+    return { color: "#f87171", glow: "0 0 12px rgba(239, 68, 68, 0.5)" };
   }
 
-  // Função auxiliar para renderizar cards (padrão igual SidebarDefeitos)
   const renderCard = (cat: any, isMain: boolean = false) => {
     const key = isMain ? "null" : cat.categoria;
     const label = isMain ? "VISÃO GERAL" : cat.categoria;
-    const isActive = isMain ? selectedCategory === null : selectedCategory === cat.categoria;
-    
-    // Se for main, não tem pct específico aqui (ou poderia ser calculado globalmente)
+    const isActive = isMain
+      ? selectedCategory === null
+      : selectedCategory === cat.categoria;
+
     const pct = isMain ? 0 : parsePct(cat.identifiedPct);
-    const color = getColor(pct);
+    const palette = getPalette(pct);
 
     return (
       <div
         key={key}
-        className={`base-card ${isActive ? "active" : ""}`}
+        className={`prod-base-card ${isActive ? "active" : ""}`}
         onClick={() => setSelectedCategory(isMain ? null : cat.categoria)}
-        style={isMain ? { marginBottom: "1.5rem", borderBottom: "1px solid var(--border)" } : {}}
       >
-        <div className="base-header">
-          <span className="base-name" style={isMain ? { fontSize: "0.9rem", fontWeight: 700 } : {}}>
+        <div className="prod-base-header">
+          <span className="prod-base-name">
             {label}
           </span>
-          
-          {isMain && <BarChart3 size={16} />}
+
+          {isMain && <BarChart3 size={16} color="#ffffff" />}
 
           {!isMain && (
             <span
-              className="base-percent"
-              style={{ color }}
+              className="prod-base-percent"
+              /* ✅ O STYLE DA COR DA FONTE FOI REMOVIDO! 
+                 Agora é puramente branco como ditado pelo CSS isolado */
             >
               {pct.toFixed(1)}%
             </span>
@@ -65,61 +94,56 @@ export default function SidebarCategorias({
         </div>
 
         {isMain ? (
-             <div className="base-subinfo" style={{marginTop: "0.5rem"}}>
-                Resumo geral da produção
-             </div>
+          <div className="prod-base-subinfo">
+            Resumo geral da produção
+          </div>
         ) : (
-            <>
-                <div className="base-subinfo">
-                    <strong>{cat.volume?.toLocaleString() ?? 0}</strong> un. •{" "}
-                    {cat.rows?.toLocaleString() ?? 0} linhas
-                </div>
+          <>
+            <div className="prod-base-subinfo">
+              <strong style={{ color: '#ffffff' }}>{cat.volume?.toLocaleString() ?? 0}</strong> un. •{" "}
+              {cat.rows?.toLocaleString() ?? 0} linhas
+            </div>
 
-                <div className="progress-wrapper">
-                    <div
-                    className="progress-bar"
-                    style={{
-                        width: `${pct}%`,
-                        background: color,
-                    }}
-                    />
-                </div>
-            </>
+            <AnimatedProgressBar targetPct={pct} color={palette.color} glow={palette.glow} />
+          </>
         )}
       </div>
     );
   };
 
   return (
-    <aside className="defeitos-sidebar">
-      
-      {/* TÍTULO */}
-      <div className="sidebar-title" style={{ color: "var(--brand)" }}>
+    <aside className="prod-sidebar-glass">
+      <div className="prod-sidebar-title">
         SIGMA-Q
       </div>
 
-      {/* ============================================================
-          CATEGORIAS
-      ============================================================ */}
-      <div className="sidebar-group">
-        <div className="sidebar-title">Global</div>
-        {/* VISÃO GERAL */}
-        {renderCard({}, true)}
-
-        {categories.length > 0 && (
-            <>
-                <div className="sidebar-title" style={{marginTop: "1rem"}}>Categorias</div>
-                {/* LISTA DE CATEGORIAS */}
-                {categories.map((c) => renderCard(c))}
-            </>
-        )}
-
-        {categories.length === 0 && (
-             <div style={{ padding: "1rem", color: "var(--text-muted)", fontSize: "0.8rem" }}>
-                Carregando categorias...
-             </div>
-        )}
+      <div className="prod-sidebar-section-title">
+        Global
       </div>
+
+      {renderCard({}, true)}
+
+      {categories.length > 0 && (
+        <>
+          <div className="prod-sidebar-section-title">
+            Categorias
+          </div>
+          {categories.map((c) => renderCard(c))}
+        </>
+      )}
+
+      {categories.length === 0 && (
+        <div
+          style={{
+            padding: "1rem",
+            color: "#94a3b8",
+            fontSize: "0.8rem",
+            textAlign: "center"
+          }}
+        >
+          Carregando categorias...
+        </div>
+      )}
     </aside>
   );
 }

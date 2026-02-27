@@ -1,11 +1,12 @@
+// src/components/AppLayoutClient.tsx
 "use client";
 
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
 import { MainSidebar } from "@/components/MainSidebar";
 
-// ✅ CORREÇÃO: Subindo dois níveis (../../) para sair de 'src' e 'components'
-import "../../app/development/dev.css"; 
+// ✅ Importação do novo Wallpaper e Layout Global
+import "./AppLayoutClient-glass.css"; 
 
 export default function AppLayoutClient({
   children,
@@ -13,7 +14,9 @@ export default function AppLayoutClient({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
+  
+  // 🔥 AJUSTE: Iniciando como 'true' para que a sidebar apareça fechada ao entrar
+  const [collapsed, setCollapsed] = useState(true);
 
   // 🚫 LISTA NEGRA: Rotas onde o Sidebar NÃO deve aparecer
   // Adicione outras rotas públicas aqui se necessário
@@ -26,13 +29,16 @@ export default function AppLayoutClient({
 
   // Se for sistema interno, renderiza a estrutura com Sidebar persistente
   return (
-    <div className={`dev-container ${collapsed ? "collapsed" : ""}`}>
+    <div className={`glass-app-container ${collapsed ? "glass-is-collapsed" : ""}`}>
+      
       {/* O Sidebar mora aqui e NUNCA é desmontado na navegação interna */}
       <MainSidebar collapsed={collapsed} setCollapsed={setCollapsed} />
 
-      <main className="dev-content">
+      {/* O Conteúdo das páginas é renderizado aqui dentro */}
+      <main className="glass-app-content">
         {children}
       </main>
+      
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import "./ppm-sidebar-glass.css";
 
 /* ======================================================
    TIPOS
@@ -35,6 +36,34 @@ function getStatusClass(precision: number) {
   return "bad";
 }
 
+/* ============================================================================
+   🚀 MICRO-COMPONENTE: Barra de Progresso Animada à Prova de Cache
+============================================================================ */
+function AnimatedPpmProgressBar({ targetPct, statusClass }: { targetPct: number, statusClass: string }) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    // Dá 50ms para o React colocar o elemento na tela no 0%, e depois dispara para o tamanho real.
+    const timer = setTimeout(() => {
+      setWidth(Number.isFinite(targetPct) ? Math.max(0, Math.min(100, targetPct)) : 0);
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [targetPct]);
+
+  return (
+    <div className="ppm-sidebar-bar">
+      <div
+        className={`ppm-sidebar-bar-fill ${statusClass}`}
+        style={{ width: `${width}%` }}
+      />
+    </div>
+  );
+}
+
+/* ============================================================================
+   COMPONENTE PRINCIPAL
+============================================================================ */
 export default function PpmSidebar({
   byCategory,
   meta,
@@ -70,12 +99,8 @@ export default function PpmSidebar({
           {meta.totalDefeitos.toLocaleString()}
         </div>
 
-        <div className="ppm-sidebar-bar">
-          <div
-            className={`ppm-sidebar-bar-fill ${geralStatus}`}
-            style={{ width: `${meta.aiPrecision}%` }}
-          />
-        </div>
+        {/* ✅ Barra animada da Visão Geral */}
+        <AnimatedPpmProgressBar targetPct={meta.aiPrecision} statusClass={geralStatus} />
       </div>
 
       {/* =========================
@@ -103,12 +128,8 @@ export default function PpmSidebar({
               {info.defects.toLocaleString()}
             </div>
 
-            <div className="ppm-sidebar-bar">
-              <div
-                className={`ppm-sidebar-bar-fill ${status}`}
-                style={{ width: `${info.aiPrecision}%` }}
-              />
-            </div>
+            {/* ✅ Barra animada por categoria */}
+            <AnimatedPpmProgressBar targetPct={info.aiPrecision} statusClass={status} />
           </div>
         );
       })}

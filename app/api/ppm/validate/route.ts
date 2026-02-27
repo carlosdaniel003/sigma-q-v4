@@ -6,8 +6,8 @@ import { runPpmEngine } from "@/core/ppm/ppmEngine";
 import { loadDefeitos } from "@/core/data/loadDefeitos";
 // ✅ IMPORTAÇÃO DIRETA DO BUSCADOR DE OCORRÊNCIAS
 import { fetchOcorrenciasFromSQL } from "@/core/data/dataAdapter";
-// ✅ IMPORTAÇÃO DO CARREGADOR DE PRODUÇÃO
-import { loadProductionRaw } from "@/core/ppm/ppmProductionNormalizer";
+// ✅ IMPORTAÇÃO DO CARREGADOR DE PRODUÇÃO UNIFICADO (SQL)
+import { loadProducao } from "@/core/data/loadProducao";
 
 // eslint-disable-next-line no-console
 console.log("🚨 API PPM VALIDATE CARREGADA");
@@ -24,7 +24,8 @@ export async function GET() {
     // --------------------------------------------------
     // 1️⃣ PRODUÇÃO
     // --------------------------------------------------
-    const productionRaw = loadProductionRaw();
+    // ✅ Agora puxando direto do SQL via nova Single Source of Truth
+    const productionRaw = await loadProducao();
 
     // --------------------------------------------------
     // 2️⃣ DEFEITOS (KPI) & OCORRÊNCIAS (INFO)

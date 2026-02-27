@@ -1,0 +1,155 @@
+/* ===================================================== */
+/* LOADING IA — IPHONE GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Container Principal --- */
+.loading-glass-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 24px;
+  padding: 40px;
+  
+  /* Glass Real */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 28px;   /* 🔥 ESSENCIAL */
+  overflow: hidden;      /* 🔥 ESSENCIAL */
+
+   box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+  isolation: isolate; /* 🔥 Corrige artefato de blur */
+  animation: slideUpLoading 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+/* Efeito de Scanner (Brilho varrendo infinitamente) */
+.loading-glass-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(96, 165, 250, 0.15),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: loadingSweep 3s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes loadingSweep {
+  0% { left: -150%; }
+  50% { left: 200%; }
+  100% { left: 200%; }
+}
+
+/* --- Bloco do Robô --- */
+.robot-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Aura Azul Pulsante atrás do Robô */
+.robot-glow-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: #3b82f6;
+  border-radius: 50%;
+  filter: blur(30px);
+  opacity: 0.2;
+  transform: scale(1.5);
+  animation: pulseGlow 2s infinite alternate;
+}
+
+@keyframes pulseGlow {
+  0% { opacity: 0.15; transform: scale(1.4); }
+  100% { opacity: 0.3; transform: scale(1.8); }
+}
+
+/* O Robô a flutuar */
+.robot-svg {
+  position: relative;
+  z-index: 2;
+  animation: bounceSlow 3s infinite ease-in-out;
+}
+
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Animações Internas do SVG */
+.robot-eye {
+  animation: pulseEye 1.5s infinite alternate;
+}
+@keyframes pulseEye {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.robot-antenna {
+  animation: pingAntenna 2s infinite cubic-bezier(0, 0, 0.2, 1);
+}
+@keyframes pingAntenna {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+/* --- Textos --- */
+.loading-text-wrapper {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.loading-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.loading-message {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+  margin: 0;
+  min-height: 22px; /* Evita que a interface pule de tamanho */
+  animation: fadeMessageIn 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeMessageIn {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Animação de Entrada Principal --- */
+@keyframes slideUpLoading {
+  0% { opacity: 0; transform: translateY(30px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}

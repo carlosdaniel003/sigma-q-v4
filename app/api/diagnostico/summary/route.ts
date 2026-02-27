@@ -525,7 +525,7 @@ export async function GET(req: Request) {
 
     // 1. Carregar Bases
     const defeitosRaw = await loadDefeitos();
-    const producaoRaw = loadProducao(); 
+    const producaoRaw = await loadProducao(); 
     const agrupamentos = loadAgrupamento();
     const fmeaEstatico = loadFmea(); 
     const ocorrenciasIgnorar = loadOcorrencias();

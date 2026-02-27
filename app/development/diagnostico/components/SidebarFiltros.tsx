@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useDiagnosticoFilters } from "../store/diagnosticoFilters";
+import "./SidebarFiltros-glass.css"; // ✅ CSS Glassmorphism Importado
 
 /* ======================================================
    TIPOS DE OPÇÕES (BACKEND)
@@ -87,15 +88,15 @@ export default function SidebarFiltros() {
 
   if (!options || loading) {
     return (
-      <aside style={containerStyle}>
-        <span style={{ fontSize: 13, opacity: 0.7 }}>Carregando filtros...</span>
+      <aside className="sidebar-filtros-container fade-in">
+        <span style={{ fontSize: 13, opacity: 0.7, color: '#94a3b8' }}>Carregando filtros...</span>
       </aside>
     );
   }
 
   return (
-    <aside style={containerStyle}>
-      <h3 style={{ fontSize: "1rem" }}>Filtros</h3>
+    <aside className="sidebar-filtros-container fade-in">
+      <h3 className="sidebar-filtros-title">Filtros</h3>
 
       <Select
         label="Tipo de período"
@@ -184,20 +185,19 @@ export default function SidebarFiltros() {
         options={options.turnos}
       />
 
+      {/* O CSS gerencia o estado :disabled (cor, cursor, etc) automaticamente */}
       <button
+        className="sidebar-filtros-btn-buscar"
         onClick={applyFilters}
         disabled={!periodoValido}
-        style={{
-          ...buttonStyle,
-          background: periodoValido ? "#2563eb" : "#334155",
-          cursor: periodoValido ? "pointer" : "not-allowed",
-          opacity: periodoValido ? 1 : 0.6,
-        }}
       >
         Buscar
       </button>
 
-      <button onClick={resetFilters} style={buttonStyle}>
+      <button 
+        className="sidebar-filtros-btn-limpar"
+        onClick={resetFilters} 
+      >
         Limpar filtros
       </button>
     </aside>
@@ -206,17 +206,13 @@ export default function SidebarFiltros() {
 
 function Select({ label, value, onChange, options, disabled = false, renderOption }: any) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <label style={labelStyle}>{label}</label>
+    <div className="sidebar-filtros-select-group">
+      <label className="sidebar-filtros-label">{label}</label>
       <select
+        className="sidebar-filtros-select"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        style={{
-          ...inputStyle,
-          opacity: disabled ? 0.6 : 1,
-          cursor: disabled ? "not-allowed" : "pointer",
-        }}
       >
         <option value="">Selecione</option>
         {options.map((o: string) => (
@@ -228,34 +224,3 @@ function Select({ label, value, onChange, options, disabled = false, renderOptio
     </div>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 16,
-  padding: 16,
-  display: "flex",
-  flexDirection: "column",
-  gap: 12,
-};
-
-const labelStyle: React.CSSProperties = { fontSize: 12, color: "#cbd5e1" };
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "8px 10px",
-  borderRadius: 10,
-  background: "#0f172a",
-  border: "1px solid rgba(255,255,255,0.15)",
-  color: "#fff",
-  fontSize: 13,
-};
-const buttonStyle: React.CSSProperties = {
-  marginTop: 8,
-  padding: "8px 12px",
-  borderRadius: 10,
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.15)",
-  color: "#e5e7eb",
-  cursor: "pointer",
-  fontSize: 13,
-};

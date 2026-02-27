@@ -1,0 +1,203 @@
+/* ===================================================== */
+/* KPI TENDÊNCIA PPM (FLIP CARD) — IPHONE GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Container 3D --- */
+.tendencia-container {
+  perspective: 1200px;
+  height: 220px;
+
+}
+
+.tendencia-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.tendencia-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.tendencia-card-inner.is-disabled {
+  cursor: default;
+}
+
+/* --- Face Base (Frente e Verso partilham isto) --- */
+.tendencia-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  
+  border-radius: 22px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+
+  /* Liquid Glass */
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+}
+
+/* Modificadores Dinâmicos de Borda (Frente e Verso) */
+/*.tendencia-face.status-better { border: 1px solid rgba(34, 197, 94, 0.3); }
+.tendencia-face.status-worse { border: 1px solid rgba(239, 68, 68, 0.3); }
+.tendencia-face.status-neutral { border: 1px solid rgba(148, 163, 184, 0.2); }
+.tendencia-face.status-empty { border: 1px dashed rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.02); box-shadow: none; }
+
+/* Highlight Animado (Apenas na Frente) */
+.tendencia-face.front::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 0.9s;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.tendencia-container:hover .tendencia-face.front::before {
+  left: 150%;
+}
+
+/* Levitação no Hover (Aplica ao Contentor para não quebrar o 3D) */
+.tendencia-container:hover .tendencia-card-inner:not(.is-disabled) {
+  transform: translateY(-6px) scale(1.02);
+}
+.tendencia-container:hover .tendencia-card-inner.is-flipped {
+  transform: translateY(-6px) scale(1.02) rotateY(180deg);
+}
+
+/* --- O Verso --- */
+.tendencia-face.back {
+  transform: rotateY(180deg);
+}
+
+/* ===================================================== */
+/* CONTEÚDO: FRENTE */
+/* ===================================================== */
+.tend-title {
+  position: relative;
+  z-index: 1;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #e2e8f0;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.tend-value {
+  position: relative;
+  z-index: 1;
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1.1;
+  margin-top: 12px;
+}
+.tend-value.text-better { color: #86EFAC;}
+.tend-value.text-worse { color: #FF6B6B;}
+.tend-value.text-neutral { color: #cbd5e1; }
+
+.tend-sub {
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #ffffff;
+}
+
+/* ===================================================== */
+/* CONTEÚDO: VERSO */
+/* ===================================================== */
+.tend-back-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tend-back-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tend-back-val {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #f8fafc;
+  line-height: 1.2;
+}
+
+.tend-back-unit {
+  font-size: 0.65rem;
+  color: #64748b;
+}
+
+.tend-diff-val {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+/* ===================================================== */
+/* CONTEÚDO: ESTADO VAZIO */
+/* ===================================================== */
+.tend-empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  height: 100%;
+  gap: 8px;
+}
+
+.tend-empty-dash {
+  font-size: 1.5rem;
+  color: #64748b;
+  opacity: 0.5;
+}
+
+.tend-empty-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.tend-empty-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  max-width: 90%;
+  line-height: 1.3;
+}

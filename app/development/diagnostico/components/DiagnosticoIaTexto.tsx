@@ -11,11 +11,11 @@ import {
   Bot
 } from "lucide-react";
 
-// ✅ Importamos o novo componente estruturado!
 import ResumoExecutivo from "./ResumoExecutivo";
+import "./DiagnosticoIaTexto-glass.css"; // ✅ NOVO CSS IMPORTADO
 
 /* ======================================================
-   PARSER DE TEXTO PARA CARDS (Mantido para compatibilidade)
+   PARSER DE TEXTO PARA CARDS (Highlight)
 ====================================================== */
 function renderHighlightedText(text: string) {
   const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -25,7 +25,7 @@ function renderHighlightedText(text: string) {
       return (
         <strong
           key={index}
-          style={{ color: "#38bdf8", fontWeight: 700, letterSpacing: "0.02em" }}
+          style={{ color: "#60a5fa", fontWeight: 700 }}
           dangerouslySetInnerHTML={{ __html: content }} 
         />
       );
@@ -35,7 +35,7 @@ function renderHighlightedText(text: string) {
 }
 
 /* ======================================================
-   SUB-COMPONENTE: MINI GRÁFICO E INSIGHT CARD (Mantidos intactos)
+   SUB-COMPONENTE: MINI GRÁFICO (Sparkline)
 ====================================================== */
 function Sparkline({ data, color }: { data: number[]; color: string }) {
   if (!data || data.length < 2) return null;
@@ -54,13 +54,16 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
   return (
     <svg width={width} height={height} style={{ overflow: "visible", opacity: 0.9 }}>
-      <path d={`M ${points}`} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d={`M ${points}`} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={lastX} cy={lastY} r="3" fill={color} />
-      <circle cx={lastX} cy={lastY} r="6" fill={color} opacity="0.3" />
+      <circle cx={lastX} cy={lastY} r="7" fill={color} opacity="0.25" />
     </svg>
   );
 }
 
+/* ======================================================
+   SUB-COMPONENTE: INSIGHT CARD ITEM
+====================================================== */
 function InsightCardItem({ card }: { card: InsightCard }) {
     const config = {
         CRITICO: { color: "#EF4444", icon: AlertTriangle },
@@ -72,30 +75,17 @@ function InsightCardItem({ card }: { card: InsightCard }) {
     const IconComponent = config.icon;
 
     return (
-        <div style={{
-            background: "rgba(255, 255, 255, 0.03)", 
-            borderLeft: `4px solid ${config.color}`, 
-            borderRadius: "4px 12px 12px 4px", 
-            padding: "14px 16px",
-            marginBottom: 12,
-            display: "flex", flexDirection: "column", gap: 8,
-            border: "1px solid rgba(255,255,255,0.05)",
-            borderLeftWidth: 4, borderLeftColor: config.color
-        }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <IconComponent size={18} color={config.color} strokeWidth={2.5} />
-                    <span style={{ fontWeight: 700, fontSize: "0.8rem", color: config.color, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        {card.titulo}
-                    </span>
+        <div className="ia-insight-card" style={{ borderLeftColor: config.color }}>
+            <div className="ia-insight-header">
+                <div className="ia-insight-title" style={{ color: config.color }}>
+                    <IconComponent size={20} strokeWidth={2.5} />
+                    {card.titulo}
                 </div>
                 {card.chartData && card.chartData.length >= 2 && (
-                    <div style={{ marginLeft: 16 }}>
-                        <Sparkline data={card.chartData} color={config.color} />
-                    </div>
+                    <Sparkline data={card.chartData} color={config.color} />
                 )}
             </div>
-            <p style={{ margin: 0, fontSize: "0.85rem", color: "#cbd5e1", lineHeight: 1.5 }}>
+            <p className="ia-insight-text">
                 {renderHighlightedText(card.descricao)}
             </p>
         </div>
@@ -103,101 +93,93 @@ function InsightCardItem({ card }: { card: InsightCard }) {
 }
 
 /* ======================================================
-   COMPONENTE PRINCIPAL (Mais Limpo)
+   COMPONENTE PRINCIPAL
 ====================================================== */
 export default function DiagnosticoIaTexto({ data }: { data?: any }) {
   if (!data) {
     return (
-      <div style={emptyStyle}>
-        <Bot size={32} style={{ marginBottom: 12, opacity: 0.5 }} />
+      <div className="ia-empty-state">
+        <Bot size={40} style={{ marginBottom: 16, opacity: 0.5 }} />
         <p>Aguardando dados para gerar o diagnóstico...</p>
       </div>
     );
   }
 
   const safeInsights = data.insights || [];
+  
+  // Mapa de cores para a Badge do Título
   const headerConfig = {
-    melhora: { color: "#22c55e", label: "CENÁRIO POSITIVO", bg: "rgba(34, 197, 94, 0.15)" },
-    piora: { color: "#ef4444", label: "CENÁRIO NEGATIVO", bg: "rgba(239, 68, 68, 0.15)" },
-    estavel: { color: "#3b82f6", label: "ESTÁVEL", bg: "rgba(59, 130, 246, 0.15)" },
-    indefinido: { color: "#94a3b8", label: "ANÁLISE DE PERÍODO", bg: "rgba(255,255,255,0.1)" },
+    melhora: { color: "#4ade80", label: "CENÁRIO POSITIVO", bg: "rgba(74, 222, 128, 0.15)", border: "rgba(74, 222, 128, 0.3)" },
+    piora: { color: "#f87171", label: "CENÁRIO NEGATIVO", bg: "rgba(248, 113, 113, 0.15)", border: "rgba(248, 113, 113, 0.3)" },
+    estavel: { color: "#60a5fa", label: "ESTÁVEL", bg: "rgba(96, 165, 250, 0.15)", border: "rgba(96, 165, 250, 0.3)" },
+    indefinido: { color: "#94a3b8", label: "ANÁLISE DE PERÍODO", bg: "rgba(255,255,255,0.08)", border: "rgba(255,255,255,0.15)" },
   }[data.tendencia as "melhora"|"piora"|"estavel"|"indefinido" || "indefinido"];
 
   return (
-    <div style={containerStyle}>
+    <div className="ia-panel-container">
         
         {/* ================= HEADER ================= */}
-        <div style={headerStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ 
-                    width: 32, height: 32, borderRadius: 8, 
-                    background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)", 
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.4)"
-                }}>
-                    <Bot size={18} color="#fff" />
+        <div className="ia-panel-header">
+            <div className="ia-panel-title-wrapper">
+                <div className="ia-bot-icon">
+                    <Bot size={22} color="#fff" />
                 </div>
-                <h2 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 600, color: "#fff", letterSpacing: "0.02em" }}>
+                <h2 className="ia-panel-title">
                     {data.titulo}
                 </h2>
             </div>
-            <span style={{ 
-                padding: "6px 12px", borderRadius: 6, 
-                background: headerConfig.bg, color: headerConfig.color, 
-                border: `1px solid ${headerConfig.color}40`, 
-                fontWeight: 700, fontSize: "0.7rem", letterSpacing: "0.08em" 
-            }}>
+            
+            <span 
+              className="ia-status-badge" 
+              style={{ background: headerConfig.bg, color: headerConfig.color, border: `1px solid ${headerConfig.border}` }}
+            >
                 {headerConfig.label}
             </span>
         </div>
 
-        {/* ================= GRID CONTENT (40% / 60%) ================= */}
-        <div style={gridStyle}>
+        {/* ================= CORPO (GRID) ================= */}
+        <div className="ia-panel-body">
             
-            {/* LADO ESQUERDO: RESUMO EXECUTIVO COMPONENTIZADO (40%) */}
-            <div style={{ width: "40%", display: "flex", flexDirection: "column", minWidth: 300 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                    <FileText size={16} color="#64748b" />
-                    <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", margin: 0, letterSpacing: "0.05em" }}>
-                        Resumo Executivo
-                    </h3>
+            {/* LADO ESQUERDO: RESUMO EXECUTIVO (40%) */}
+            <div className="ia-resumo-col">
+                <div className="ia-section-title">
+                    <FileText size={18} color="#94a3b8" />
+                    <h3>Resumo Executivo</h3>
                 </div>
                 
-                {/* ✅ AQUI ENTRA A MÁGICA: Em vez do texto cru, o componente assume. */}
                 {data.resumoEstruturado ? (
                   <ResumoExecutivo dados={data.resumoEstruturado} />
                 ) : (
-                  <div style={{ color: "#e2e8f0" }}>
+                  <div className="ia-resumo-text">
                      {(data.resumoGeral || "Analisando dados...").split("\n\n").map((p:string, idx:number) => (
-                        <p key={idx}>{renderHighlightedText(p)}</p>
+                        <p key={idx} style={{ marginBottom: 12 }}>{renderHighlightedText(p)}</p>
                      ))}
                   </div>
                 )}
 
                 {/* KPI CHIPS */}
-                <div style={{ marginTop: "auto", paddingTop: 24, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                <div className="ia-chips-wrapper">
                     {(data.indicadoresChave || []).map((ind: string, i: number) => (
-                        <span key={i} style={chipStyle}>{ind}</span>
+                        <span key={i} className="ia-chip">{ind}</span>
                     ))}
                 </div>
             </div>
 
-            <div style={{ width: 1, background: "rgba(255,255,255,0.1)", margin: "0 10px" }} />
+            {/* DIVISOR DE VIDRO (Invisível em Mobile) */}
+            <div className="ia-panel-divider" />
 
             {/* LADO DIREITO: INSIGHT CARDS (60%) */}
-            <div style={{ flex: 1, minWidth: 320, display: "flex", flexDirection: "column" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                    <TrendingUp size={16} color="#64748b" />
-                    <h3 style={{ fontSize: "0.8rem", fontWeight: 700, textTransform: "uppercase", color: "#64748b", margin: 0, letterSpacing: "0.05em" }}>
-                        Alertas & Insights
-                    </h3>
+            <div className="ia-insights-col">
+                <div className="ia-section-title">
+                    <TrendingUp size={18} color="#94a3b8" />
+                    <h3>Alertas & Insights</h3>
                 </div>
                 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+                <div className="ia-insights-grid">
                     {safeInsights.length === 0 ? (
-                        <div style={{ ...emptyCardStyle, gridColumn: "1 / -1" }}>
-                            <CheckCircle2 size={24} color="#22c55e" style={{ opacity: 0.5, marginBottom: 8 }} />
-                            <span>Nenhum alerta crítico detectado no período.</span>
+                        <div className="ia-insight-empty">
+                            <CheckCircle2 size={32} color="#4ade80" style={{ opacity: 0.6, marginBottom: 12 }} />
+                            <span>Nenhum alerta crítico detectado no período analisado.</span>
                         </div>
                     ) : (
                         safeInsights.map((card: InsightCard, idx: number) => (
@@ -210,32 +192,3 @@ export default function DiagnosticoIaTexto({ data }: { data?: any }) {
     </div>
   );
 }
-
-/* ======================================================
-   ESTILOS MANTIDOS
-====================================================== */
-const containerStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: 16, padding: 0, backdropFilter: "blur(12px)",
-    boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)", overflow: "hidden"
-};
-const headerStyle: React.CSSProperties = {
-    display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px",
-    background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
-    borderBottom: "1px solid rgba(255,255,255,0.08)"
-};
-const gridStyle: React.CSSProperties = { display: "flex", gap: 20, padding: "24px", flexWrap: "wrap" };
-const chipStyle: React.CSSProperties = {
-    fontSize: "0.75rem", fontWeight: 600, background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.1)", padding: "6px 12px",
-    borderRadius: 6, color: "#94a3b8", letterSpacing: "0.02em"
-};
-const emptyStyle: React.CSSProperties = {
-    background: "rgba(255,255,255,0.02)", borderRadius: 16, padding: 40, color: "#64748b",
-    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-    border: "1px dashed rgba(255,255,255,0.1)",
-};
-const emptyCardStyle: React.CSSProperties = {
-    padding: 30, textAlign: "center", color: "#64748b", border: "1px dashed rgba(255,255,255,0.1)", 
-    borderRadius: 12, display: "flex", flexDirection: "column", alignItems: "center", fontSize: "0.85rem"
-};

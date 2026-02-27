@@ -1,5 +1,5 @@
 "use client";
-
+import "./DiagnosticoGeral-glass.css";
 import React, { useMemo } from "react";
 import { 
   AlertTriangle, 
@@ -243,68 +243,6 @@ export default function DiagnosticoGeral({ data, diagnostico }: Props) {
           </div>
         )}
       </div>
-
-      {/* ESTILOS LOCAIS */}
-      <style jsx>{`
-        .grid-list {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 12px;
-        }
-        .empty-state {
-          font-size: 0.85rem;
-          color: rgba(255,255,255,0.4);
-          font-style: italic;
-          padding: 12px;
-          border: 1px dashed rgba(255,255,255,0.1);
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        .diag-item {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 10px;
-          padding: 12px 14px;
-          transition: transform 0.2s, background 0.2s;
-        }
-        .diag-item:hover {
-          background: rgba(255,255,255,0.05);
-          transform: translateY(-2px);
-        }
-        .diag-item.danger { border-left: 3px solid var(--danger); }
-        .diag-item.warn { border-left: 3px solid var(--warn); }
-        .diag-item.warn-orange { border-left: 3px solid #f59e0b; }
-        .diag-item.success { border-left: 3px solid var(--success); }
-        .diag-item.success-light { border-left: 3px solid #86efac; }
-
-        .diag-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 6px;
-        }
-        .diag-header strong {
-          font-size: 0.95rem;
-          color: var(--text-strong);
-        }
-        .diag-reason {
-          font-size: 0.8rem;
-          color: rgba(255,255,255,0.6);
-        }
-        .badge {
-          font-size: 0.7rem;
-          font-weight: 700;
-          padding: 2px 6px;
-          border-radius: 4px;
-        }
-        .badge.danger { background: rgba(239,68,68,0.15); color: var(--danger); }
-        .badge.warn { background: rgba(250,204,21,0.15); color: var(--warn); }
-        .badge.warn-orange { background: rgba(245,158,11,0.15); color: #f59e0b; }
-        .badge.success { background: rgba(34,197,94,0.15); color: var(--success); }
-        .badge.success-light { background: rgba(134,239,172,0.15); color: #86efac; }
-      `}</style>
     </div>
   );
 }

@@ -1,0 +1,246 @@
+/* ===================================================== */
+/* PRODUÇÃO PAGE — GLASS IPHONE ANIMADO (SEM FUNDO) */
+/* ===================================================== */
+
+/* ===================================================== */
+/* LAYOUT BASE */
+/* ===================================================== */
+
+.producao-wrapper {
+  width: 100%;
+  min-height: 100%;
+}
+
+.split-view {
+  display: grid;
+  grid-template-columns: 370px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+
+  margin-top: 32px; /* 🔥 encosta visualmente na sidebar */
+}
+
+@media (max-width: 1200px) {
+  .split-view {
+    grid-template-columns: 1fr;
+  }
+}
+
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+/* ===================================================== */
+/* HEADER PRINCIPAL */
+/* ===================================================== */
+
+.page-header {
+  position: relative;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  
+  padding: 30px;
+  border-radius: 28px;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  background: 
+    linear-gradient(
+        135deg,
+        rgba(255,255,255,0.08),
+        rgba(255,255,255,0.02)
+    );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.18),
+    inset 0 0 40px rgba(255,255,255,0.03);
+
+  overflow: hidden;
+  transition: all .45s cubic-bezier(.4,0,.2,1);
+}
+
+/* brilho animado */
+.page-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.page-header:hover::before {
+  left: 150%;
+}
+
+.page-header:hover {
+  transform: translateY(-4px);
+}
+
+/* ===================================================== */
+/* GLASS CARD (CATEGORIA COM PROBLEMA) */
+/* ===================================================== */
+
+.glass-card {
+  position: relative;
+
+  border-radius: 28px;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255,255,255,0.07),
+    rgba(255,255,255,0.02)
+  );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+
+  transition: all .45s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.glass-card:hover::before {
+  left: 150%;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ===================================================== */
+/* FRIENDLY BOX (CATEGORIA 100%) */
+/* ===================================================== */
+
+.friendly-box {
+  position: relative;
+
+  border-radius: 32px;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  box-shadow:
+    0 30px 70px rgba(0,0,0,0.45),
+    0 0 40px rgba(74,222,128,0.25);
+
+  overflow: hidden;
+}
+
+.friendly-box::before {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -40%;
+  width: 200%;
+  height: 200%;
+
+  background: radial-gradient(
+    circle,
+    rgba(255,255,255,0.15),
+    transparent 60%
+  );
+
+  animation: pulseGlow 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulseGlow {
+  0%,100% { opacity: .4; }
+  50% { opacity: .8; }
+}
+
+/* ===================================================== */
+/* KPIs WRAPPER */
+/* ===================================================== */
+
+.kpis-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ===================================================== */
+/* SCROLL PREMIUM */
+/* ===================================================== */
+
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.35);
+}
+
+/* ===================================================== */
+/* ANIMAÇÃO FADE */
+/* ===================================================== */
+
+.fade-in {
+  animation: fadeUpGlass .6s cubic-bezier(.4,0,.2,1) forwards;
+}
+
+@keyframes fadeUpGlass {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import "./insight-inteligente-glass.css";
 import React from "react";
 import { Lightbulb, Search, AlertTriangle, FileQuestion } from "lucide-react";
 
@@ -34,29 +35,32 @@ export default function InsightInteligente({ categoria, stats, diagnostico, over
       <div className="insight-list">
         {naoIdentificados.map((m: any, i: number) => {
           
-          // Calcula a porcentagem de impacto deste erro no volume total do sistema
           const impactoSistema = totalSistema
             ? ((m.notIdentifiedRows / totalSistema) * 100).toFixed(3) + "%"
             : "—";
 
-          // Chama a função de análise para obter causa e sugestão
           const analise = analisarModelo(m, diagnostico);
 
           return (
             <div key={i} className="insight-card">
               
-              {/* Cabeçalho do Card: Nome do Modelo e Impacto */}
+              {/* Cabeçalho do Card */}
               <div className="insight-card-header">
                 <strong className="model">{m.modelKey}</strong>
-                <span className="pct" title="Impacto no volume total de produção">{impactoSistema}</span>
+                <span
+                  className="pct"
+                  title="Impacto no volume total de produção"
+                >
+                  {impactoSistema}
+                </span>
               </div>
 
-              {/* Quantidade de Itens Afetados */}
+              {/* Quantidade */}
               <div className="insight-qty">
                 {m.notIdentifiedRows} itens não identificados • {m.identifiedRows} identificados
               </div>
 
-              {/* Causa Provável */}
+              {/* Causa */}
               <div className="insight-row">
                 <Search size={16} className="icon cause" />
                 <p className="insight-text">
@@ -64,13 +68,12 @@ export default function InsightInteligente({ categoria, stats, diagnostico, over
                 </p>
               </div>
 
-              {/* Sugestão de Ação */}
+              {/* Sugestão */}
               <div className="insight-row">
-                {/* Ícone dinâmico baseado no tipo de problema */}
                 {analise.tipo === "cadastro" ? (
-                   <FileQuestion size={16} className="icon warn" />
+                  <FileQuestion size={16} className="icon warn" />
                 ) : (
-                   <AlertTriangle size={16} className="icon warn" />
+                  <AlertTriangle size={16} className="icon warn" />
                 )}
                 <p className="insight-text">
                   <strong>Sugestão:</strong> {analise.sugestao}
@@ -87,16 +90,12 @@ export default function InsightInteligente({ categoria, stats, diagnostico, over
 
 /* ============================================================
    FUNÇÃO DE ANÁLISE (INTELIGÊNCIA REAL)
-   Integra dados estatísticos com a taxonomia do sistema (Grupos A, B, C)
 ============================================================ */
 
 function analisarModelo(m: any, diagnostico: any) {
   const nome = m.modelKey;
-  // Total de itens deste modelo (identificados + não identificados)
   const total = m.identifiedRows + m.notIdentifiedRows;
   
-  // 0. ERRO DE CADASTRO/GRAFIA (Prioridade Alta)
-  // Se NENHUM item foi identificado (0% de precisão), é quase certo que o nome está errado ou falta no cadastro.
   if (m.identifiedRows === 0 && m.notIdentifiedRows > 0) {
     return {
       tipo: "cadastro",
@@ -105,7 +104,6 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 1. GRUPO B1: INCONSISTÊNCIA NA PRODUÇÃO (Verifica se está na lista de INCONSISTÊNCIA)
   const isPreProd = diagnostico?.preProducao?.find((d: any) => d.modelo === nome);
   if (isPreProd) {
     return {
@@ -115,7 +113,6 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 2. GRUPO B2: PRODUÇÃO PARCIAL (Verifica se está na lista de produção parcial)
   const isParcial = diagnostico?.producaoParcial?.find((d: any) => d.modelo === nome);
   if (isParcial) {
     return {
@@ -125,7 +122,6 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 3. GRUPO A: ERRO PROPOSITAL (Verifica se é um erro de teste conhecido)
   const isErroTeste = diagnostico?.defeitosSemProducao?.find((d: any) => d.modelo === nome);
   if (isErroTeste) {
     return {
@@ -135,11 +131,8 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 4. DIVERGÊNCIA NUMÉRICA (Defeitos > Produção)
-  // Busca dados de divergência para este modelo
   const diverg = diagnostico?.divergencias?.find((d: any) => d.modelo === nome);
   const defeitosApontados = diverg?.defeitosApontados ?? 0;
-  // Se não houver divergência registrada, assume a produção total encontrada
   const produzido = diverg?.produzido ?? total;
 
   if (defeitosApontados > produzido && defeitosApontados > 0) {
@@ -150,7 +143,6 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 5. BAIXO VOLUME (Fallback para casos com algum match parcial mas baixa confiança)
   if (produzido < 20) {
     return {
       tipo: "producao",
@@ -159,7 +151,6 @@ function analisarModelo(m: any, diagnostico: any) {
     };
   }
 
-  // 6. DEFAULT (Caso genérico)
   return {
     tipo: "geral",
     causa: "Padrões disponíveis insuficientes para identificação segura.",

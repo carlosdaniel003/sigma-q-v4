@@ -21,18 +21,12 @@ import {
 } from "lucide-react";
 
 /* ======================================================
-   CONSTANTES & MAPEAMENTO DE SEGURANÇA
-   ✅ Agora usamos apenas os nomes normalizados vindos do Adapter
+   CONSTANTES & MAPEAMENTO
 ====================================================== */
 const COLORS_RESP: Record<string, string> = {
-  // Fornecedores
   "FORNECEDOR IMPORTADO": "#60A5FA", 
   "FORNECEDOR LOCAL": "#2563EB",
-  
-  // Engenharia
   "ENGENHARIA/PROJETO": "#8B5CF6",
-
-  // Processos
   "PROCESSO INJEÇÃO": "#F59E0B",
   "PROCESSO LCM": "#D97706",
   "PROCESSO MA": "#EA580C",
@@ -209,7 +203,7 @@ export default function PpmDinamico({
 }: Props) {
 
   /* ======================================================
-      SELEÇÃO DE DADOS (CONTEXTO + DETALHE)
+      SELEÇÃO DE DADOS & INTELIGÊNCIA DE MODELOS
    ====================================================== */
   const chartData = useMemo(() => {
     let rawItems: TrendItem[] = [];
@@ -244,6 +238,28 @@ export default function PpmDinamico({
         }
     }
 
+    // 🔥 REGRA: Remover dias/semanas/meses que não tiveram nem produção nem defeitos
+    rawItems = rawItems.filter(item => item.production > 0 || item.defects > 0);
+    
+    if (contextItem && contextItem.production === 0 && contextItem.defects === 0) {
+        contextItem = null;
+    }
+
+    // 🔥 LÓGICA TOP 10 MODELOS + OUTROS
+    const modelTotals: Record<string, number> = {};
+    if (viewMode === "modelo") {
+        rawItems.forEach(item => {
+            if (item.modelo) {
+                Object.entries(item.modelo).forEach(([k, v]) => {
+                    if (allowedModels && allowedModels.length > 0 && !allowedModels.includes(k)) return;
+                    modelTotals[k] = (modelTotals[k] || 0) + v;
+                });
+            }
+        });
+    }
+    const sortedModels = Object.keys(modelTotals).sort((a, b) => modelTotals[b] - modelTotals[a]);
+    const topModels = new Set(sortedModels.slice(0, 11)); // Mantém os top 11
+
     let finalRawItems = [...rawItems];
     if (contextItem) {
         finalRawItems = [
@@ -270,19 +286,31 @@ export default function PpmDinamico({
             abs_resp: item.abs_responsabilidade,
             abs_cat: item.abs_categoria,
             abs_mod: item.abs_modelo,
+            // 🔥 GUARDAMOS OS DADOS BRUTOS ORIGINAIS AQUI PARA O TOOLTIP LER DEPOIS!
+            _raw_modelo_data: item.modelo || {}, 
             isContext: isCtx 
         };
 
         if (viewMode === "responsabilidade") {
-             // O dado já vem normalizado do Adapter, basta copiar.
              const sourceObj = item.responsabilidade || {};
              Object.assign(base, sourceObj); 
         }
         else if (viewMode === "categoria") {
-             Object.assign(base, item.categoria);
+             Object.assign(base, item.categoria || {});
         }
         else if (viewMode === "modelo") {
-             Object.assign(base, item.modelo);
+             const modObj = item.modelo || {};
+             let outrosVal = 0;
+             Object.entries(modObj).forEach(([k, v]) => {
+                 if (allowedModels && allowedModels.length > 0 && !allowedModels.includes(k)) return;
+                 
+                 if (topModels.has(k)) {
+                     base[k] = v;
+                 } else {
+                     outrosVal += v; // Agrupa o excedente em OUTROS
+                 }
+             });
+             if (outrosVal > 0) base["OUTROS"] = outrosVal;
         }
         else {
              base["PPM Geral"] = item.ppm;
@@ -291,7 +319,7 @@ export default function PpmDinamico({
         return base;
     });
 
-  }, [trendData, filters, viewMode]);
+  }, [trendData, filters, viewMode, allowedModels]);
 
   /* ======================================================
       CONFIGURAÇÃO DE CORES E CHAVES
@@ -301,63 +329,47 @@ export default function PpmDinamico({
     
     if (viewMode === "responsabilidade") {
         const respFilter = filters?.responsabilidade;
-
-        // Lógica de Grupos Especiais
         if (respFilter && respFilter !== "Todos") {
-            if (respFilter === "AGRUPAMENTO DE PROCESSOS") {
-                return Object.keys(COLORS_RESP).filter(key => 
-                    key.startsWith("PROC") || key.includes("PTH") || key.includes("LCM") || key.includes("DIP")
-                );
-            }
-            if (respFilter === "AGRUPAMENTO DE FORNECEDORES") {
-                return ["FORNECEDOR IMPORTADO", "FORNECEDOR LOCAL"];
-            }
-            // Filtro específico
+            if (respFilter === "AGRUPAMENTO DE PROCESSOS") return Object.keys(COLORS_RESP).filter(key => key.startsWith("PROC") || key.includes("PTH") || key.includes("LCM") || key.includes("DIP"));
+            if (respFilter === "AGRUPAMENTO DE FORNECEDORES") return ["FORNECEDOR IMPORTADO", "FORNECEDOR LOCAL"];
             return [respFilter];
         }
 
-        // Caso padrão (Todos): Mostra o que tiver dados > 0
         const activeResp = new Set<string>();
         chartData.forEach(d => {
              if ((d as any).isGap) return;
              Object.keys(d).forEach(key => {
-                 // Verifica se a chave é válida na nossa lista oficial
-                 if (COLORS_RESP[key] && typeof d[key] === 'number' && d[key] > 0) {
-                     activeResp.add(key);
-                 }
+                 if (COLORS_RESP[key] && typeof d[key] === 'number' && d[key] > 0) activeResp.add(key);
              });
         });
         return activeResp.size > 0 ? Array.from(activeResp) : Object.keys(COLORS_RESP);
     }
     
     if (viewMode === "categoria") {
-        if (filters?.categoria && filters.categoria !== "Todos") {
-            return [filters.categoria];
-        }
+        if (filters?.categoria && filters.categoria !== "Todos") return [filters.categoria];
         return Object.keys(COLORS_CAT);
     }
 
     if (viewMode === "modelo") {
-        if (filters?.modelo && filters.modelo !== "Todos") {
-            return [filters.modelo];
-        }
-        const allModels = new Set<string>();
+        const activeModels = new Set<string>();
         chartData.forEach(d => {
              if ((d as any).isGap) return;
              Object.keys(d).forEach(k => {
-                 if (!['name', 'labelAxis', 'fullLabel', 'production', 'defects', 'ppm', 'totalDefects', 'totalPpmDisplay', 'abs_resp', 'abs_cat', 'abs_mod', 'isContext', 'isGap'].includes(k)) {
-                     if (allowedModels && allowedModels.length > 0) {
-                         if (!allowedModels.includes(k)) return;
-                     }
-                     if (typeof d[k] === 'number' && d[k] > 0) allModels.add(k);
+                 if (!['name', 'labelAxis', 'fullLabel', 'production', 'defects', 'ppm', 'totalDefects', 'totalPpmDisplay', 'abs_resp', 'abs_cat', 'abs_mod', 'isContext', 'isGap', '_raw_modelo_data'].includes(k)) {
+                     activeModels.add(k);
                  }
              });
         });
-        return Array.from(allModels);
+        
+        // Garante que "OUTROS" fica sempre no final da lista da legenda
+        const sortedArray = Array.from(activeModels).filter(m => m !== "OUTROS");
+        if (activeModels.has("OUTROS")) sortedArray.push("OUTROS");
+        
+        return sortedArray;
     }
 
     return [];
-  }, [viewMode, filters, chartData, allowedModels]); 
+  }, [viewMode, filters, chartData]); 
 
   const colors = useMemo(() => {
     if (viewMode === "geral") return { "PPM Geral": COLOR_GERAL };
@@ -366,8 +378,14 @@ export default function PpmDinamico({
     
     if (viewMode === "modelo") {
         const mapping: any = {};
-        keys.forEach((k, i) => {
-            mapping[k] = PALETA_MODELOS[i % PALETA_MODELOS.length];
+        let colorIdx = 0;
+        keys.forEach((k) => {
+            if (k === "OUTROS") {
+                mapping[k] = "#64748b"; // Cinza para o OUTROS
+            } else {
+                mapping[k] = PALETA_MODELOS[colorIdx % PALETA_MODELOS.length];
+                colorIdx++;
+            }
         });
         return mapping;
     }
@@ -381,13 +399,8 @@ export default function PpmDinamico({
   const finalData = useMemo(() => {
       return chartData.map(d => {
           if ((d as any).isGap) return { ...d, _stackTotal: null };
-          
           const realTotalPpm = d.totalPpmDisplay || 0;
-
-          return { 
-            ...d, 
-            _stackTotal: realTotalPpm > 0 ? realTotalPpm : null 
-          };
+          return { ...d, _stackTotal: realTotalPpm > 0 ? realTotalPpm : null };
       });
   }, [chartData]);
 
@@ -447,7 +460,7 @@ export default function PpmDinamico({
   return (
     <div style={containerStyle}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <h2 style={{ fontSize: "1.1rem", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
@@ -487,16 +500,16 @@ export default function PpmDinamico({
 
           <div style={legendContainerStyle}>
             {keys.map((key) => (
-              <div key={key} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: colors[key] }} />
-                {key}
+              <div key={key} style={{ display: "flex", gap: 6, alignItems: "center", fontSize: 11 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: colors[key], flexShrink: 0 }} />
+                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "120px" }} title={key}>{key}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div style={{ flex: 1, width: "100%", minHeight: 0 }}>
+      <div style={{ flex: 1, width: "100%", minHeight: 0, position: "relative" }}>
         {chartData.length === 0 ? (
              <div style={{...emptyContainerStyle, height: "100%"}}>
                <span>Sem dados para esta seleção.</span>
@@ -557,54 +570,89 @@ export default function PpmDinamico({
                     <ReferenceLine x={1} stroke="rgba(255,255,255,0.2)" strokeDasharray="3 3" />
                 )}
 
+                {/* 🔥 TOOLTIP: LÓGICA DE MOSTRAR TUDO NO MODO MODELO */}
                 <Tooltip
                 cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                wrapperStyle={{ zIndex: 9999, pointerEvents: 'auto' }}
                 content={({ active, payload }) => {
                     if (active && payload && payload.length) {
-                    const dataItem = payload[0].payload;
-                    
-                    if (dataItem.isGap) return null;
-
-                    const isCtx = dataItem.isContext;
-                    return (
-                        <div style={{ background: "#0f172a", border: isCtx ? "1px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)", padding: "12px", borderRadius: "8px", fontSize: "13px", boxShadow: "0 4px 12px rgba(0,0,0,0.5)", minWidth: 180 }}>
-                        <p style={{ fontWeight: "bold", marginBottom: "8px", color: isCtx ? "#60A5FA" : "#fff", fontSize: "13px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px" }}>
-                            {dataItem.fullLabel}
-                        </p>
+                        const dataItem = payload[0].payload;
                         
-                        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#cbd5e1" }}>
-                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                    <Package size={14} /> Produção:
-                                </span>
-                                <strong>{Number(dataItem.production).toLocaleString("pt-BR")}</strong>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#fca5a5" }}>
-                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                    <AlertCircle size={14} /> Defeitos:
-                                </span>
-                                <strong>{Number(dataItem.totalDefects).toLocaleString("pt-BR")}</strong>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", color: "#60a5fa" }}>
-                                <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                    <Activity size={14} /> PPM Total:
-                                </span>
-                                <strong>{Number(dataItem.totalPpmDisplay).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
-                            </div>
-                        </div>
+                        if (dataItem.isGap) return null;
 
-                        {payload.map((entry: any, index: number) => {
-                            if (entry.dataKey === "_stackTotal") return null;
-                            return (
-                                <div key={index} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                                <div style={{ width: 8, height: 8, borderRadius: "50%", background: entry.color }} />
-                                <span style={{ color: "#94a3b8", flex: 1 }}>{entry.name}:</span>
-                                <span style={{ color: "#fff", fontWeight: 500 }}>{Number(entry.value).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} PPM</span>
+                        const isCtx = dataItem.isContext;
+
+                        // Se estivermos na visão Modelo, pegamos nos dados brutos completos para o tooltip.
+                        // Caso contrário, usamos o payload padrão do Recharts.
+                        let tooltipItems: any[] = [];
+                        
+                        if (viewMode === "modelo" && dataItem._raw_modelo_data) {
+                            const rawData = dataItem._raw_modelo_data;
+                            tooltipItems = Object.entries(rawData)
+                                .map(([key, value]) => ({
+                                    name: key,
+                                    value: value,
+                                    // Tenta usar a cor do mapeamento, senão gera uma baseada no índice
+                                    color: colors[key] || PALETA_MODELOS[Math.floor(Math.random() * PALETA_MODELOS.length)]
+                                }))
+                                .filter(item => {
+                                    if (allowedModels && allowedModels.length > 0) return allowedModels.includes(item.name);
+                                    return (item.value as number) > 0;
+                                })
+                                .sort((a, b) => (b.value as number) - (a.value as number)); // Ordena do maior pro menor
+                        } else {
+                            tooltipItems = payload.filter(entry => entry.dataKey !== "_stackTotal");
+                        }
+
+                        return (
+                            <div style={{ 
+                                background: "rgba(15,23,42,0.9)", 
+                                backdropFilter: "blur(20px)", 
+                                border: isCtx ? "1px solid #60A5FA" : "1px solid rgba(255,255,255,0.15)", 
+                                padding: "16px", 
+                                borderRadius: "12px", 
+                                fontSize: "13px", 
+                                boxShadow: "0 10px 30px rgba(0,0,0,0.8)", 
+                                minWidth: 200,
+                                maxHeight: "300px", // Limita a altura se houver MUITOS modelos
+                                overflowY: "auto" // Permite scroll dentro do tooltip
+                            }}>
+                                <p style={{ fontWeight: "bold", marginBottom: "8px", color: isCtx ? "#60A5FA" : "#fff", fontSize: "13px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "4px" }}>
+                                    {dataItem.fullLabel}
+                                </p>
+                                
+                                <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 8, paddingBottom: 8, borderBottom: "1px dashed rgba(255,255,255,0.1)" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", color: "#cbd5e1" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <Package size={14} /> Produção:
+                                        </span>
+                                        <strong>{Number(dataItem.production).toLocaleString("pt-BR")}</strong>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", color: "#fca5a5" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <AlertCircle size={14} /> Defeitos:
+                                        </span>
+                                        <strong>{Number(dataItem.totalDefects).toLocaleString("pt-BR")}</strong>
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", color: "#60a5fa" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <Activity size={14} /> PPM Total:
+                                        </span>
+                                        <strong>{Number(dataItem.totalPpmDisplay).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+                                    </div>
                                 </div>
-                            );
-                        })}
-                        </div>
-                    );
+
+                                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                    {tooltipItems.map((entry: any, index: number) => (
+                                        <div key={index} style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                                            <div style={{ width: 8, height: 8, borderRadius: "50%", background: entry.color, boxShadow: `0 0 5px ${entry.color}`, flexShrink: 0 }} />
+                                            <span style={{ color: "#94a3b8", flex: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "160px" }} title={entry.name}>{entry.name}:</span>
+                                            <span style={{ color: "#fff", fontWeight: 700 }}>{Number(entry.value).toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })} PPM</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
                     }
                     return null;
                 }}
@@ -616,7 +664,7 @@ export default function PpmDinamico({
                     stroke="#fff"
                     strokeWidth={2}
                     strokeDasharray="4 4"
-                    dot={{ r: 4, fill: "#fff", strokeWidth: 0 }}
+                    dot={{ r: 4, fill: "#0f172a", stroke: "#fff", strokeWidth: 2 }}
                     activeDot={{ r: 6 }}
                     isAnimationActive={false}
                     connectNulls={false} 
@@ -642,18 +690,21 @@ export default function PpmDinamico({
 }
 
 /* ======================================================
-   ESTILOS
+   ESTILOS - GLASSMORPHISM ATUALIZADO (Z-INDEX 50)
 ====================================================== */
 const containerStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 16,
+  backdropFilter: "blur(35px)",
+  WebkitBackdropFilter: "blur(35px)",
+  background: "linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))",
+  border: "1px solid rgba(255, 255, 255, 0.12)",
+  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
+  borderRadius: 24,
   padding: 24,
   height: 480, 
   display: "flex",
   flexDirection: "column",
   position: "relative",
-  zIndex: 20,
+  zIndex: 50, // 🔥 GARANTE QUE FICA ACIMA DO RANKING
 };
 
 const emptyContainerStyle: React.CSSProperties = {
@@ -664,5 +715,14 @@ const emptyContainerStyle: React.CSSProperties = {
 };
 
 const legendContainerStyle: React.CSSProperties = {
-  display: "flex", gap: 12, fontSize: 15, fontWeight: 500, opacity: 0.9, flexWrap: "wrap", color: "#cbd5e1", justifyContent: "flex-end", maxWidth: "60%"
+  display: "flex", 
+  gap: "6px 12px", 
+  opacity: 0.9, 
+  flexWrap: "wrap", 
+  color: "#cbd5e1", 
+  justifyContent: "flex-end", 
+  maxWidth: "50%",
+  maxHeight: "60px", // 🔥 EVITA QUE O GRÁFICO SEJA ESMAGADO SE HOUVER MUITOS ITENS
+  overflowY: "auto",
+  overflowX: "hidden"
 };

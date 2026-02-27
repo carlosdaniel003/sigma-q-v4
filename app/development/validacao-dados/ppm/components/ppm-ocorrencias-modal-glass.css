@@ -1,0 +1,165 @@
+/* ===================================================== */
+/* SIGMA-Q — OCORRÊNCIAS MODAL GLASS IPHONE PREMIUM */
+/* ===================================================== */
+
+/* ================= OVERLAY ================= */
+
+.ppm-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.75);
+  backdrop-filter: blur(10px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInOverlay .25s ease-out;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ================= MODAL ================= */
+
+.ppm-modal-glass {
+  position: relative;
+  width: 95%;
+  max-width: 1250px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 26px;
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  background: linear-gradient(
+    145deg,
+    rgba(15,23,42,0.9),
+    rgba(11,18,32,0.95)
+  );
+
+  border: 1px solid rgba(59,130,246,0.15);
+
+  box-shadow:
+    0 40px 80px rgba(0,0,0,0.65),
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 0 60px rgba(59,130,246,0.08);
+
+  animation: modalEnter .25s ease-out;
+}
+
+@keyframes modalEnter {
+  from { transform: translateY(20px) scale(.98); opacity: 0; }
+  to { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Reflexo animado */
+.ppm-modal-glass::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.18),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.ppm-modal-glass:hover::before {
+  left: 150%;
+}
+
+/* ================= HEADER ================= */
+
+.ppm-modal-header {
+  padding: 20px 28px;
+  border-bottom: 1px solid rgba(59,130,246,0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    90deg,
+    rgba(59,130,246,0.08),
+    rgba(59,130,246,0.02)
+  );
+}
+
+.ppm-modal-close {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  transition: all .2s ease;
+}
+
+.ppm-modal-close:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+/* ================= CONTENT ================= */
+
+.ppm-modal-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ppm-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+.ppm-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 8px;
+}
+
+/* ================= TABLE ================= */
+
+.ppm-modal-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.ppm-modal-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(11,18,32,0.95);
+  backdrop-filter: blur(12px);
+}
+
+.ppm-modal-table th {
+  padding: 14px 20px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  border-bottom: 1px solid rgba(59,130,246,0.15);
+  white-space: nowrap;
+}
+
+.ppm-modal-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(59,130,246,0.05);
+  vertical-align: top;
+}
+
+.ppm-modal-table tbody tr {
+  transition: background .2s ease;
+}
+
+.ppm-modal-table tbody tr:hover {
+  background: rgba(255,255,255,0.04);
+}

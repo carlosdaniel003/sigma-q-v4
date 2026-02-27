@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight, MapPin, Cpu } from "lucide-react";
+import "./PrincipaisCausas-glass.css"; // ✅ NOVO CSS IMPORTADO
 
 /* ======================================================
-   TIPAGEM (Compatível com o Aggregation de 4 Níveis)
+   TIPAGEM
 ====================================================== */
 interface PosicaoItem {
   nome: string;
@@ -29,7 +30,6 @@ interface AgrupamentoItem {
   detalhes?: AnaliseItem[];
 }
 
-// ✅ TIPAGEM CORRIGIDA: Agora espera explicitamente os 3 parâmetros
 interface PrincipaisCausasProps {
   data?: AgrupamentoItem[];
   onSelectPosition: (analise: string, modelo: string, posicao: string) => void;
@@ -64,29 +64,21 @@ export default function PrincipaisCausas({
   const listaCausas = data || [];
 
   return (
-    <div
-      style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 16,
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        gap: 14,
-        position: "relative",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#e5e7eb", margin: 0 }}>
+    <div className="causas-container">
+      
+      {/* TÍTULO */}
+      <div className="causas-header">
+        <h3 className="causas-title">
           Principais Causas
         </h3>
-        <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: 0.5 }}>
-            Drill-down (4 Níveis)
+        <span className="causas-subtitle">
+          Drill-down (4 Níveis)
         </span>
       </div>
 
+      {/* ESTADO VAZIO */}
       {listaCausas.length === 0 && (
-        <span style={{ fontSize: 13, color: "#94a3b8", opacity: 0.85 }}>
+        <span className="causas-empty">
           Nenhuma causa crítica identificada para os filtros aplicados.
         </span>
       )}
@@ -94,43 +86,35 @@ export default function PrincipaisCausas({
       {/* ================= NÍVEL 1: AGRUPAMENTO ================= */}
       {listaCausas.map((group, groupIdx) => {
         const isGroupOpen = expandedGroup === groupIdx;
-        const rankColor = groupIdx === 0 ? "#ef4444" : groupIdx === 1 ? "#f59e0b" : "#22c55e";
+        const rankClass = groupIdx === 0 ? "rank-1" : groupIdx === 1 ? "rank-2" : "rank-3";
 
         return (
-          <div key={groupIdx} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div key={groupIdx} className="lvl1-group-wrapper">
             
             <div
               onClick={() => toggleGroup(groupIdx)}
-              style={{
-                display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "center",
-                padding: "10px 12px", borderRadius: 12,
-                background: isGroupOpen ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.03)",
-                borderLeft: `5px solid ${rankColor}`, cursor: "pointer", transition: "all 0.2s",
-              }}
+              className={`lvl1-card ${rankClass} ${isGroupOpen ? "is-open" : ""}`}
             >
-              <span style={{ fontWeight: 800, fontSize: 14, color: rankColor }}>
+              <span className="lvl1-rank-num">
                 #{groupIdx + 1}
               </span>
 
-              <div style={{ display: 'flex', flexDirection: 'column'}}>
-                  <strong style={{ fontSize: 14, color: "#f8fafc" }}>{group.nome}</strong>
-                  <span style={{ fontSize: 10, color: "#94a3b8", marginTop: 2 }}>
-                      {isGroupOpen ? "Clique para fechar" : "Clique para ver análises"}
+              <div className="lvl1-info">
+                  <span className="lvl1-name">{group.nome}</span>
+                  <span className="lvl1-hint">
+                      {isGroupOpen ? "Clique para fechar" : "Clique para explorar raízes"}
                   </span>
               </div>
 
-              <span style={{ fontSize: 13, color: "#e5e7eb", fontWeight: isGroupOpen ? 700 : 400 }}>
+              <span className="lvl1-count">
                 {group.ocorrencias.toLocaleString("pt-BR")}
               </span>
             </div>
 
             {/* ================= NÍVEL 2: ANÁLISE ================= */}
             {isGroupOpen && group.detalhes && (
-              <div style={{
-                  padding: "8px 0px 8px 16px", marginLeft: 12, borderLeft: `2px solid ${rankColor}40`,
-                  animation: "fadeIn 0.3s ease-in-out", display: "flex", flexDirection: "column", gap: 6
-              }}>
-                <div style={{ fontSize: 10, color: "#64748b", textTransform: "uppercase", paddingLeft: 8, marginBottom: 4 }}>
+              <div className="lvl2-wrapper">
+                <div className="lvl2-label">
                     Principais Análises:
                 </div>
 
@@ -140,85 +124,61 @@ export default function PrincipaisCausas({
                     const hasModelos = analise.modelos && analise.modelos.length > 0;
 
                     return (
-                        <div key={analiseIdx} style={{ display: "flex", flexDirection: "column" }}>
+                        <div key={analiseIdx}>
                             <div 
                                 onClick={() => hasModelos && toggleAnalise(analiseKey)}
-                                style={{
-                                    display: "flex", justifyContent: "space-between", alignItems: "center",
-                                    padding: "8px 12px", borderRadius: 8,
-                                    background: isAnaliseOpen ? "rgba(255,255,255,0.06)" : "transparent",
-                                    cursor: hasModelos ? "pointer" : "default", transition: "background 0.2s"
-                                }}
+                                className={`lvl2-card ${hasModelos ? "clickable" : ""} ${isAnaliseOpen ? "is-open" : ""}`}
                             >
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <div className="lvl2-info">
                                     {hasModelos && (
-                                        isAnaliseOpen ? <ChevronDown size={14} color="#94a3b8"/> : <ChevronRight size={14} color="#94a3b8"/>
+                                        isAnaliseOpen ? <ChevronDown size={16} color="#94a3b8"/> : <ChevronRight size={16} color="#94a3b8"/>
                                     )}
-                                    <span style={{ fontSize: 13, color: isAnaliseOpen ? "#fff" : "#e2e8f0", fontWeight: isAnaliseOpen ? 600 : 400 }}>
+                                    <span className="lvl2-name">
                                         {analise.nome}
                                     </span>
                                 </div>
-                                <span style={{ fontSize: 12, color: "#94a3b8" }}>{analise.ocorrencias}</span>
+                                <span className="lvl2-count">{analise.ocorrencias}</span>
                             </div>
 
                             {/* ================= NÍVEL 3: MODELO ================= */}
                             {isAnaliseOpen && hasModelos && (
-                                <div style={{
-                                    marginLeft: 24, marginTop: 4, marginBottom: 8, paddingLeft: 12,
-                                    borderLeft: "1px dashed rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", gap: 4
-                                }}>
+                                <div className="lvl3-wrapper">
                                     {analise.modelos!.map((modelo, modeloIdx) => {
                                         const modeloKey = `${analiseKey}-${modeloIdx}`;
                                         const isModeloOpen = expandedModelo === modeloKey;
                                         const hasPosicoes = modelo.posicoes && modelo.posicoes.length > 0;
 
                                         return (
-                                            <div key={modeloIdx} style={{ display: "flex", flexDirection: "column" }}>
+                                            <div key={modeloIdx}>
                                                 <div 
                                                     onClick={() => hasPosicoes && toggleModelo(modeloKey)}
-                                                    style={{
-                                                        display: "flex", justifyContent: "space-between", alignItems: "center",
-                                                        padding: "6px 10px", borderRadius: 6,
-                                                        background: isModeloOpen ? "rgba(59, 130, 246, 0.15)" : "rgba(255,255,255,0.03)",
-                                                        border: isModeloOpen ? "1px solid rgba(59, 130, 246, 0.3)" : "1px solid transparent",
-                                                        cursor: hasPosicoes ? "pointer" : "default"
-                                                    }}
+                                                    className={`lvl3-card ${hasPosicoes ? "clickable" : ""} ${isModeloOpen ? "is-open" : ""}`}
                                                 >
-                                                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                                        <Cpu size={12} color={isModeloOpen ? "#60a5fa" : "#64748b"} />
-                                                        <span style={{ fontSize: 12, color: isModeloOpen ? "#93c5fd" : "#cbd5e1" }}>
+                                                    <div className="lvl3-info">
+                                                        <Cpu size={14} color={isModeloOpen ? "#60a5fa" : "#64748b"} />
+                                                        <span className="lvl3-name">
                                                             {modelo.nome}
                                                         </span>
                                                     </div>
-                                                    <span style={{ fontSize: 11, fontWeight: 700, color: isModeloOpen ? "#60a5fa" : "#64748b" }}>
+                                                    <span className="lvl3-count">
                                                         {modelo.ocorrencias}
                                                     </span>
                                                 </div>
 
-                                                {/* ================= NÍVEL 4: POSIÇÃO MECÂNICA ================= */}
+                                                {/* ================= NÍVEL 4: POSIÇÃO ================= */}
                                                 {isModeloOpen && hasPosicoes && (
-                                                    <div style={{
-                                                        marginTop: 6, marginLeft: 12, display: "flex", flexWrap: "wrap", gap: 6,
-                                                        animation: "slideUp 0.2s ease-out"
-                                                    }}>
+                                                    <div className="lvl4-wrapper">
                                                         {modelo.posicoes!.map((pos, posIdx) => (
                                                             <div 
                                                                 key={posIdx}
-                                                                // ✅ DISPARO CORRETO: Envia os 3 argumentos exigidos pela página
                                                                 onClick={() => onSelectPosition(analise.nome, modelo.nome, pos.nome)}
-                                                                style={{
-                                                                    display: "flex", alignItems: "center", gap: 4,
-                                                                    background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)",
-                                                                    borderRadius: 4, padding: "2px 6px", cursor: "pointer", transition: "all 0.2s"
-                                                                }}
-                                                                onMouseEnter={(e) => e.currentTarget.style.borderColor = "#60a5fa"}
-                                                                onMouseLeave={(e) => e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)"}
+                                                                className="lvl4-pill"
                                                             >
-                                                                <MapPin size={10} color="#fcd34d" />
-                                                                <span style={{ fontSize: 11, color: "#f1f5f9", fontWeight: 500 }}>
+                                                                <MapPin size={12} color="#fcd34d" />
+                                                                <span className="lvl4-pill-name">
                                                                     {pos.nome}
                                                                 </span>
-                                                                <span style={{ fontSize: 10, color: "#94a3b8", marginLeft: 2 }}>
+                                                                <span className="lvl4-pill-count">
                                                                     ({pos.ocorrencias})
                                                                 </span>
                                                             </div>
@@ -238,17 +198,6 @@ export default function PrincipaisCausas({
           </div>
         );
       })}
-      
-      <style jsx>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-5px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,0 +1,162 @@
+/* ===================================================== */
+/* PAINEL INCONSISTÊNCIAS — GLASS IPHONE PREMIUM */
+/* ===================================================== */
+
+.painel-glass-card {
+  position: relative;
+
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.06),
+    rgba(255,255,255,0.02)
+  );
+
+  backdrop-filter: blur(45px) saturate(150%);
+  -webkit-backdrop-filter: blur(45px) saturate(150%);
+
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+
+  padding: 26px;
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+
+  transition: all .45s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+
+.painel-glass-card:hover {
+  transform: translateY(-4px);
+}
+
+/* brilho animado suave */
+.painel-glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.18),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.painel-glass-card:hover::before {
+  left: 150%;
+}
+
+/* ===================================================== */
+/* HEADER */
+/* ===================================================== */
+
+.painel-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.painel-icon-wrapper {
+  background: rgba(59,130,246,0.12);
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(59,130,246,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.painel-title {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: .4px;
+}
+
+.painel-subtitle {
+  margin: 4px 0 0 0;
+  font-size: .75rem;
+  color: #64748b;
+}
+
+/* ===================================================== */
+/* LISTA */
+/* ===================================================== */
+
+.painel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.painel-item {
+  display: grid;
+  grid-template-columns: 1.2fr 50px 1fr 60px;
+  align-items: center;
+  gap: 16px;
+
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+
+  padding: 14px 18px;
+
+  transition: all .35s cubic-bezier(.4,0,.2,1);
+}
+
+.painel-item:hover {
+  background: rgba(255,255,255,0.08);
+  transform: translateX(6px);
+}
+
+/* ===================================================== */
+/* TEXTOS */
+/* ===================================================== */
+
+.painel-label {
+  color: #cbd5e1;
+  font-size: .85rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.painel-value {
+  font-weight: 800;
+  font-size: .95rem;
+  text-align: right;
+}
+
+.painel-percent {
+  font-weight: 700;
+  font-size: .75rem;
+  text-align: right;
+}
+
+/* ===================================================== */
+/* BARRA */
+/* ===================================================== */
+
+.painel-bar-wrapper {
+  width: 100%;
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.painel-bar {
+  height: 100%;
+  border-radius: 20px;
+  transition: width .8s cubic-bezier(.4,0,.2,1);
+}

@@ -1,0 +1,198 @@
+/* ===================================================== */
+/* SIDEBAR DE FILTROS — IPHONE GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Container Principal (Baseado em SidebarDefeitos) --- */
+.sidebar-filtros-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+
+  /* Glass Real */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  border-radius: 28px;   /* 🔥 ESSENCIAL */
+  overflow: hidden;      /* 🔥 ESSENCIAL */
+
+   box-shadow:
+    0 20px 50px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.04);
+
+  isolation: isolate; /* 🔥 Corrige artefato de blur */
+}
+
+/* Reflexo Vítreo Angular */
+.sidebar-filtros-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.5),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sidebar-filtros-container:hover::before {
+  left: 200%;
+}
+
+/* --- Título --- */
+.sidebar-filtros-title {
+  position: relative;
+  z-index: 1;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* --- Grupo de Input (Label + Select) --- */
+.sidebar-filtros-select-group {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-filtros-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+  margin-left: 4px;
+}
+
+/* --- Select Customizado --- */
+.sidebar-filtros-select {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 14px;
+  
+  background: rgba(2, 6, 23, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  font-size: 0.9rem;
+  
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  /* Seta customizada via background-image */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px; /* Espaço para a seta */
+}
+
+.sidebar-filtros-select:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+.sidebar-filtros-select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.sidebar-filtros-select option {
+  background: #0f172a; /* Fundo sólido escuro para as opções do dropdown */
+  color: #f8fafc;
+}
+
+/* Estado Disabled do Select */
+.sidebar-filtros-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* --- Botões --- */
+.sidebar-filtros-btn-buscar {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.sidebar-filtros-btn-buscar:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+
+.sidebar-filtros-btn-buscar:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Estado Disabled do Botão Buscar (Controlado puramente pelo CSS agora) */
+.sidebar-filtros-btn-buscar:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  box-shadow: none;
+  cursor: not-allowed;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sidebar-filtros-btn-limpar {
+  position: relative;
+  z-index: 1;
+  padding: 12px;
+  border-radius: 14px;
+  
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sidebar-filtros-btn-limpar:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sidebar-filtros-btn-limpar:active {
+  transform: scale(0.97);
+}

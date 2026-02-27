@@ -9,6 +9,8 @@ import {
   Squares2X2Icon,
 } from "@heroicons/react/24/outline";
 
+import "./ppm-kpis-glass.css"; // ✅ NOVO CSS
+
 interface Props {
   meta: {
     totalVolume: number;
@@ -17,19 +19,14 @@ interface Props {
     aiPrecision: number;
     itensSemProducao: number;
     itensSemDefeitos: number;
-
-    // ✅ NOVO KPI
     ocorrencias: number;
   };
 }
 
-/* ======================================================
-   🎨 REGRAS VISUAIS — PRECISÃO IA
-====================================================== */
 function getPrecisionClass(value: number) {
-  if (value < 50) return "bad";
-  if (value < 90) return "warn";
-  return "ok";
+  if (value < 50) return "text-danger-ppm";
+  if (value < 90) return "text-warn-ppm";
+  return "text-success-ppm";
 }
 
 export default function PpmKpis({ meta }: Props) {
@@ -37,11 +34,17 @@ export default function PpmKpis({ meta }: Props) {
 
   return (
     <div className="kpis-wrapper">
+      
+      {/* LINHA 1 */}
       <div className="kpi-row">
+        
         {/* PRECISÃO DA IA */}
         <div className="stat-card">
-          <div className="stat-label">
-            <CpuChipIcon width={18} /> PRECISÃO DA IA
+          <div className="stat-header">
+            <div className={`stat-icon ${precisionClass}`}>
+              <CpuChipIcon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">PRECISÃO DA IA</span>
           </div>
           <div className={`stat-value ${precisionClass}`}>
             {meta.aiPrecision.toFixed(2)}%
@@ -51,8 +54,11 @@ export default function PpmKpis({ meta }: Props) {
 
         {/* VOLUME PRODUZIDO */}
         <div className="stat-card">
-          <div className="stat-label">
-            <CubeIcon width={18} /> VOLUME PRODUZIDO
+          <div className="stat-header">
+            <div className="stat-icon text-brand-ppm">
+              <CubeIcon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">VOLUME PRODUZIDO</span>
           </div>
           <div className="stat-value">
             {meta.totalVolume.toLocaleString()}
@@ -60,38 +66,48 @@ export default function PpmKpis({ meta }: Props) {
           <div className="stat-sub">unidades analisadas</div>
         </div>
 
-        {/* DEFEITOS */}
+        {/* DEFEITOS REGISTRADOS */}
         <div className="stat-card">
-          <div className="stat-label">
-            <ExclamationTriangleIcon width={18} /> DEFEITOS
+          <div className="stat-header">
+            <div className="stat-icon text-danger-ppm">
+              <ExclamationTriangleIcon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">DEFEITOS</span>
           </div>
-          <div className="stat-value">
+          <div className="stat-value text-danger-ppm">
             {meta.totalDefeitos.toLocaleString()}
           </div>
           <div className="stat-sub">defeitos registrados</div>
         </div>
+
       </div>
 
+      {/* LINHA 2 */}
       <div className="kpi-row">
+        
         {/* PPM GERAL */}
         <div className="stat-card">
-          <div className="stat-label">
-            <ChartBarIcon width={18} /> PPM GERAL
+          <div className="stat-header">
+            <div className="stat-icon text-highlight-ppm">
+              <ChartBarIcon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">PPM GERAL</span>
           </div>
-          <div className="stat-value highlight">
-            {meta.ppmGeral !== null
-              ? meta.ppmGeral.toFixed(2)
-              : "—"}
+          <div className="stat-value">
+            {meta.ppmGeral !== null ? meta.ppmGeral.toLocaleString('pt-BR', { maximumFractionDigits: 2 }) : "—"}
           </div>
           <div className="stat-sub">defeitos por milhão</div>
         </div>
 
         {/* ITENS SEM PRODUÇÃO */}
         <div className="stat-card">
-          <div className="stat-label">
-            <ExclamationTriangleIcon width={18} /> ITENS SEM PRODUÇÃO
+          <div className="stat-header">
+            <div className="stat-icon text-danger-ppm">
+              <ExclamationTriangleIcon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">ITENS SEM PRODUÇÃO</span>
           </div>
-          <div className="stat-value bad">
+          <div className={`stat-value ${meta.itensSemProducao > 0 ? "text-danger-ppm" : "text-success-ppm"}`}>
             {meta.itensSemProducao}
           </div>
           <div className="stat-sub">apontamentos não encontrados</div>
@@ -99,25 +115,31 @@ export default function PpmKpis({ meta }: Props) {
 
         {/* ITENS SEM DEFEITOS */}
         <div className="stat-card">
-          <div className="stat-label">
-            <CheckCircleIcon width={18} /> ITENS SEM DEFEITOS
+          <div className="stat-header">
+            <div className="stat-icon text-success-ppm">
+              <CheckCircleIcon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">ITENS SEM DEFEITOS</span>
           </div>
-          <div className="stat-value ok">
+          <div className="stat-value text-success-ppm">
             {meta.itensSemDefeitos}
           </div>
           <div className="stat-sub">produção sem falhas</div>
         </div>
+
       </div>
 
-      {/* ======================================================
-          🔶 KPI — OCORRÊNCIAS (NÃO MOSTRAR NO ÍNDICE)
-      ======================================================= */}
+      {/* LINHA 3 */}
       <div className="kpi-row">
+        {/* OCORRÊNCIAS */}
         <div className="stat-card">
-          <div className="stat-label">
-            <Squares2X2Icon width={18} /> OCORRÊNCIAS
+          <div className="stat-header">
+            <div className="stat-icon text-purple-ppm">
+              <Squares2X2Icon width={24} strokeWidth={2} />
+            </div>
+            <span className="stat-label">OCORRÊNCIAS</span>
           </div>
-          <div className="stat-value highlight">
+          <div className="stat-value">
             {meta.ocorrencias}
           </div>
           <div className="stat-sub">
@@ -125,6 +147,7 @@ export default function PpmKpis({ meta }: Props) {
           </div>
         </div>
       </div>
+      
     </div>
   );
 }

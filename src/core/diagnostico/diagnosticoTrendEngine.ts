@@ -1,6 +1,6 @@
 import { ProducaoRaw } from "@/core/data/loadProducao";
 import { DefeitoFiltrado } from "./diagnosticoFilterEngine";
-import { parseDateSafe } from "@/core/ppm/ppmDateUtils";
+import { parseDateSafe } from "@/core/ppm/ppmDateUtils"; // Mantido apenas para defeitos se necessário
 import { norm } from "./diagnosticoUtils";
 
 export interface TrendAlert {
@@ -44,8 +44,10 @@ export function calcularTendenciaPpm(
     if (filtrosAtivos.modelo && !filtrosAtivos.modelo.includes(norm(p.MODELO))) return;
     if (filtrosAtivos.categoria && !filtrosAtivos.categoria.includes(norm(p.CATEGORIA))) return;
 
-    const date = parseDateSafe(p.DATA);
-    if (!date) return;
+    // ✅ CORREÇÃO: Como o loadProducao agora entrega um Date limpo direto do SQL,
+    // não precisamos mais passar pelo parser de Excel (parseDateSafe).
+    const date = p.DATA instanceof Date ? p.DATA : new Date(p.DATA);
+    if (!date || isNaN(date.getTime())) return;
 
     const key = getKey(date);
     if (!timeline.has(key)) timeline.set(key, { producao: 0, defeitos: new Map() });
@@ -55,7 +57,12 @@ export function calcularTendenciaPpm(
 
   // --- PROCESSAR DEFEITOS ---
   defeitos.forEach((d) => {
-    const key = getKey(d.DATA);
+    // Mantemos o parseDateSafe para defeitos, pois a fonte original deles
+    // pode ter uma estrutura de data diferente (dependendo de onde vem a tabela raw).
+    const dateDef = d.DATA instanceof Date ? d.DATA : parseDateSafe(d.DATA);
+    if (!dateDef) return;
+
+    const key = getKey(dateDef);
     if (!timeline.has(key)) timeline.set(key, { producao: 0, defeitos: new Map() });
 
     const ref = timeline.get(key)!;
@@ -103,8 +110,6 @@ export function calcularTendenciaPpm(
       const ppm3 = dadosM3.producao > 0 ? (qtd3 / dadosM3.producao) * 1000000 : 0;
 
       // 🛑 LÓGICA DE TENDÊNCIA FLEXÍVEL (ZIG-ZAG PERMITIDO)
-      // Antes exigíamos: ppm3 > ppm2 && ppm2 > ppm1 (Escadinha perfeita)
-      // Agora exigimos:
       // 1. O final (3) deve ser maior que o começo (1) -> Crescimento no período
       // 2. O final (3) deve ser maior que o meio (2) -> Garante que o problema não foi resolvido no fim
       

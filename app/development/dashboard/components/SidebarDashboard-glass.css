@@ -1,0 +1,220 @@
+/* ===================================================== */
+/* BARRA DE FILTROS DASHBOARD — HORIZONTAL GLASSMORPHISM */
+/* ===================================================== */
+
+/* --- Container Principal (100% Largura) --- */
+.dash-sidebar-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+
+  /* Glass Real */
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+
+  background: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px; /* Ajustado para horizontal */
+  overflow: hidden; 
+
+  box-shadow:
+    0 20px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 30px rgba(255, 255, 255, 0.04);
+
+  isolation: isolate;
+  animation: fadeUpDash 0.5s ease forwards;
+}
+
+/* Reflexo Vítreo Angular */
+.dash-sidebar-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 30%; /* Mais estreito num ecrã largo */
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dash-sidebar-container:hover::before {
+  left: 150%;
+}
+
+/* --- Título da Barra --- */
+.dash-sidebar-title {
+  position: relative;
+  z-index: 1;
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #94a3b8;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+/* --- Formulário (Inputs Container Horizontal) --- */
+.dash-sidebar-form {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: row; /* 🔥 Lado a lado */
+  flex-wrap: wrap; /* Quebra linha em ecrãs pequenos */
+  align-items: flex-end; /* Alinha o fundo dos selects e botões */
+  gap: 16px;
+  width: 100%;
+}
+
+/* --- Grupo de Input (Label + Select) --- */
+.dash-sidebar-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto; /* 🔥 Permite crescer e encolher harmoniosamente */
+  min-width: 140px; /* Evita que fiquem minúsculos */
+  max-width: 250px; /* Limita a largura máxima em ecrãs ultra-wide */
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dash-sidebar-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-left: 4px;
+  transition: color 0.3s ease;
+}
+
+.dash-sidebar-select-group:focus-within .dash-sidebar-label {
+  color: #60a5fa;
+}
+
+/* --- Select Customizado --- */
+.dash-sidebar-select {
+  width: 100%;
+  padding: 12px 18px;
+  height: 46px; /* Altura fixa para alinhar com botões */
+  border-radius: 14px; 
+  
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394a3b8%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  padding-right: 40px;
+}
+
+.dash-sidebar-select:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+}
+
+.dash-sidebar-select option {
+  background: #0f172a; 
+  color: #f8fafc;
+}
+
+.dash-sidebar-select:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Botões de Ação --- */
+.dash-sidebar-actions {
+  display: flex;
+  flex-direction: row; /* Lado a lado */
+  gap: 12px;
+  margin-left: auto; /* 🔥 Empurra os botões tudo para a direita! */
+}
+
+.dash-sidebar-btn-buscar {
+  height: 46px; /* Mesma altura do select */
+  padding: 0 24px;
+  border-radius: 14px;
+  border: none;
+  
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.dash-sidebar-btn-buscar:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 15px 30px rgba(37, 99, 235, 0.45);
+  background: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+
+.dash-sidebar-btn-buscar:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.dash-sidebar-btn-buscar:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  box-shadow: none;
+  cursor: not-allowed;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dash-sidebar-btn-limpar {
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 14px;
+  
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 600;
+  
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dash-sidebar-btn-limpar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dash-sidebar-btn-limpar:active {
+  transform: scale(0.97);
+}

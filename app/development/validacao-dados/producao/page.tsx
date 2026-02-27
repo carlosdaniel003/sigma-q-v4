@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Factory, AlertTriangle, CheckCircle } from "lucide-react";
-
-import "./producao-premium.css";
+import "./producao-page-glass.css";
+//import "./producao-premium.css";
 import { useValidacao } from "./hooks/useValidacao";
 
 // 🔑 CONTEXTO DE PRODUÇÃO
@@ -16,6 +16,7 @@ import ResumoGeral from "./components/ResumoGeral";
 import DiagnosticoGeral from "./components/DiagnosticoGeral";
 import DetalhamentoPorModelo from "./components/DetalhamentoPorModelo";
 import InsightInteligente from "./components/InsightInteligente";
+import ExportarExcelProducao from "./components/ExportarExcelProducao"; 
 
 export default function ProducaoPage({
   embedded = false,
@@ -49,9 +50,16 @@ export default function ProducaoPage({
   /* ============================================================
       📌 GRAVA BASE DE PRODUÇÃO NO CONTEXTO (1x)
       ============================================================ */
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && Array.isArray(baseProducao) && baseProducao.length > 0) {
-      setProductionData(baseProducao);
+      // ✅ CORREÇÃO DE PERFORMANCE: O setTimeout de 150ms liberta a "Main Thread"
+      // permitindo que o navegador desenhe e anime a Sidebar primeiro, 
+      // antes de processar o armazenamento da base de dados pesada.
+      const timer = setTimeout(() => {
+         setProductionData(baseProducao);
+      }, 150);
+      
+      return () => clearTimeout(timer);
     }
   }, [loading, baseProducao, setProductionData]);
 
@@ -91,15 +99,17 @@ export default function ProducaoPage({
   return (
     <div className="producao-wrapper fade-in">
       {/* HEADER */}
-      <header className="page-header">
-        <h1>
+      <header className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Factory size={28} className="text-brand" />
           Validação de Produção
         </h1>
 
-        <div className="muted small">
-          Automático •{" "}
-          {overall?.totalVolume?.toLocaleString()} unidades analisadas
+        <div className="muted small" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <span>Automático • {overall?.totalVolume?.toLocaleString()} unidades analisadas</span>
+          
+          {/* ✅ COMPONENTE ISOLADO DE EXPORTAÇÃO */}
+          <ExportarExcelProducao baseProducao={baseProducao} />
         </div>
       </header>
 

@@ -11,6 +11,8 @@ import {
   Layers
 } from "lucide-react";
 
+import "./ResumoGeral-glass.css";
+
 /**
  * RESUMO GERAL — PRODUÇÃO
  *

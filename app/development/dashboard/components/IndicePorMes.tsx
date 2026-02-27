@@ -21,10 +21,12 @@ import {
   AlertCircle 
 } from "lucide-react";
 
+import "./IndicePorMes-glass.css"; // ✅ NOVO CSS IMPORTADO
+
 interface Props {
   data: TrendItem[];
   tipoLabel: string;
-  metaDinamica?: number; // ✅ Recebe a meta dinâmica da categoria
+  metaDinamica?: number; 
 }
 
 /* ======================================================
@@ -64,25 +66,20 @@ function formatLabel(value: string, tipo: string): string {
 }
 
 /* ======================================================
-   CUSTOM LABELS PARA BARRAS EMPILHADAS (COM 2 DECIMAIS)
+   CUSTOM LABELS PARA BARRAS EMPILHADAS
 ====================================================== */
-
-// Label para a parte AZUL (Segura)
 const renderSafeLabel = (props: any, currentMeta: number) => {
   const { x, y, width, height, value } = props;
   const totalPpm = Number(value || 0);
 
-  // Se passou da meta, a responsabilidade de mostrar o número é da parte vermelha.
   if (totalPpm > currentMeta) return null;
-  
-  // Se a barra azul for muito pequena, não desenha para não cortar
   if (width < 70) return null;
 
   return (
     <text
       x={x + width - 8}
       y={y + height / 2}
-      fill="#fff"
+      fill="#f8fafc"
       textAnchor="end"
       dominantBaseline="middle"
       style={{ fontSize: 11, fontWeight: "bold", pointerEvents: "none" }}
@@ -92,19 +89,17 @@ const renderSafeLabel = (props: any, currentMeta: number) => {
   );
 };
 
-// Label para a parte VERMELHA (Excedente)
 const renderExcessLabel = (props: any, currentMeta: number) => {
   const { x, y, width, height, value } = props;
   const totalPpm = Number(value || 0);
 
-  // Segurança: se não passou da meta, não desenha
   if (totalPpm <= currentMeta) return null;
   
   return (
     <text
-      x={x + width + 5} // Sempre desenha 5px à direita
+      x={x + width + 5} 
       y={y + height / 2}
-      fill="#EF4444" // Sempre Vermelho
+      fill="#fca5a5" 
       textAnchor="start"
       dominantBaseline="middle"
       style={{ fontSize: 11, fontWeight: "bold", pointerEvents: "none" }}
@@ -119,14 +114,11 @@ const renderExcessLabel = (props: any, currentMeta: number) => {
 ====================================================== */
 export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: Props) {
   
-  // 1. PREPARAÇÃO DOS DADOS (UNIFICAÇÃO MATEMÁTICA E META DINÂMICA)
+  // 1. PREPARAÇÃO DOS DADOS
   const chartData = (data || [])
     .filter(d => d.production > 0)
     .map(d => {
-        // ✅ RECALCULO CONSOLIDADO: Garante sincronia exata com o PpmDinamico
         const ppmReal = d.production > 0 ? (d.defects / d.production) * 1000000 : 0;
-        
-        // Separa o valor em duas partes baseando-se na meta da categoria
         const ppmSafe = Math.min(ppmReal, metaDinamica); 
         const ppmExcess = Math.max(0, ppmReal - metaDinamica); 
 
@@ -142,23 +134,29 @@ export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: P
 
   if (chartData.length === 0) {
      return (
-        <div style={emptyContainerStyle}>
-           Nenhum dado de histórico disponível para esta seleção.
+        <div className="evolucao-chart-container">
+            <h2 className="evolucao-title">
+              <BarChart2 size={20} color="#60A5FA" />
+              Evolução Temporal ({tipoLabel})
+            </h2>
+            <div className="evolucao-empty-state">
+               Nenhum dado de histórico disponível para esta seleção.
+            </div>
         </div>
      );
   }
 
-  // Calcula máximo dinâmico considerando a meta atual
   const maxVal = Math.max(...chartData.map(d => d.ppmTotal), metaDinamica) * 1.3;
 
   return (
-    <div style={containerStyle}>
-      <h2 style={{ fontSize: "1.1rem", marginBottom: 16, color: "#fff", display: "flex", alignItems: "center", gap: 8 }}>
-        <BarChart2 size={18} color="#60A5FA" />
+    <div className="evolucao-chart-container">
+      
+      <h2 className="evolucao-title">
+        <BarChart2 size={20} color="#60A5FA" />
         Evolução Temporal ({tipoLabel})
       </h2>
 
-      <div style={{ flex: 1, minHeight: 0 }}>
+      <div className="evolucao-chart-body">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             layout="vertical"
@@ -174,7 +172,7 @@ export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: P
                 dataKey="labelKey" 
                 type="category" 
                 tickFormatter={(val) => formatLabel(val, tipoLabel)}
-                tick={{ fill: "#94a3b8", fontSize: 11, fontWeight: 500 }}
+                tick={{ fill: "#cbd5e1", fontSize: 11, fontWeight: 500 }}
                 width={60}
                 axisLine={false}
                 tickLine={false}
@@ -187,24 +185,37 @@ export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: P
                     if (active && payload && payload.length) {
                         const dataItem = payload[0].payload;
                         return (
-                            <div style={{ background: "#0f172a", border: "1px solid rgba(255,255,255,0.15)", padding: "12px", borderRadius: "8px", fontSize: "12px", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.5)" }}>
-                                <p style={{ fontWeight: "bold", marginBottom: "8px", color: "#fff", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 4 }}>
+                            <div style={{ 
+                                background: "rgba(15, 23, 42, 0.85)", 
+                                backdropFilter: "blur(20px)",
+                                border: "1px solid rgba(255,255,255,0.15)", 
+                                padding: "16px", 
+                                borderRadius: "16px", 
+                                fontSize: "12px", 
+                                boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+                                minWidth: 200
+                            }}>
+                                <p style={{ fontWeight: 800, color: "#f8fafc", marginBottom: 12, borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: 8 }}>
                                     {formatLabel(label as string, tipoLabel)}
                                 </p>
-                                <div style={{ marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                                <div style={{ marginBottom: 10, display: "flex", alignItems: "center", gap: 8 }}>
                                     <Activity size={14} color={dataItem.ppmTotal > metaDinamica ? "#EF4444" : "#60a5fa"} />
-                                    <span style={{ color: dataItem.ppmTotal > metaDinamica ? "#EF4444" : "#60a5fa" }}>
+                                    <span style={{ color: dataItem.ppmTotal > metaDinamica ? "#fca5a5" : "#60a5fa" }}>
                                         PPM: <strong>{dataItem.ppmTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                                     </span>
                                 </div>
-                                <div style={{ display: "flex", flexDirection: "column", gap: 4, color: "#cbd5e1", marginTop: 4 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                        <Package size={14} /> 
-                                        <span>Prod: {dataItem.production.toLocaleString("pt-BR")}</span>
+                                <div style={{ display: "flex", flexDirection: "column", gap: 6, color: "#cbd5e1", borderTop: "1px dashed rgba(255,255,255,0.1)", paddingTop: 10 }}>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <Package size={14} /> Prod:
+                                        </span>
+                                        <strong>{dataItem.production.toLocaleString("pt-BR")}</strong>
                                     </div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#fca5a5" }}>
-                                        <AlertCircle size={14} /> 
-                                        <span>Def: {dataItem.defects.toLocaleString("pt-BR")}</span>
+                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", color: "#fca5a5" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                            <AlertCircle size={14} /> Defeitos:
+                                        </span>
+                                        <strong>{dataItem.defects.toLocaleString("pt-BR")}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -214,13 +225,12 @@ export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: P
                 }}
             />
 
-            {/* ✅ Linha de Referência Dinâmica baseada na meta da categoria */}
-            <ReferenceLine x={metaDinamica} stroke="#EF4444" strokeDasharray="4 4">
+            <ReferenceLine x={metaDinamica} stroke="#EF4444" strokeDasharray="4 4" opacity={0.8}>
                 <Label 
-                    value={`Meta ${metaDinamica.toLocaleString("pt-BR")} PPM`} 
+                    value={`Meta ${metaDinamica.toLocaleString("pt-BR")}`} 
                     position="insideTopRight" 
                     fill="#EF4444" 
-                    fontSize={10} 
+                    fontSize={11} 
                     offset={-5}
                     fontWeight={700}
                 />
@@ -254,20 +264,3 @@ export default function IndicePorMes({ data, tipoLabel, metaDinamica = 5200 }: P
     </div>
   );
 }
-
-const containerStyle: React.CSSProperties = {
-  background: "rgba(255,255,255,0.04)",
-  border: "1px solid rgba(255,255,255,0.08)",
-  borderRadius: 16,
-  padding: 24,
-  height: 480,
-  display: "flex",
-  flexDirection: "column",
-};
-
-const emptyContainerStyle: React.CSSProperties = {
-  ...containerStyle,
-  alignItems: "center",
-  justifyContent: "center",
-  color: "#94a3b8",
-};

@@ -1,0 +1,201 @@
+/* ===================================================== */
+/* HEADER GLASS — IPHONE LIQUID STYLE */
+/* ===================================================== */
+
+.glass-header {
+  position: relative;
+  margin-bottom: 22px;
+  padding: 26px 30px;
+  border-radius: 24px;
+
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.08),
+      rgba(255,255,255,0.03)
+    );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 0 40px rgba(255,255,255,0.03);
+
+  transition: all 0.45s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+
+/* brilho animado suave */
+.glass-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.glass-header:hover::before {
+  left: 150%;
+}
+
+.glass-header:hover {
+  transform: translateY(-4px);
+}
+
+/* título */
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+}
+
+.update-text {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+}
+
+
+
+/* ===================================================== */
+/* TABS GLASS — IPHONE STYLE */
+/* ===================================================== */
+
+.tabs-glass {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 18px 22px;
+  margin-bottom: 26px;
+  border-radius: 20px;
+
+  backdrop-filter: blur(35px) saturate(140%);
+  -webkit-backdrop-filter: blur(35px) saturate(140%);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.07),
+      rgba(255,255,255,0.02)
+    );
+
+  border: 1px solid rgba(255,255,255,0.12);
+
+  box-shadow:
+    0 25px 50px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.15);
+
+  transition: all 0.45s cubic-bezier(.4,0,.2,1);
+  overflow: hidden;
+}
+
+/* light sweep */
+.tabs-glass::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255,255,255,0.18),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.tabs-glass:hover::before {
+  left: 150%;
+}
+
+.tabs-glass:hover {
+  transform: translateY(-3px);
+}
+
+
+
+/* ===================================================== */
+/* TAB BUTTONS */
+/* ===================================================== */
+
+.tab-btn {
+  padding: 10px 20px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 0.9rem;
+
+  transition: all 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.tab-btn:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateY(-3px);
+}
+
+.tab-btn.active {
+  background: rgba(59,130,246,0.28);
+  border-color: rgba(59,130,246,0.6);
+  color: white;
+
+  box-shadow:
+    0 0 20px rgba(59,130,246,0.45),
+    inset 0 0 10px rgba(255,255,255,0.1);
+}
+
+
+
+/* ===================================================== */
+/* RELOAD BUTTON — PREMIUM MICRO INTERACTION */
+/* ===================================================== */
+
+.reload-btn {
+  padding: 9px 14px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+
+  color: white;
+  cursor: pointer;
+
+  transition: all 0.35s cubic-bezier(.4,0,.2,1);
+}
+
+.reload-btn:hover {
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-3px) rotate(8deg);
+  box-shadow: 0 0 18px rgba(255,255,255,0.25);
+}
+
+.reload-btn.loading svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
