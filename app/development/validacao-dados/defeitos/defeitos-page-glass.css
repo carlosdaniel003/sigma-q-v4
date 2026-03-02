@@ -1,3 +1,4 @@
+/* app\development\validacao-dados\defeitos\defeitos-page-glass.css */
 /* ===================================================== */
 /* DEFEITOS PAGE — GLASS IPHONE ANIMADO (SEM FUNDO) */
 /* ===================================================== */
@@ -24,10 +25,14 @@
   display: flex;
   flex-direction: column;
   gap: 28px;
-
+  align-items: stretch;
   width: 100%;
-  min-width: 0; /* ESSENCIAL para evitar overflow */
+  min-width: 0; /* ESSENCIAL para evitar overflow */ 
 }
+  .breakdown-grid {
+  width: 100%;
+  min-width: 0;
+  }
 @media (max-width: 1200px) {
   .defeitos-container {
     grid-template-columns: 1fr;

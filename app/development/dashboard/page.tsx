@@ -88,44 +88,65 @@ export default function DevelopmentDashboardPage() {
   }, []);
 
   /* ======================================================
-      🔄 SISTEMA DE POLLING (VERIFICAÇÃO SILENCIOSA)
+      🔄 SISTEMA DE POLLING (VERIFICAÇÃO SILENCIOSA - CORRIGIDO)
   ====================================================== */
   useEffect(() => {
-    if (!data) return;
+    // Se não há dados ainda, não começamos o polling
+    if (!data || !data.meta) return;
+
+    // Registra a contagem inicial no sessionStorage (apenas se não existir ou se for uma atualização manual)
+    const storedBaseCount = sessionStorage.getItem("sigma_base_defect_count");
+    if (!storedBaseCount || parseInt(storedBaseCount, 10) !== data.meta.totalDefects) {
+      // Se não havia registro, ou se o total da API mudou "legitimamente" (por exemplo, após o refresh), atualizamos a base.
+      sessionStorage.setItem("sigma_base_defect_count", data.meta.totalDefects.toString());
+    }
 
     const checkNewData = async () => {
-        try {
-            const params = new URLSearchParams();
-            const { tipo, valor, ano, dia } = appliedFilters.periodo;
-            
-            if (tipo === "mes" && valor && ano) { params.set("mes", valor.toString()); params.set("ano", ano.toString()); }
-            if (tipo === "semana" && valor && ano) { params.set("semana", valor.toString()); params.set("ano", ano.toString()); }
-            if (dia) params.set("dia", dia);
-            
-            const res = await fetch(`/api/dashboard/summary?${params.toString()}`);
-            if (res.ok) {
-                const newData = await res.json();
-                const currentCount = data.meta.totalDefects;
-                const serverCount = newData.meta.totalDefects;
+      try {
+        const params = new URLSearchParams();
+        const { tipo, valor, ano, dia } = appliedFilters.periodo;
+        
+        if (tipo === "mes" && valor && ano) { params.set("mes", valor.toString()); params.set("ano", ano.toString()); }
+        if (tipo === "semana" && valor && ano) { params.set("semana", valor.toString()); params.set("ano", ano.toString()); }
+        if (dia) params.set("dia", dia);
+        
+        const res = await fetch(`/api/dashboard/summary?${params.toString()}`);
+        if (res.ok) {
+          const newData = await res.json();
+          const serverCount = newData.meta.totalDefects;
+          
+          // Lemos a base imutável da sessão
+          const currentBaseCount = parseInt(sessionStorage.getItem("sigma_base_defect_count") || "0", 10);
 
-                if (serverCount > currentCount) {
-                    setNewDefectsCount(serverCount - currentCount);
-                }
-            }
-        } catch (err) {
-            console.warn("Polling falhou:", err);
+          // Se o servidor tem mais defeitos do que a nossa base guardada na sessão
+          if (serverCount > currentBaseCount) {
+             setNewDefectsCount(serverCount - currentBaseCount);
+          } else {
+             // Caso alguém delete defeitos ou limpe o banco
+             setNewDefectsCount(0);
+          }
         }
+      } catch (err) {
+        console.warn("Polling falhou:", err);
+      }
     };
 
-    pollingRef.current = setInterval(checkNewData, 60000); // 60 segundos
+    // Roda a primeira vez logo em seguida (opcional, mas bom para sincronizar caso tenha navegado fora por muito tempo)
+    const timeoutId = setTimeout(checkNewData, 5000); 
+
+    // Configura o loop infinito a cada 60s
+    pollingRef.current = setInterval(checkNewData, 60000); 
 
     return () => {
-        if (pollingRef.current) clearInterval(pollingRef.current);
+      clearTimeout(timeoutId);
+      if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [data, appliedFilters]);
 
   const handleRefresh = () => {
+      // Atualizamos a base na sessão com os dados mais recentes que virão da API após o refresh
       setNewDefectsCount(0);
+      sessionStorage.removeItem("sigma_base_defect_count"); // Força o useEffect a recriar a base
       refresh();
   };
 

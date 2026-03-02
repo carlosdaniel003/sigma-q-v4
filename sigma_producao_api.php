@@ -29,8 +29,9 @@ mysqli_set_charset($conexao1, "utf8");
 // =========================================================
 // 🚀 QUERY DA PRODUÇÃO (OFICIAL)
 // Filtra pela coluna DATA pegando tudo de 2026 para frente
+// E garante que a coluna TIPO_MOV seja estritamente 'FORNECIDO'
 // =========================================================
-$sql = "SELECT id, DATA, HORA, MATNR, MAKTX, TIPO_PROD, FABRICA, QUANTIDADE, TIPO_MOV FROM plano_mao WHERE DATA >= '2026-01-01' ORDER BY DATA DESC";
+$sql = "SELECT id, DATA, HORA, MATNR, MAKTX, TIPO_PROD, FABRICA, QUANTIDADE, TIPO_MOV FROM plano_mao WHERE DATA >= '2026-01-01' AND TIPO_MOV = 'FORNECIDO' ORDER BY DATA DESC";
 
 $resultado = mysqli_query($conexao1, $sql);
 $dados = array();

@@ -1,3 +1,4 @@
+/* app\development\validacao-dados\producao\components\ResumoGeral.tsx */
 "use client";
 
 import React, { useMemo } from "react";
@@ -384,7 +385,7 @@ function CategoryGroup({ titulo, descricao, cor, className, items, icon }: any) 
                 <div
                   style={{
                     height: "100%",
-                    width: `${Math.max(c.identifiedPctNum, 5)}%`,
+                    width: `${Math.max(c.identifiedPctNum)}%`,
                     background: cor,
                     transition: "width .5s ease-out",
                     borderRadius: 4

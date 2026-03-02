@@ -1,0 +1,402 @@
+/* ===================================================== */
+/* PAINEL DA TABELA GLASS — IPHONE LIQUID STYLE          */
+/* ===================================================== */
+
+.gl-table-panel {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+  
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.3), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  overflow: hidden;
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===================================================== */
+/* BARRA DE AÇÃO SUPERIOR (ACTION BAR)                   */
+/* ===================================================== */
+
+.gl-action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  min-height: 70px;
+  
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 -1px 10px rgba(0, 0, 0, 0.1);
+}
+
+.gl-selection-count {
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.gl-selection-count.active {
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.gl-selection-count.inactive {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* ===================================================== */
+/* ESTRUTURA GRID (CABEÇALHO E LINHAS)                   */
+/* ===================================================== */
+
+.gl-grid-layout {
+  display: grid;
+  grid-template-columns: 40px 60px 100px 1.5fr 80px 100px 80px 100px 80px 100px;
+  gap: 12px;
+  align-items: center;
+}
+
+.gl-table-header {
+  padding: 16px 24px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  
+  background: rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ===================================================== */
+/* LINHAS DA TABELA (ROWS)                               */
+/* ===================================================== */
+
+.gl-table-scroll-area {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* Estilização da barra de scroll (Scrollbar) para Webkit */
+.gl-table-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+.gl-table-scroll-area::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.1);
+}
+.gl-table-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.15);
+  border-radius: 10px;
+}
+.gl-table-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+.gl-table-row {
+  padding: 16px 24px;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  background: transparent;
+  transition: all 0.25s ease;
+}
+
+.gl-table-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Linha selecionada (brilho azul) */
+.gl-table-row.selected {
+  background: rgba(59, 130, 246, 0.08);
+  border-left: 3px solid #3b82f6;
+  box-shadow: inset 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+/* Textos e Dados */
+.gl-id-text { color: #94a3b8; font-weight: 600; }
+.gl-date-text { color: #cbd5e1; }
+.gl-time-text { font-size: 0.75rem; color: #64748b; }
+.gl-model-text { font-weight: 600; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gl-matnr-text { font-size: 0.7rem; color: #64748b; font-weight: 400; }
+.gl-category-text { font-weight: 700; color: #3b82f6; }
+.gl-default-text { color: #94a3b8; }
+.gl-qty-text { text-align: right; font-weight: 700; color: #e2e8f0; font-size: 0.9rem; }
+
+.gl-mov-success { font-size: 0.75rem; color: #34d399; font-weight: 600;}
+.gl-mov-default { font-size: 0.75rem; color: #cbd5e1; font-weight: 600;}
+
+/* ===================================================== */
+/* BADGES (ATIVO / OCULTO)                               */
+/* ===================================================== */
+
+.gl-badge-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.gl-badge-col-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+}
+
+.gl-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.gl-badge.ativo {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.gl-badge.oculto {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.gl-badge-reason {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+/* ===================================================== */
+/* CHECKBOX PERSONALIZADO                                */
+/* ===================================================== */
+
+.gl-checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(0,0,0,0.2);
+}
+
+.gl-checkbox:hover {
+  border-color: #60a5fa;
+  background: rgba(255,255,255,0.05);
+}
+
+.gl-checkbox:checked {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.gl-checkbox:checked::after {
+  content: "✔";
+  color: white;
+  font-size: 11px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* ===================================================== */
+/* BOTÕES GERAIS                                         */
+/* ===================================================== */
+
+.gl-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(.4,0,.2,1);
+  font-size: 0.9rem;
+}
+
+.gl-btn:active {
+  transform: scale(0.96);
+}
+
+.gl-btn-danger {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border: 1px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.gl-btn-danger:hover {
+  box-shadow: 0 10px 25px rgba(220, 38, 38, 0.5);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.gl-btn-success {
+  background: linear-gradient(135deg, #10b981, #047857);
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.gl-btn-success:hover {
+  box-shadow: 0 10px 25px rgba(5, 150, 105, 0.5);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.gl-empty-state {
+  padding: 80px 20px;
+  text-align: center;
+  color: #64748b;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+/* ===================================================== */
+/* MENU FLUTUANTE DE FILTROS (EXCEL STYLE)               */
+/* ===================================================== */
+
+.gl-th-wrapper {
+  position: relative;
+}
+
+.gl-th-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.gl-th-content:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gl-filter-icon {
+  color: #64748b;
+  transition: all 0.3s ease;
+}
+
+.gl-filter-icon.is-active {
+  color: #60a5fa;
+  filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+}
+
+.gl-filter-popover {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  width: 220px;
+  z-index: 100;
+  
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  
+  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  text-transform: none; /* remove o uppercase do th */
+  color: #cbd5e1;
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.gl-popover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #f8fafc;
+}
+
+.gl-popover-clear {
+  background: transparent;
+  border: none;
+  color: #f87171;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.gl-popover-clear:hover {
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+}
+
+.gl-popover-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.gl-popover-list::-webkit-scrollbar { width: 6px; }
+.gl-popover-list::-webkit-scrollbar-track { background: transparent; }
+.gl-popover-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+.gl-popover-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.gl-popover-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gl-checkbox-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  margin-top: 2px;
+}
+.gl-checkbox-small:checked::after { font-size: 9px; }
+
+/* Botão Exportar (Azul) */
+.gl-btn-export {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.gl-btn-export:hover {
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}

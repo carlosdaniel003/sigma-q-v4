@@ -1,0 +1,162 @@
+/* ===================================================== */
+/* PAINEL DE FILTROS GLASS — IPHONE LIQUID STYLE         */
+/* ===================================================== */
+
+.gl-filters-panel {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 18px 24px;
+  margin-bottom: 26px;
+  border-radius: 20px;
+
+  backdrop-filter: blur(35px) saturate(140%);
+  -webkit-backdrop-filter: blur(35px) saturate(140%);
+
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.07),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  box-shadow: 
+    0 25px 50px rgba(0, 0, 0, 0.4), 
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+
+  transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* light sweep animado */
+.gl-filters-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.18),
+    transparent
+  );
+  transform: skewX(-20deg);
+  transition: 1.2s;
+}
+
+.gl-filters-panel:hover::before {
+  left: 150%;
+}
+
+.gl-filters-panel:hover {
+  transform: translateY(-3px);
+}
+
+/* ===================================================== */
+/* SEGMENTED CONTROL (TABS INTERNAS)                     */
+/* ===================================================== */
+
+.gl-tabs-wrapper {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gl-tab-btn {
+  padding: 10px 20px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gl-tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Aba Ativa Azul (Lotes Ativos) */
+.gl-tab-btn.active-blue {
+  background: rgba(59, 130, 246, 0.28);
+  border-color: rgba(59, 130, 246, 0.6);
+  color: white;
+  box-shadow: 
+    0 0 20px rgba(59, 130, 246, 0.45), 
+    inset 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* Aba Ativa Vermelha (Ignorados) */
+.gl-tab-btn.active-red {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: white;
+  box-shadow: 
+    0 0 20px rgba(239, 68, 68, 0.45), 
+    inset 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+/* ===================================================== */
+/* SEARCH INPUT PREMIUM                                  */
+/* ===================================================== */
+
+.gl-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.gl-search-icon {
+  position: absolute;
+  left: 14px;
+  color: #94a3b8;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.gl-search-input {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 10px 16px 10px 40px;
+  border-radius: 14px;
+  color: #fff;
+  outline: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  width: 250px;
+  
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gl-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.gl-search-input:focus {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(59, 130, 246, 0.6);
+  width: 320px;
+  box-shadow: 
+    0 0 18px rgba(59, 130, 246, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.gl-search-wrapper:focus-within .gl-search-icon {
+  color: #60a5fa;
+  transform: scale(1.1);
+}

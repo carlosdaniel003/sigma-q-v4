@@ -1,4 +1,3 @@
-// src/components/MainSidebar.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -60,7 +59,6 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
         onMouseEnter={() => setCollapsed(false)}
         onMouseLeave={() => setCollapsed(true)}
       >
-        {/* 🔥 ALTERAÇÃO AQUI: justifyContent sempre center e paddingLeft 0 para centralizar o texto */}
         <div
           className="glass-sidebar-header"
           style={{
@@ -68,7 +66,6 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
             paddingLeft: 0
           }}
         >
-           {/* LOGO ADAPTATIVO */}
            {collapsed ? (
              <div className="glass-sidebar-logo" style={{ fontSize: "1.2rem", padding: 0 }}>SQ</div>
            ) : (
@@ -128,6 +125,11 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
                 <Link href="/development/validacao-dados/ppm" className={`glass-nav-pill ${isActive("/development/validacao-dados/ppm") ? "glass-is-active" : ""}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div><span className="glass-nav-dot">•</span> PPM</div>
                   {alerts.ppm && <span className="glass-pulse-dot"></span>}
+                </Link>
+
+                {/* 🔥 NOVA ABA ADICIONADA AQUI */}
+                <Link href="/development/validacao-dados/gestao-lotes" className={`glass-nav-pill ${isActive("/development/validacao-dados/gestao-lotes") ? "glass-is-active" : ""}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><span className="glass-nav-dot">•</span> Gestão de Lotes</div>
                 </Link>
               </div>
             )}

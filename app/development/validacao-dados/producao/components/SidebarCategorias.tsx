@@ -2,12 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { BarChart3 } from "lucide-react";
-import "./SidebarCategorias.css"; // Apenas carrega as classes isoladas com 'prod-'
+import "./SidebarCategorias.css"; 
 
 // ============================================================================
 // MICRO-COMPONENTE DA BARRA (Com Proteção)
 // ============================================================================
-function AnimatedProgressBar({ targetPct, color, glow }: { targetPct: number; color: string; glow: string; }) {
+function AnimatedProgressBar({ targetPct, statusClass }: { targetPct: number; statusClass: string; }) {
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
@@ -20,12 +20,8 @@ function AnimatedProgressBar({ targetPct, color, glow }: { targetPct: number; co
   return (
     <div className="prod-progress-wrapper">
       <div
-        className="prod-progress-bar"
-        style={{
-          width: `${width}%`,
-          backgroundColor: color, // Força a cor absoluta da barra
-          boxShadow: glow,        // Força o brilho absoluto da barra
-        }}
+        className={`prod-progress-bar ${statusClass}`}
+        style={{ width: `${width}%` }}
       />
     </div>
   );
@@ -53,11 +49,33 @@ export default function SidebarCategorias({
     return 0;
   };
 
-  function getPalette(pct: number) {
-    if (pct >= 99.9) return { color: "#4ade80", glow: "0 0 12px rgba(74, 222, 128, 0.5)" };
-    if (pct >= 60) return { color: "#facc15", glow: "0 0 12px rgba(250, 204, 21, 0.5)" };
-    return { color: "#f87171", glow: "0 0 12px rgba(239, 68, 68, 0.5)" };
+  // 🔥 Nova função espelho da página de Defeitos
+  function getStatusClass(pct: number) {
+    if (pct >= 99.9) return "status-green";
+    if (pct >= 60) return "status-yellow";
+    return "status-red";
   }
+
+  // Calcula a percentagem e os totais para o cartão Global (Visão Geral)
+  const calcGlobalStats = () => {
+    if (!categories || categories.length === 0) return { pct: 0, volume: 0, rows: 0 };
+    
+    let totalVolume = 0;
+    let totalRows = 0;
+    let totalIdentified = 0; 
+    
+    categories.forEach(c => {
+      totalVolume += (c.volume || 0);
+      totalRows += (c.rows || 0);
+      totalIdentified += (c.volume || 0) * (parsePct(c.identifiedPct) / 100); 
+    });
+
+    const avgPct = totalVolume > 0 ? (totalIdentified / totalVolume) * 100 : 0;
+
+    return { pct: avgPct, volume: totalVolume, rows: totalRows };
+  };
+
+  const globalStats = calcGlobalStats();
 
   const renderCard = (cat: any, isMain: boolean = false) => {
     const key = isMain ? "null" : cat.categoria;
@@ -66,8 +84,12 @@ export default function SidebarCategorias({
       ? selectedCategory === null
       : selectedCategory === cat.categoria;
 
-    const pct = isMain ? 0 : parsePct(cat.identifiedPct);
-    const palette = getPalette(pct);
+    const pct = isMain ? globalStats.pct : parsePct(cat.identifiedPct);
+    const volume = isMain ? globalStats.volume : (cat.volume ?? 0);
+    const rows = isMain ? globalStats.rows : (cat.rows ?? 0);
+    
+    // Pegar a classe CSS de cor baseada no percentual
+    const statusClass = getStatusClass(pct);
 
     return (
       <div
@@ -77,36 +99,24 @@ export default function SidebarCategorias({
       >
         <div className="prod-base-header">
           <span className="prod-base-name">
+            {isMain && <BarChart3 size={16} color="#ffffff" style={{ marginRight: 8, display: 'inline-block', verticalAlign: 'text-bottom' }} />}
             {label}
           </span>
 
-          {isMain && <BarChart3 size={16} color="#ffffff" />}
-
-          {!isMain && (
-            <span
-              className="prod-base-percent"
-              /* ✅ O STYLE DA COR DA FONTE FOI REMOVIDO! 
-                 Agora é puramente branco como ditado pelo CSS isolado */
-            >
-              {pct.toFixed(1)}%
-            </span>
-          )}
+          {/* Adicionada a classe de status na percentagem */}
+          <span className={`prod-base-percent ${statusClass}`}>
+            {pct.toFixed(1)}%
+          </span>
         </div>
 
-        {isMain ? (
-          <div className="prod-base-subinfo">
-            Resumo geral da produção
-          </div>
-        ) : (
-          <>
-            <div className="prod-base-subinfo">
-              <strong style={{ color: '#ffffff' }}>{cat.volume?.toLocaleString() ?? 0}</strong> un. •{" "}
-              {cat.rows?.toLocaleString() ?? 0} linhas
-            </div>
+        <div className="prod-base-subinfo">
+          <strong style={{ color: '#ffffff' }}>{volume.toLocaleString()}</strong> un. •{" "}
+          {rows.toLocaleString()} linhas
+        </div>
 
-            <AnimatedProgressBar targetPct={pct} color={palette.color} glow={palette.glow} />
-          </>
-        )}
+        {/* Passando a classe de status em vez de cores estáticas inline */}
+        <AnimatedProgressBar targetPct={pct} statusClass={statusClass} />
+
       </div>
     );
   };

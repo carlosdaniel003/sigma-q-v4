@@ -1,18 +1,49 @@
+/* app\development\validacao-dados\producao\components\KPIsGerais-glass.css */
 /* ===================================================== */
 /* KPIs GERAIS PRODUÇÃO — GLASS IPHONE ANIMADO (Padrão Defeitos) */
 /* ===================================================== */
 
 /* ============================= */
-/* GRID */
+/* WRAPPER */
 /* ============================= */
 
 .kpi-wrapper {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  display: flex;          /* 🔥 flex coluna para empilhar as linhas */
+  flex-direction: column;
   gap: 24px;
   margin-bottom: 28px;
   width: 100%;
+  min-width: 0;           /* 🔥 essencial em contexto de grid pai */
+  box-sizing: border-box;
   animation: fadeUpProdKPI 0.8s ease forwards;
+}
+
+/* ============================= */
+/* LINHAS (ROWS) */
+/* ============================= */
+
+.kpi-row {
+  display: grid;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* 🔥 Colunas fixas por linha — sem auto-fit que falha no 1º render */
+.kpi-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.kpi-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.kpi-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Responsivo */
+@media (max-width: 1200px) {
+  .kpi-row.cols-4 { grid-template-columns: repeat(2, 1fr); }
+  .kpi-row.cols-3 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .kpi-row.cols-2,
+  .kpi-row.cols-3,
+  .kpi-row.cols-4 { grid-template-columns: 1fr; }
 }
 
 @keyframes fadeUpProdKPI {

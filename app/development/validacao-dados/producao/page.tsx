@@ -1,5 +1,5 @@
 "use client";
-
+/* app\development\validacao-dados\producao\page.tsx*/
 import React, { useEffect } from "react";
 import { Factory, AlertTriangle, CheckCircle } from "lucide-react";
 import "./producao-page-glass.css";
@@ -62,6 +62,18 @@ export default function ProducaoPage({
       return () => clearTimeout(timer);
     }
   }, [loading, baseProducao, setProductionData]);
+
+// ProducaoPage.tsx — adicionar junto aos outros useEffects
+
+useEffect(() => {
+  // 🔥 Força o browser a recalcular o layout do grid/flex
+  // Resolve o bug de KPIs empilhados na primeira renderização
+  const timer = setTimeout(() => {
+    window.dispatchEvent(new Event("resize"));
+  }, 50);
+
+  return () => clearTimeout(timer);
+}, []); // ← roda apenas 1x ao montar
 
   /* ============================================================
       REGRAS DE VISUALIZAÇÃO
@@ -132,6 +144,7 @@ export default function ProducaoPage({
               {/* KPIs */}
               <div className="kpis-wrapper">
                 <KPIsGerais
+                  key={`kpis-${loading ? "loading" : "ready"}`} // 🔥 força remount quando dados chegam
                   overall={overall}
                   categories={categories}
                   categoriasSaudaveis={categoriasSaudaveis}

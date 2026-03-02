@@ -116,14 +116,23 @@ function TabsWithReload() {
   const isProducao = pathname.startsWith(
     "/development/validacao-dados/producao"
   );
+  // 🔥 Nova Aba
+  const isGestaoLotes = pathname.startsWith(
+    "/development/validacao-dados/gestao-lotes"
+  );
+  
+  // Garantir que a aba de defeitos só fica ativa se não for nenhuma das outras
   const isDefeitos =
-    pathname === "/development/validacao-dados" ||
-    pathname.startsWith("/development/validacao-dados/defeitos");
+    (pathname === "/development/validacao-dados" ||
+    pathname.startsWith("/development/validacao-dados/defeitos")) && 
+    !isGestaoLotes;
 
   useEffect(() => {
     if (isDefeitos) loadDefeitos();
     else if (isProducao) loadProducao();
     else if (isPpm) loadPpm();
+    // Nota: Gestão de lotes não precisa disparar um contexto global, 
+    // pois ela carrega seus próprios dados internamente no page.tsx
   }, [isDefeitos, isProducao, isPpm, loadDefeitos, loadProducao, loadPpm]);
 
   return (
@@ -155,6 +164,17 @@ function TabsWithReload() {
         >
           Validação de PPM
         </button>
+
+        {/* 🔥 NOVO BOTÃO DE ABA PARA A GESTÃO DE LOTES */}
+        <button
+          className={`tab-btn ${isGestaoLotes ? "active" : ""}`}
+          onClick={() =>
+            router.push("/development/validacao-dados/gestao-lotes")
+          }
+        >
+          Gestão de Lotes
+        </button>
+
       </div>
 
       <button

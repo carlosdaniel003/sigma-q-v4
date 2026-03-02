@@ -1,3 +1,4 @@
+/* app\development\validacao-dados\defeitos\components\DiagnosticoInteligente.tsx */
 "use client";
 
 import React, { useMemo } from "react";

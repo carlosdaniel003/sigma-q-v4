@@ -81,25 +81,25 @@ export default function SidebarDefeitos({
           </span>
         </div>
 
+        {/* 🔥 Condicional atualizado: Ambos mostram as infos, mas de formas levemente diferentes, E AMBOS mostram a barra */}
         {!isMain ? (
-          <>
-            <div className="card-subinfo">
-              <span>{linhas.toLocaleString()} un.</span>
-              <span>{defeitos.toLocaleString()} linhas</span>
-            </div>
-
-            {/* ✅ Substituímos a div estática pelo nosso novo componente animado */}
-            <AnimatedDefeitosProgressBar 
-              targetPct={pct} 
-              statusClass={getStatusClass(pct)} 
-            />
-          </>
+          <div className="card-subinfo">
+            <span>{linhas.toLocaleString()} un.</span>
+            <span>{defeitos.toLocaleString()} linhas</span>
+          </div>
         ) : (
-          <div className="card-main-info">
+          <div className="card-main-info" style={{ marginTop: 10, fontSize: "0.85rem", color: "#cbd5e1", display: "flex", alignItems: "center", gap: 6 }}>
             <Activity size={16} />
-            Volume total: <strong>{defeitos.toLocaleString()}</strong>
+            Volume total: <strong>{defeitos.toLocaleString()} linhas</strong>
           </div>
         )}
+
+        {/* ✅ Agora a barra de progresso aparece para TODOS os cartões */}
+        <AnimatedDefeitosProgressBar 
+          targetPct={pct} 
+          statusClass={getStatusClass(pct)} 
+        />
+        
       </div>
     );
   };

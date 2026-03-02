@@ -1,12 +1,16 @@
+// src\core\data\loadProducao.ts
+import fs from "fs";
+import path from "path";
+
 export const dynamic = "force-dynamic";
 
 export interface ProducaoRaw {
+  ID_SQL: string; // ✅ Adicionamos o ID para rastreabilidade
   DATA: any;
   MODELO: string;
   CATEGORIA: string;
   TURNO: string; 
   QTY_GERAL: number;
-  // ✅ Novas colunas adicionadas
   TIPO_MOV: string;
   FABRICA: string;
   TIPO_PROD: string;
@@ -22,52 +26,39 @@ const TEMPO_CACHE_MS = 0; // 0 para leitura em tempo real sempre
 
 /* ======================================================
    🧠 INFERÊNCIA INTELIGENTE DE CATEGORIA
-   Baseado na lista oficial de conversão.
 ====================================================== */
 function inferirCategoria(modelo: string, fallbackCategoriaBruta: string): string {
   const m = String(modelo).toUpperCase();
 
-  // 1. Regras Exatas solicitadas (Mapeamento Oficial)
   if (m.includes("TM-1200")) return "TM";
   if (m.includes("AWS-BBS") || m.includes("BBS-01") || m.includes("BOOMBOX")) return "BBS";
   if (m.includes("CM-1000") || m.includes("CM-300") || m.includes("CM-650") || m.includes("CAIXA AMPLIFICADA CM")) return "CM";
   if (m.includes("MO-01") || m.includes("MO-02") || m.includes("MICRO-ONDAS") || m.includes("MICRO ONDAS")) return "MWO";
-  // ✅ Ajustado para apanhar tanto a T1W como a T2W
   if (m.includes("AWS-T2W") || m.includes("T2W-02") || m.includes("AWS-T1W") || m.includes("T1W-02") || m.includes("TORRE DE SOM AWS-T")) return "TW";
 
-  // 2. Fallbacks de Segurança (Caso entrem modelos novos no futuro)
   if (m.includes("TV") || m.includes("TELEVISOR")) return "TV";
   if (m.includes("AR CONDICIONADO") || m.includes("SPLIT") || m.includes("CONDENSADOR") || m.includes("EVAPORADOR")) return "ARCON";
   if (m.includes("PLACA") || m.includes("PCI") || m.includes("PCBA")) return "HW";
 
-  // 🚨 Fallback final: Devolve a categoria bruta recebida, mas se não houver, fica em branco. 
-  // Nunca mais utiliza o "TIPO_PROD" ou "OUTROS".
   return String(fallbackCategoriaBruta || "").trim().toUpperCase();
 }
 
 /* ======================================================
    ⏰ INFERÊNCIA INTELIGENTE DE TURNO (COM MINUTOS)
-   Baseado no horário (HORA) vindo do SQL.
 ====================================================== */
 function inferirTurno(horaStr: string): string {
   if (!horaStr || horaStr === "00:00:00" || horaStr.trim() === "") {
-     return "C"; // Fallback de segurança se a hora vier zerada no SAP
+     return "C"; 
   }
 
-  // Extrai horas e minutos do formato "14:30:00"
   const partes = horaStr.split(":");
   const horas = parseInt(partes[0], 10);
   const minutos = parseInt(partes[1], 10);
 
   if (isNaN(horas) || isNaN(minutos)) return "C";
 
-  // Converte o horário do SAP para o "Minuto do Dia" (0 a 1440)
   const minutoDoDia = (horas * 60) + minutos;
 
-  // Fronteiras do Turno Comercial:
-  // Início: 06:45 -> (6 * 60) + 45 = 405
-  // Fim: 16:45 -> (16 * 60) + 45 = 1005 (Até 16:44 pertence ao Comercial)
-  
   const INICIO_COMERCIAL = 405; // 06:45
   const FIM_COMERCIAL = 1005;   // 16:45
 
@@ -76,6 +67,27 @@ function inferirTurno(horaStr: string): string {
   } else {
       return "2"; 
   }
+}
+
+/* ======================================================
+   🔥 LER LISTA NEGRA (Lotes Ignorados)
+====================================================== */
+function getIgnoredIds(): Set<string> {
+  const ignoradosIds = new Set<string>();
+  try {
+    // Tenta ler o arquivo local apenas se estiver a rodar no servidor
+    if (typeof window === "undefined") {
+      const filePath = path.join(process.cwd(), "lotes_ignorados.json");
+      if (fs.existsSync(filePath)) {
+        const fileData = fs.readFileSync(filePath, "utf-8");
+        const ignoradosList = JSON.parse(fileData);
+        ignoradosList.forEach((i: any) => ignoradosIds.add(String(i.id)));
+      }
+    }
+  } catch (e) {
+    console.error("Erro ao ler lotes_ignorados.json no loadProducao:", e);
+  }
+  return ignoradosIds;
 }
 
 export async function loadProducao(): Promise<ProducaoRaw[]> {
@@ -107,10 +119,16 @@ export async function loadProducao(): Promise<ProducaoRaw[]> {
         return [];
     }
 
-    // 🛡️ FILTRO DE ANO 2026 E TRATAMENTO DE DATA
-    const filteredData = rawData.filter((r) => {
-      let dataObj: Date | null = null;
+    // 🚀 Carrega os IDs que devem ser banidos do sistema
+    const ignoradosIds = getIgnoredIds();
 
+    // 🛡️ FILTRO: REMOVE IGNORADOS + FILTRA ANO 2026 E DATA
+    const filteredData = rawData.filter((r) => {
+      // 1. O Filtro Mágico: Se estiver na lista negra, ignora e não entra na conta!
+      if (ignoradosIds.has(String(r.id))) return false;
+
+      // 2. Filtro normal de Data / 2026
+      let dataObj: Date | null = null;
       if (r.DATA) {
          const dateStr = String(r.DATA).trim().split(" ")[0];
          dataObj = new Date(`${dateStr}T12:00:00`); 
@@ -123,7 +141,7 @@ export async function loadProducao(): Promise<ProducaoRaw[]> {
     const discarded = rawData.length - filteredData.length;
     if (discarded > 0) {
         // eslint-disable-next-line no-console
-        console.log(`🧹 [LoadProducao] ${discarded} registros ignorados. Mantidos: ${filteredData.length} (2026).`);
+        console.log(`🧹 [LoadProducao] ${discarded} registros filtrados (Data ou Ignorados). Mantidos: ${filteredData.length}`);
     }
 
     // ======================================================
@@ -145,13 +163,12 @@ export async function loadProducao(): Promise<ProducaoRaw[]> {
       const turnoCalculado = inferirTurno(horaStr);
 
       return {
+        ID_SQL: String(r.id || ""), // ✅ Guardando o ID original
         DATA: new Date(`${dateStr}T12:00:00`), 
         MODELO: modeloNome,
-        // ✅ Categoria passa a receber apenas o nome do modelo e uma eventual categoria pré-existente
         CATEGORIA: inferirCategoria(modeloNome, r.CATEGORIA), 
         TURNO: turnoCalculado, 
         QTY_GERAL: qtdReal,
-        // ✅ Trazendo as novas colunas
         TIPO_MOV: String(r.TIPO_MOV || "").trim(),
         FABRICA: String(r.FABRICA || "").trim(),
         TIPO_PROD: String(r.TIPO_PROD || "").trim(),

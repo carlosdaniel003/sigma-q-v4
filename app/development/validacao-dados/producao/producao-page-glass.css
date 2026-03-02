@@ -5,7 +5,7 @@
 /* ===================================================== */
 /* LAYOUT BASE */
 /* ===================================================== */
-
+/* app\development\validacao-dados\producao\producao-page-glass.css */
 .producao-wrapper {
   width: 100%;
   min-height: 100%;
@@ -202,6 +202,9 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;      /* 🔥 ADICIONADO */
+  min-width: 0;     /* 🔥 ADICIONADO — evita overflow em grid pai */
+  box-sizing: border-box; /* 🔥 ADICIONADO */
 }
 
 /* ===================================================== */
