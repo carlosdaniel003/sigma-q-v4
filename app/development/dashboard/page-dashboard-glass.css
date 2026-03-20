@@ -1,24 +1,44 @@
+/* app/development/dashboard/page-dashboard-glass.css */
+
 /* ===================================================== */
 /* DASHBOARD PAGE — LAYOUT & GLASSMORPHISM */
 /* ===================================================== */
 
 /* --- Layout Base --- */
 .dashboard-page-layout {
-  display: grid;
-  grid-template-columns: 320px 1fr; /* 320px exatos para encaixar na nova Sidebar */
+  /* 🔥 MUDANÇA AQUI: Trocamos o Grid estático por Flexbox dinâmico */
+  display: flex;
+  flex-direction: row;
   gap: 24px;
   color: #fff;
   min-height: 100vh;
-  align-items: start;
+  align-items: flex-start;
   padding-bottom: 40px;
+  
+  /* Garante que o layout não estoure horizontalmente */
+  width: 100%;
+  overflow-x: hidden; 
 }
 
 /* Área principal de conteúdo (à direita da sidebar) */
 .dashboard-content-area {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 24px;
-  margin-top: 20px;
+  
+  /* 🔥 A MÁGICA DA PERFORMANCE: 
+     min-width: 0 impede que as bibliotecas de gráficos (SVG/Canvas) 
+     forçem recalculos infinitos ao redimensionar, eliminando as travadas. 
+  */
+  min-width: 0; 
+  width: 100%;
+  
+  /* Transição sedosa para acompanhar a barra lateral */
+  /*transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);*/
+  contain: layout paint size;
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* --- Estados de Mensagem (Erro e Vazio) --- */
@@ -46,7 +66,7 @@
 /* --- Grelhas de Layout Interno --- */
 .dashboard-kpi-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 16px;
   animation: fadeUpDash 0.6s ease forwards;
 }
@@ -56,6 +76,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   animation: fadeUpDash 0.8s ease forwards;
+  min-height: 300px;
 }
 
 /* --- Menu de Tabs (Pílulas de Vidro) --- */
@@ -68,7 +89,7 @@
 
 .dashboard-tab-btn {
   padding: 10px 20px;
-  border-radius: 100px; /* Formato pílula arredondado */
+  border-radius: 100px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.03);
   color: #94a3b8;
@@ -108,6 +129,6 @@
 }
 
 @media (max-width: 1024px) {
-  .dashboard-page-layout { grid-template-columns: 1fr; }
+  .dashboard-page-layout { flex-direction: column; }
   .dashboard-charts-row { grid-template-columns: 1fr; }
 }

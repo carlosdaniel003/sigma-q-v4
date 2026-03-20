@@ -267,7 +267,13 @@ export default function DevelopmentDashboardPage() {
   if (!mounted || !user) return null;
 
   return (
-    <div style={{ color: "#fff", minHeight: "100vh", paddingBottom: 40 }}>
+    <div
+  style={{
+    color: "#fff",
+    height: "100%",
+    paddingBottom: 40,
+  }}
+>
 
       {/* ✅ HEADER COMPONENTE */}
       <DashboardHeader 

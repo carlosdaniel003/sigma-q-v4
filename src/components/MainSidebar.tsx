@@ -1,4 +1,4 @@
-// src\components\MainSidebar.tsx
+// src/components/MainSidebar.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -56,89 +56,77 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
   return (
       <aside 
         className={`glass-sidebar-wrapper ${collapsed ? "collapsed" : ""}`} 
-        style={{ width: collapsed ? "80px" : "260px" }}
         onMouseEnter={() => setCollapsed(false)}
         onMouseLeave={() => setCollapsed(true)}
       >
-        <div
-          className="glass-sidebar-header"
-          style={{
-            justifyContent: "center", 
-            paddingLeft: 0
-          }}
-        >
-           {collapsed ? (
-             <div className="glass-sidebar-logo" style={{ fontSize: "1.2rem", padding: 0 }}>SQ</div>
-           ) : (
-             <div className="glass-sidebar-logo">SIGMA-Q</div>
-           )}
+        <div className="glass-sidebar-header">
+           {/* 🔥 Mantemos ambos no DOM e o CSS intercala a opacidade */}
+           <div className="glass-sidebar-logo full">SIGMA-Q</div>
+           <div className="glass-sidebar-logo mini">SQ</div>
         </div>
 
         <div className="glass-nav-section">
           <Link href="/dashboard" className={`glass-nav-card ${isActive("/dashboard") ? "glass-is-active" : ""}`}>
             <Squares2X2Icon className="glass-nav-icon" />
-            {!collapsed && <span className="glass-nav-text">Dashboard</span>}
+            <span className="glass-nav-text">Dashboard</span>
           </Link>
 
           <Link href="/development/diagnostico" className={`glass-nav-card ${isActive("/development/diagnostico") ? "glass-is-active" : ""}`}>
             <CpuChipIcon className="glass-nav-icon" />
-            {!collapsed && <span className="glass-nav-text">Diagnóstico IA</span>}
+            <span className="glass-nav-text">Diagnóstico IA</span>
           </Link>
 
           <Link href="/development/catalogo" className={`glass-nav-card ${isActive("/development/catalogo") ? "glass-is-active" : ""}`}>
             <BookOpenIcon className="glass-nav-icon" />
-            {!collapsed && <span className="glass-nav-text">Catálogo Oficial</span>}
+            <span className="glass-nav-text">Catálogo Oficial</span>
           </Link>
 
           {/* VALIDAÇÃO DE DADOS */}
           <div className="glass-nav-group">
             <div
               className={`glass-nav-card ${isValidacaoActive ? "glass-is-active-parent" : ""} ${hasAnyAlert && !isValidacaoActive ? "glass-pulse-alert" : ""}`}
-              onClick={() => {
-                setOpenValidacao(!openValidacao);
-              }}
+              onClick={() => setOpenValidacao(!openValidacao)}
             >
               <TableCellsIcon className="glass-nav-icon" />
-              {!collapsed && (
-                <>
-                  <span className="glass-nav-text" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                    Validação de Dados
-                    {hasAnyAlert && !openValidacao && <span className="glass-pulse-dot" style={{ marginLeft: 8 }}></span>}
-                  </span>
-                  <ChevronDownIcon className={`glass-chevron-icon ${openValidacao ? "glass-rotate" : ""}`} />
-                </>
-              )}
-              {collapsed && hasAnyAlert && <div style={{ position: "absolute", top: 8, right: 8 }} className="glass-pulse-dot"></div>}
+              
+              <span className="glass-nav-text glass-flex-between">
+                Validação de Dados
+                {hasAnyAlert && !openValidacao && <span className="glass-pulse-dot"></span>}
+                <ChevronDownIcon className={`glass-chevron-icon ${openValidacao ? "glass-rotate" : ""}`} />
+              </span>
+
+              {/* Bolinha vermelha para quando o menu estiver fechado/colapsado */}
+              {collapsed && hasAnyAlert && <div className="glass-pulse-dot collapsed-alert"></div>}
             </div>
 
-            {!collapsed && openValidacao && (
+            {/* O Submenu só renderiza se aberto e NÃO colapsado */}
+            <div className={`glass-submenu-wrapper ${openValidacao && !collapsed ? "open" : ""}`}>
               <div className="glass-submenu-pills">
-                <Link href="/development/validacao-dados/defeitos" className={`glass-nav-pill ${isActive("/development/validacao-dados/defeitos") ? "glass-is-active" : ""}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Link href="/development/validacao-dados/defeitos" className={`glass-nav-pill ${isActive("/development/validacao-dados/defeitos") ? "glass-is-active" : ""}`}>
                   <div><span className="glass-nav-dot">•</span> Defeitos</div>
                   {alerts.defeitos && <span className="glass-pulse-dot"></span>}
                 </Link>
 
-                <Link href="/development/validacao-dados/producao" className={`glass-nav-pill ${isActive("/development/validacao-dados/producao") ? "glass-is-active" : ""}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Link href="/development/validacao-dados/producao" className={`glass-nav-pill ${isActive("/development/validacao-dados/producao") ? "glass-is-active" : ""}`}>
                   <div><span className="glass-nav-dot">•</span> Produção</div>
                   {alerts.producao && <span className="glass-pulse-dot"></span>}
                 </Link>
 
-                <Link href="/development/validacao-dados/ppm" className={`glass-nav-pill ${isActive("/development/validacao-dados/ppm") ? "glass-is-active" : ""}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Link href="/development/validacao-dados/ppm" className={`glass-nav-pill ${isActive("/development/validacao-dados/ppm") ? "glass-is-active" : ""}`}>
                   <div><span className="glass-nav-dot">•</span> PPM</div>
                   {alerts.ppm && <span className="glass-pulse-dot"></span>}
                 </Link>
 
-                {/* 🔥 NOVA ABA ADICIONADA AQUI */}
-                <Link href="/development/validacao-dados/gestao-lotes" className={`glass-nav-pill ${isActive("/development/validacao-dados/gestao-lotes") ? "glass-is-active" : ""}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <Link href="/development/validacao-dados/gestao-lotes" className={`glass-nav-pill ${isActive("/development/validacao-dados/gestao-lotes") ? "glass-is-active" : ""}`}>
                   <div><span className="glass-nav-dot">•</span> Gestão de Lotes</div>
                 </Link>
               </div>
-            )}
+            </div>
           </div>
 
           <Link href="/development/acesso" className={`glass-nav-card ${isActive("/development/acesso") ? "glass-is-active" : ""}`}>
             <ShieldCheckIcon className="glass-nav-icon" />
-            {!collapsed && <span className="glass-nav-text">Gerenciamento de Acesso</span>}
+            <span className="glass-nav-text">Gerenciamento de Acesso</span>
           </Link>
         </div>
 
@@ -149,7 +137,7 @@ export function MainSidebar({ collapsed, setCollapsed }: SidebarProps) {
               window.location.href = "/login";
             }}>
             <div className="glass-logout-icon-wrapper"><span className="glass-logout-initial">S</span></div>
-            {!collapsed && <span className="glass-nav-text">Sair</span>}
+            <span className="glass-nav-text">Sair</span>
           </div>
         </div>
       </aside>

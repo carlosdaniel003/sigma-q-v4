@@ -1,6 +1,6 @@
-/* src\components\MainSidebar.tsx */
+/* src/components/MainSidebar-glass.css */
 /* ===================================================== */
-/* MAIN SIDEBAR — IPHONE GLASSMORPHISM (ISOLATED) */
+/* MAIN SIDEBAR — IPHONE GLASSMORPHISM (ISOLATED & GPU ACCELERATED) */
 /* ===================================================== */
 
 /* --- Container da Sidebar --- */
@@ -13,32 +13,30 @@
   left: 0;
   z-index: 50;
 
-  /* Glass Real */
+  width: 260px; /* Largura padrão definida via CSS */
+  
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
 
-  background: linear-gradient(
-    160deg,
-    rgba(255, 255, 255, 0.07),
-    rgba(255, 255, 255, 0.02)
-  );
-
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px; /* Ajustado para horizontal */
-  overflow: hidden; 
-
+  border-radius: 24px; 
+  
   box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.35),
     inset 0 1px 0 rgba(255,255,255,0.15),
     inset 0 0 30px rgba(255, 255, 255, 0.04);
 
   isolation: isolate;
-  animation: fadeUpDash 0.5s ease forwards;
   
-  /* Expansão fluída Apple-like */
-  transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  overflow: hidden;
-  
+  /* 🔥 MÁGICA DE PERFORMANCE: cubic-bezier e width via GPU */
+  transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow-x: hidden; /* Fundamental para esconder o texto sem quebrar o layout */
+}
+
+/* Estado Colapsado */
+.glass-sidebar-wrapper.collapsed {
+  width: 80px;
 }
 
 /* --- Cabeçalho e Logo --- */
@@ -46,20 +44,29 @@
   height: 80px;
   display: flex;
   align-items: center;
-  justify-content: center; /* Centraliza horizontal */
+  justify-content: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 0; /* 🔥 Remove deslocamento lateral */
+  position: relative;
 }
 
 .glass-sidebar-logo {
-  font-size: 1.2rem;
+  position: absolute;
   font-weight: 800;
   background: linear-gradient(to right, #ffffff, #ffffff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   letter-spacing: 1px;
-  text-align: center; /* 🔥 Garante alinhamento interno */
+  text-align: center;
+  transition: opacity 0.3s ease, transform 0.3s ease;
 }
+
+/* Lida com a troca dos logos (SIGMA-Q vs SQ) */
+.glass-sidebar-logo.full { font-size: 1.2rem; opacity: 1; transform: scale(1); }
+.glass-sidebar-logo.mini { font-size: 1.2rem; opacity: 0; transform: scale(0.8); pointer-events: none; }
+
+.glass-sidebar-wrapper.collapsed .glass-sidebar-logo.full { opacity: 0; transform: scale(0.8); pointer-events: none; }
+.glass-sidebar-wrapper.collapsed .glass-sidebar-logo.mini { opacity: 1; transform: scale(1); }
+
 
 /* --- Secção de Navegação (Links) --- */
 .glass-nav-section {
@@ -69,9 +76,9 @@
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
-/* Esconde a barra de rolagem mas mantém funcionalidade */
 .glass-nav-section::-webkit-scrollbar { width: 0; }
 
 .glass-nav-card {
@@ -84,20 +91,36 @@
   text-decoration: none;
   cursor: pointer;
   border: 1px solid transparent;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s ease;
+  white-space: normal;
 }
 
 .glass-nav-icon {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
-  transition: color 0.3s ease;
+  transition: color 0.25s ease;
 }
 
 .glass-nav-text {
   font-size: 0.95rem;
   font-weight: 600;
   flex: 1;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+/* Esconde o texto no modo colapsado suavemente */
+.glass-sidebar-wrapper.collapsed .glass-nav-text {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.glass-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
 }
 
 /* Interações Hover e Active */
@@ -105,6 +128,10 @@
   background: rgba(255, 255, 255, 0.06);
   color: #f8fafc;
   transform: translateX(4px);
+}
+
+.glass-sidebar-wrapper.collapsed .glass-nav-card:hover {
+  transform: translateX(0px); /* Tira o efeito visual de pulo se colapsado */
 }
 
 .glass-nav-card.glass-is-active,
@@ -130,6 +157,16 @@
 }
 
 /* --- Submenus (Pills de Vidro) --- */
+/* 🔥 Otimização do submenu: Usamos max-height para animar a abertura ao invés de destruir o DOM */
+.glass-submenu-wrapper {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.glass-submenu-wrapper.open {
+  max-height: 300px; /* Espaço suficiente para os itens */
+}
+
 .glass-submenu-pills {
   display: flex;
   flex-direction: column;
@@ -137,12 +174,13 @@
   padding-left: 38px;
   margin-top: 4px;
   margin-bottom: 8px;
-  animation: glassSlideDown 0.3s ease forwards;
+  white-space: nowrap;
 }
 
 .glass-nav-pill {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 10px 14px;
   border-radius: 12px;
   color: #cbd5e1;
@@ -165,15 +203,8 @@
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-.glass-nav-dot {
-  margin-right: 8px;
-  opacity: 0.5;
-  transition: all 0.2s;
-}
-.glass-nav-pill.glass-is-active .glass-nav-dot {
-  color: #60a5fa;
-  opacity: 1;
-}
+.glass-nav-dot { margin-right: 8px; opacity: 0.5; transition: all 0.2s; }
+.glass-nav-pill.glass-is-active .glass-nav-dot { color: #60a5fa; opacity: 1; }
 
 /* --- Alertas de Validação (Neon Vermelho) --- */
 @keyframes glassPulseAlert {
@@ -189,9 +220,7 @@
   border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
-.glass-pulse-alert .glass-nav-icon {
-  color: #ef4444 !important;
-}
+.glass-pulse-alert .glass-nav-icon { color: #ef4444 !important; }
 
 .glass-pulse-dot {
   display: inline-block;
@@ -204,11 +233,18 @@
   flex-shrink: 0;
 }
 
+.collapsed-alert {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+}
+
 /* --- Rodapé (Logout) --- */
 .glass-sidebar-footer {
-  padding: 20px;
+  padding: 20px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.01);
+  white-space: nowrap;
 }
 
 .glass-logout-card {
@@ -249,61 +285,4 @@
 .glass-logout-initial {
   font-size: 0.9rem;
   font-weight: 800;
-}
-
-@keyframes glassSlideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ======================================= */
-/* TEXT ANIMATION — PREMIUM SIDEBAR */
-/* ======================================= */
-
-.glass-nav-text {
-  font-size: 0.95rem;
-  font-weight: 600;
-  flex: 1;
-
-  opacity: 1;
-  transform: translateX(0);
-  transition:
-    opacity 0.25s ease,
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-sidebar-wrapper.collapsed .glass-nav-text {
-  opacity: 0;
-  transform: translateX(-10px);
-}
-
-.glass-sidebar-logo {
-  font-size: 1.2rem;
-  font-weight: 800;
-  background: linear-gradient(to right, #ffffff, #ffffff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  letter-spacing: 1px;
-
-  transition:
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.25s ease;
-}
-
-.glass-sidebar-wrapper.collapsed .glass-sidebar-logo {
-  transform: scale(0.9);
-  opacity: 0.85;
-}
-
-.glass-nav-icon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  transition:
-    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    color 0.3s ease;
-}
-
-.glass-sidebar-wrapper.collapsed .glass-nav-icon {
-  transform: scale(1.05);
 }
